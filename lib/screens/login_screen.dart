@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/utils/validator_util.dart';
 import 'package:payhive/widgets/main_text_form_field.dart';
 import 'package:payhive/widgets/primary_button_widget.dart';
 
@@ -51,6 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _phoneController,
                         hintText: "Enter your phone number",
                         label: "Mobile Number",
+                        validator: (value) =>
+                            ValidatorUtil.phoneNumberValidator(value),
                       ),
 
                       SizedBox(height: 20),
@@ -58,6 +61,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       MainTextFormField(
                         prefixIcon: Icons.lock_outline,
                         controller: _passwordController,
+                        validator: (value) =>
+                            ValidatorUtil.passwordValidator(value),
                         hintText: "Enter your password",
                         label: "Password",
                         obscureText: _obscurePassword,
@@ -91,9 +96,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       SizedBox(height: 36),
 
-                      PrimaryButtonWidget(onPressed: () {
-                         if (_formKey.currentState?.validate() == true) {print(_phoneController.text);}
-                      }, text: "Login"),
+                      PrimaryButtonWidget(
+                        onPressed: () {
+                          if (_formKey.currentState?.validate() == true) {
+                            print(_phoneController.text);
+                          }
+                        },
+                        text: "Login",
+                      ),
                       SizedBox(height: 36),
                       RichText(
                         text: TextSpan(

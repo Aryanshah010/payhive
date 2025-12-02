@@ -9,7 +9,8 @@ class MainTextFormField extends StatelessWidget {
     this.prefixIcon,
     this.keyboardType = TextInputType.text,
     this.suffixIcon,
-    this.obscureText=false ,
+    this.obscureText = false,
+    this.validator,
   });
 
   final TextEditingController controller;
@@ -19,6 +20,7 @@ class MainTextFormField extends StatelessWidget {
   final TextInputType keyboardType;
   final Widget? suffixIcon;
   final bool obscureText;
+  final String? Function(String?)? validator;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +41,7 @@ class MainTextFormField extends StatelessWidget {
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
+          validator: validator,
           obscureText: obscureText,
           decoration: InputDecoration(
             prefixIcon: prefixIcon != null
@@ -61,12 +64,6 @@ class MainTextFormField extends StatelessWidget {
               ),
             ),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return "field cannot be empty";
-            }
-            return null;
-          },
         ),
       ],
     );
