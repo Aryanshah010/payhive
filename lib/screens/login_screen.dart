@@ -14,124 +14,147 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-
   bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                Center(
-                  child: Image.asset(
-                    height: 190,
-                    width: 228,
-                    'assets/images/payhive.png',
-                    color: Colors.orange,
-                  ),
-                ),
-                Text(
-                  "Welcome to Payhive",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-                ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final bool isTablet = constraints.maxWidth >= 600;
 
-                SizedBox(height: 125),
+          final double horizontalPadding = isTablet ? 48 : 16;
+          final double verticalSpacing = isTablet ? 28 : 20;
+          final double imageHeight = isTablet ? 260 : 190;
+          final double imageWidth = isTablet ? 300 : 228;
+          final double titleFontSize = isTablet ? 32 : 24;
+          
 
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      MainTextFormField(
-                        keyboardType: TextInputType.phone,
-                        prefixIcon: Icons.phone_iphone_outlined,
-                        controller: _phoneController,
-                        hintText: "Enter your phone number",
-                        label: "Mobile Number",
-                        validator: (value) =>
-                            ValidatorUtil.phoneNumberValidator(value),
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: Column(
+                  children: [
+                    SizedBox(height: isTablet ? 60 : 30),
+
+                    Center(
+                      child: Image.asset(
+                        'assets/images/payhive.png',
+                        height: imageHeight,
+                        width: imageWidth,
+                        color: Colors.orange,
                       ),
+                    ),
 
-                      SizedBox(height: 20),
+                    SizedBox(height: verticalSpacing),
 
-                      MainTextFormField(
-                        prefixIcon: Icons.lock_outline,
-                        controller: _passwordController,
-                        validator: (value) =>
-                            ValidatorUtil.passwordValidator(value),
-                        hintText: "Enter your password",
-                        label: "Password",
-                        obscureText: _obscurePassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            color: Colors.grey,
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
+                    Text(
+                      "Welcome to Payhive",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: titleFontSize,
                       ),
-                      Container(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {},
-                          child: Text(
-                            "Forget Password?",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              decoration: TextDecoration.underline,
-                              decorationColor: Color.fromARGB(255, 255, 107, 0),
-                              color: Color.fromARGB(255, 255, 107, 0),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 36),
+                    ),
 
-                      PrimaryButtonWidget(
-                        onPressed: () {
-                          if (_formKey.currentState?.validate() == true) {
-                            print(_phoneController.text);
-                          }
-                        },
-                        text: "Login",
-                      ),
-                      SizedBox(height: 36),
-                      RichText(
-                        text: TextSpan(
-                          style: TextStyle(
-                            color: Color.fromARGB(255, 122, 122, 122),
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          children: <TextSpan>[
-                            TextSpan(text: "Don’t have an account?\u00A0"),
+                    SizedBox(height: isTablet ? 80 : 40),
 
-                            TextSpan(
-                              text: "Sign Up",
-                              style: TextStyle(
-                                color: Color.fromARGB(255, 255, 107, 0),
-                                decoration: TextDecoration.underline,
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          MainTextFormField(
+                            keyboardType: TextInputType.phone,
+                            prefixIcon: Icons.phone_iphone_outlined,
+                            controller: _phoneController,
+                            hintText: "Enter your phone number",
+                            label: "Mobile Number",
+                            validator: ValidatorUtil.phoneNumberValidator,
+                          ),
+
+                          SizedBox(height: verticalSpacing),
+
+                          MainTextFormField(
+                            prefixIcon: Icons.lock_outline,
+                            controller: _passwordController,
+                            hintText: "Enter your password",
+                            label: "Password",
+                            validator: ValidatorUtil.passwordValidator,
+                            obscureText: _obscurePassword,
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {},
+                              child: Text(
+                                "Forget Password?",
+                                style: TextStyle(
+                                  fontSize: isTablet ? 18 : 14,
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
+                                  decorationColor: Colors.orange,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: isTablet ? 40 : 30),
+
+                          PrimaryButtonWidget(
+                            onPressed: () {
+                              if (_formKey.currentState?.validate() == true) {
+                                print(_phoneController.text);
+                              }
+                            },
+                            text: "Login",
+                          ),
+
+                          SizedBox(height: isTablet ? 40 : 36),
+
+                          RichText(
+                            text: TextSpan(
+                              style: TextStyle(
+                                color: Color(0xFF7A7A7A),
+                                fontSize: isTablet ? 20 : 16,
+                                fontWeight: FontWeight.w500
+                              ),
+                              children: [
+                                TextSpan(text: "Don’t have an account? "),
+                                TextSpan(
+                                  text: "Sign Up",
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: isTablet ? 60 : 30),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

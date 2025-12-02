@@ -12,21 +12,39 @@ class PrimaryButtonWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Color.fromARGB(255, 255, 107, 0),
-        fixedSize: Size(375, 52),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      onPressed: onPressed,
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.black,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isTablet = constraints.maxWidth >= 600;
+
+        final double buttonHeight = isTablet ? 62 : 52;
+        final double fontSize = isTablet ? 20 : 16;
+        final double horizontalPadding = isTablet ? 40 : 20;
+
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 255, 107, 0),
+              padding: EdgeInsets.symmetric(
+                vertical: buttonHeight / 2 - 12,
+                horizontal: horizontalPadding,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: onPressed,
+            child: Text(
+              text,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
