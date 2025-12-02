@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/screens/signin_screen.dart';
 import 'package:payhive/utils/validator_util.dart';
 import 'package:payhive/widgets/main_text_form_field.dart';
 import 'package:payhive/widgets/primary_button_widget.dart';
+import 'package:flutter/gestures.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,7 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
           final double imageHeight = isTablet ? 260 : 190;
           final double imageWidth = isTablet ? 300 : 228;
           final double titleFontSize = isTablet ? 32 : 24;
-          
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -68,9 +69,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardType: TextInputType.phone,
                             prefixIcon: Icons.phone_iphone_outlined,
                             controller: _phoneController,
-                            hintText: "Enter your phone number",
+                            hintText: "Enter your mobile number",
                             label: "Mobile Number",
-                            validator: ValidatorUtil.phoneNumberValidator,
+                            validator: (value) =>
+                                ValidatorUtil.phoneNumberValidator(value),
                           ),
 
                           SizedBox(height: verticalSpacing),
@@ -80,7 +82,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             controller: _passwordController,
                             hintText: "Enter your password",
                             label: "Password",
-                            validator: ValidatorUtil.passwordValidator,
+                            validator: (value) =>
+                                ValidatorUtil.passwordValidator(value),
                             obscureText: _obscurePassword,
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -116,9 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           PrimaryButtonWidget(
                             onPressed: () {
-                              if (_formKey.currentState?.validate() == true) {
-                                print(_phoneController.text);
-                              }
+                              if (_formKey.currentState?.validate() == true) {}
                             },
                             text: "Login",
                           ),
@@ -130,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(
                                 color: Color(0xFF7A7A7A),
                                 fontSize: isTablet ? 20 : 16,
-                                fontWeight: FontWeight.w500
+                                fontWeight: FontWeight.w500,
                               ),
                               children: [
                                 TextSpan(text: "Don’t have an account? "),
@@ -140,6 +141,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                     color: Colors.orange,
                                     decoration: TextDecoration.underline,
                                   ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const SigninScreen(),
+                                        ),
+                                      );
+                                    },
                                 ),
                               ],
                             ),
