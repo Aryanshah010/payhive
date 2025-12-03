@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/screens/login_screen.dart';
+import 'package:payhive/screens/onboarding_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -8,7 +8,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
+      home: OnboardingScreen(),
     );
   }
 }
