@@ -14,36 +14,39 @@ class OnBoardingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final w = size.width;
+
+    final titleSize = w * 0.045;
+    final subtitleSize = w * 0.028;
+    final imageHeight = size.height * (w > 600 ? 0.45 : 0.38);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: EdgeInsets.symmetric(horizontal: w * 0.06),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            image,
-            height: MediaQuery.of(context).size.height * 0.38,
-            fit: BoxFit.contain,
-          ),
+          Image.asset(image, height: imageHeight, fit: BoxFit.contain),
 
-          const SizedBox(height: 35),
+          SizedBox(height: w * 0.06),
 
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 28,
+            style: TextStyle(
+              fontSize: titleSize,
               fontWeight: FontWeight.w700,
               color: Colors.black,
             ),
           ),
 
-          const SizedBox(height: 15),
+          SizedBox(height: w * 0.03),
 
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
+            style: TextStyle(
+              fontSize: subtitleSize,
               color: Colors.grey,
               fontWeight: FontWeight.w500,
               height: 1.4,

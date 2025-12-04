@@ -17,6 +17,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final w = size.width;
+
+    final bottomSpacing = w * 0.04;
+    final bottomPadding = EdgeInsets.symmetric(horizontal: w * 0.05);
+    final buttonFontSize = w * 0.04;
+    final dotSize = w > 600 ? 12.0 : 8.0;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -56,12 +64,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
 
             Positioned(
-              bottom: 30,
+              bottom: bottomSpacing,
               left: 0,
               right: 0,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-
+                padding: bottomPadding,
                 child: isLastPage
                     ? PrimaryButtonWidget(
                         text: "Get Started",
@@ -85,10 +92,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 curve: Curves.easeInOut,
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               "Skip",
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: buttonFontSize,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -99,10 +106,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             controller: _pageController,
                             count: 4,
                             effect: ExpandingDotsEffect(
-                              activeDotColor: Color(0xFFFF6B00),
+                              activeDotColor: const Color(0xFFFF6B00),
                               dotColor: Colors.grey,
-                              dotHeight: 8,
-                              dotWidth: 8,
+                              dotHeight: dotSize,
+                              dotWidth: dotSize,
                               expansionFactor: 3,
                             ),
                           ),
@@ -114,11 +121,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 curve: Curves.easeInOut,
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               "Next",
                               style: TextStyle(
-                                fontSize: 16,
-                                color: Color(0xFFFF6B00),
+                                fontSize: buttonFontSize,
+                                color: const Color(0xFFFF6B00),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

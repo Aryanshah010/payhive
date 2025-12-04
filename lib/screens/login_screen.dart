@@ -20,152 +20,142 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+
+    final double horizontalPadding = isTablet ? 48 : 16;
+    final double verticalSpacing = isTablet ? 28 : 20;
+    final double imageHeight = isTablet ? 260 : 190;
+    final double imageWidth = isTablet ? 300 : 228;
+    final double titleFontSize = isTablet ? 32 : 24;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final bool isTablet = constraints.maxWidth >= 600;
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: Column(
+            children: [
+              SizedBox(height: isTablet ? 60 : 30),
 
-          final double horizontalPadding = isTablet ? 48 : 16;
-          final double verticalSpacing = isTablet ? 28 : 20;
-          final double imageHeight = isTablet ? 260 : 190;
-          final double imageWidth = isTablet ? 300 : 228;
-          final double titleFontSize = isTablet ? 32 : 24;
+              Image.asset(
+                'assets/images/payhive.png',
+                height: imageHeight,
+                width: imageWidth,
+                color: Colors.orange,
+              ),
 
-          return SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              SizedBox(height: verticalSpacing),
+
+              Text(
+                "Welcome to Payhive",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: titleFontSize,
+                ),
+              ),
+
+              SizedBox(height: isTablet ? 80 : 40),
+
+              Form(
+                key: _formKey,
                 child: Column(
                   children: [
-                    SizedBox(height: isTablet ? 60 : 30),
-
-                    Center(
-                      child: Image.asset(
-                        'assets/images/payhive.png',
-                        height: imageHeight,
-                        width: imageWidth,
-                        color: Colors.orange,
-                      ),
+                    MainTextFormField(
+                      keyboardType: TextInputType.phone,
+                      prefixIcon: Icons.phone_iphone_outlined,
+                      controller: _phoneController,
+                      hintText: "Enter your mobile number",
+                      label: "Mobile Number",
+                      validator: ValidatorUtil.phoneNumberValidator,
                     ),
 
                     SizedBox(height: verticalSpacing),
 
-                    Text(
-                      "Welcome to Payhive",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: titleFontSize,
+                    MainTextFormField(
+                      prefixIcon: Icons.lock_outline,
+                      controller: _passwordController,
+                      hintText: "Enter your password",
+                      label: "Password",
+                      validator: ValidatorUtil.passwordValidator,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                     ),
 
-                    SizedBox(height: isTablet ? 80 : 40),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          "Forget Password?",
+                          style: TextStyle(
+                            fontSize: isTablet ? 18 : 14,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.orange,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ),
+                    ),
 
-                    Form(
-                      key: _formKey,
-                      child: Column(
+                    SizedBox(height: isTablet ? 40 : 30),
+
+                    PrimaryButtonWidget(
+                      onPressed: () {
+                        if (_formKey.currentState?.validate() == true) {}
+                      },
+                      text: "Login",
+                    ),
+
+                    SizedBox(height: isTablet ? 40 : 36),
+
+                    RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          color: Color(0xFF7A7A7A),
+                          fontSize: isTablet ? 20 : 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                         children: [
-                          MainTextFormField(
-                            keyboardType: TextInputType.phone,
-                            prefixIcon: Icons.phone_iphone_outlined,
-                            controller: _phoneController,
-                            hintText: "Enter your mobile number",
-                            label: "Mobile Number",
-                            validator: (value) =>
-                                ValidatorUtil.phoneNumberValidator(value),
-                          ),
-
-                          SizedBox(height: verticalSpacing),
-
-                          MainTextFormField(
-                            prefixIcon: Icons.lock_outline,
-                            controller: _passwordController,
-                            hintText: "Enter your password",
-                            label: "Password",
-                            validator: (value) =>
-                                ValidatorUtil.passwordValidator(value),
-                            obscureText: _obscurePassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: Colors.grey,
-                              ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
-                              ),
+                          TextSpan(text: "Don’t have an account? "),
+                          TextSpan(
+                            text: "Sign Up",
+                            style: TextStyle(
+                              color: Colors.orange,
+                              decoration: TextDecoration.underline,
                             ),
-                          ),
-
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {},
-                              child: Text(
-                                "Forget Password?",
-                                style: TextStyle(
-                                  fontSize: isTablet ? 18 : 14,
-                                  fontWeight: FontWeight.w500,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: Colors.orange,
-                                  color: Colors.orange,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: isTablet ? 40 : 30),
-
-                          PrimaryButtonWidget(
-                            onPressed: () {
-                              if (_formKey.currentState?.validate() == true) {}
-                            },
-                            text: "Login",
-                          ),
-
-                          SizedBox(height: isTablet ? 40 : 36),
-
-                          RichText(
-                            text: TextSpan(
-                              style: TextStyle(
-                                color: Color(0xFF7A7A7A),
-                                fontSize: isTablet ? 20 : 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              children: [
-                                TextSpan(text: "Don’t have an account? "),
-                                TextSpan(
-                                  text: "Sign Up",
-                                  style: TextStyle(
-                                    color: Colors.orange,
-                                    decoration: TextDecoration.underline,
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SigninScreen(),
                                   ),
-                                  recognizer: TapGestureRecognizer()
-                                    ..onTap = () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const SigninScreen(),
-                                        ),
-                                      );
-                                    },
-                                ),
-                              ],
-                            ),
+                                );
+                              },
                           ),
-
-                          SizedBox(height: isTablet ? 60 : 30),
                         ],
                       ),
                     ),
+
+                    SizedBox(height: isTablet ? 60 : 30),
                   ],
                 ),
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
     );
   }
