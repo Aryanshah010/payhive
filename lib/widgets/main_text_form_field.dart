@@ -27,10 +27,10 @@ class MainTextFormField extends StatelessWidget {
     final w = MediaQuery.of(context).size.width;
     final bool isTablet = w >= 600;
 
-    final double labelFont = isTablet ? 26 : 18;
-    final double hintFont = isTablet ? 22 : 16;
-    final double iconSize = isTablet ? 28 : 22;
-    final double errorFont = isTablet ? 18 : 14;
+    final double labelFont = isTablet ? 26 : 16;
+    final double hintFont = isTablet ? 22 : 14;
+    final double iconSize = isTablet ? 28 : 20;
+    final double errorFont = isTablet ? 18 : 12;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +44,7 @@ class MainTextFormField extends StatelessWidget {
           ),
         ),
 
-        SizedBox(height: isTablet ? 8 : 4),
+        SizedBox(height: isTablet ? 8 : 2),
 
         TextFormField(
           controller: controller,

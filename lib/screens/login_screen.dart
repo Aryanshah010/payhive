@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/screens/dashboard_screen.dart';
 import 'package:payhive/screens/signin_screen.dart';
 import 'package:payhive/utils/validator_util.dart';
 import 'package:payhive/widgets/main_text_form_field.dart';
@@ -24,10 +25,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final isTablet = width >= 600;
 
     final double horizontalPadding = isTablet ? 48 : 16;
-    final double verticalSpacing = isTablet ? 28 : 20;
+    final double verticalSpacing = isTablet ? 28 : 16;
     final double imageHeight = isTablet ? 260 : 190;
     final double imageWidth = isTablet ? 300 : 228;
-    final double titleFontSize = isTablet ? 32 : 24;
+    final double titleFontSize = isTablet ? 32 : 20;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -36,8 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: Column(
             children: [
-              SizedBox(height: isTablet ? 60 : 30),
-
               Image.asset(
                 'assets/images/payhive.png',
                 height: imageHeight,
@@ -113,18 +112,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     PrimaryButtonWidget(
                       onPressed: () {
-                        if (_formKey.currentState?.validate() == true) {}
+                        if (_formKey.currentState?.validate() == true) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DashboardScreen(),
+                            ),
+                          );
+                        }
                       },
                       text: "Login",
                     ),
 
-                    SizedBox(height: isTablet ? 40 : 36),
+                    SizedBox(height: isTablet ? 26 : 16),
 
                     RichText(
                       text: TextSpan(
                         style: TextStyle(
                           color: Color(0xFF7A7A7A),
-                          fontSize: isTablet ? 20 : 16,
+                          fontSize: isTablet ? 20 : 14,
                           fontWeight: FontWeight.w500,
                         ),
                         children: [

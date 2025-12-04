@@ -29,10 +29,10 @@ class _SigninScreenState extends State<SigninScreen> {
           final bool isTablet = constraints.maxWidth >= 600;
 
           final double horizontalPadding = isTablet ? 48 : 16;
-          final double verticalSpacing = isTablet ? 28 : 20;
+          final double verticalSpacing = isTablet ? 28 : 16;
           final double imageHeight = isTablet ? 260 : 190;
           final double imageWidth = isTablet ? 300 : 228;
-          final double titleFontSize = isTablet ? 32 : 24;
+          final double titleFontSize = isTablet ? 32 : 20;
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -40,7 +40,6 @@ class _SigninScreenState extends State<SigninScreen> {
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Column(
                   children: [
-                    SizedBox(height: isTablet ? 50 : 24),
 
                     Center(
                       child: Image.asset(
@@ -50,8 +49,6 @@ class _SigninScreenState extends State<SigninScreen> {
                         color: Colors.orange,
                       ),
                     ),
-
-                    SizedBox(height: verticalSpacing),
 
                     Text(
                       "Create Your Payhive Account",
@@ -154,13 +151,13 @@ class _SigninScreenState extends State<SigninScreen> {
                             text: "Sign Up",
                           ),
 
-                          SizedBox(height: isTablet ? 40 : 36),
+                          SizedBox(height: isTablet ? 36 : 16),
 
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
                                 color: Color(0xFF7A7A7A),
-                                fontSize: isTablet ? 20 : 16,
+                                fontSize: isTablet ? 20 : 14,
                                 fontWeight: FontWeight.w500,
                               ),
                               children: [
