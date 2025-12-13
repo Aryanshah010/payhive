@@ -15,28 +15,16 @@ class PrimaryButtonWidget extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
 
-    final double buttonHeight = isTablet ? 62 : 52;
-    final double fontSize = isTablet ? 20 : 16;
-    final double horizontalPadding = isTablet ? 40 : 20;
-
     return SizedBox(
       width: double.infinity,
+      height: isTablet ? 70 : 52, 
       child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 255, 107, 0),
-          minimumSize: Size(double.infinity, buttonHeight),
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
         onPressed: onPressed,
         child: Text(
           text,
           style: TextStyle(
-            color: Colors.black,
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
+            fontSize: isTablet ? 24 : 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

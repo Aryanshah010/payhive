@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/theme/colors.dart';
 
 class MainTextFormField extends StatelessWidget {
   const MainTextFormField({
@@ -37,11 +38,7 @@ class MainTextFormField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: labelFont,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
+          style: TextStyle(fontSize: labelFont, fontWeight: FontWeight.w500),
         ),
 
         SizedBox(height: isTablet ? 8 : 2),
@@ -55,25 +52,11 @@ class MainTextFormField extends StatelessWidget {
           decoration: InputDecoration(
             errorStyle: TextStyle(fontSize: errorFont),
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: Colors.grey, size: iconSize)
+                ? Icon(prefixIcon, color: AppColors.greyText, size: iconSize)
                 : null,
             suffixIcon: suffixIcon,
             hintText: hintText,
-            hintStyle: TextStyle(fontSize: hintFont, color: Colors.grey),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color.fromARGB(255, 230, 230, 230),
-                width: 2,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Color.fromARGB(255, 255, 230, 204),
-                width: 2,
-              ),
-            ),
+            hintStyle: TextStyle(fontSize: hintFont, color:  AppColors.greyText),
           ),
         ),
       ],

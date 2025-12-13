@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/theme/colors.dart';
 
 class OnBoardingWidget extends StatelessWidget {
   const OnBoardingWidget({
@@ -34,9 +35,9 @@ class OnBoardingWidget extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: TextStyle(
+              fontFamily: "Poppins",
               fontSize: titleSize,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
             ),
           ),
 
@@ -47,8 +48,8 @@ class OnBoardingWidget extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: subtitleSize,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
+              color: AppColors.greyText,
+              fontWeight: FontWeight.w600,
               height: 1.4,
             ),
           ),

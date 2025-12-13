@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/screens/dashboard_screen.dart';
 import 'package:payhive/screens/signin_screen.dart';
+import 'package:payhive/theme/colors.dart';
 import 'package:payhive/utils/validator_util.dart';
 import 'package:payhive/widgets/main_text_form_field.dart';
 import 'package:payhive/widgets/primary_button_widget.dart';
@@ -28,10 +29,9 @@ class _LoginScreenState extends State<LoginScreen> {
     final double verticalSpacing = isTablet ? 28 : 16;
     final double imageHeight = isTablet ? 260 : 190;
     final double imageWidth = isTablet ? 300 : 228;
-    final double titleFontSize = isTablet ? 32 : 20;
+    final double titleFontSize = isTablet ? 32 : 24;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -49,7 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 "Welcome to Payhive",
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w700,
                   fontSize: titleFontSize,
                 ),
               ),
@@ -83,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _obscurePassword
                               ? Icons.visibility_off
                               : Icons.visibility,
-                          color: Colors.grey,
+                          color: AppColors.greyText,
                         ),
                         onPressed: () => setState(
                           () => _obscurePassword = !_obscurePassword,
@@ -99,10 +100,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           "Forget Password?",
                           style: TextStyle(
                             fontSize: isTablet ? 18 : 14,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                             decoration: TextDecoration.underline,
-                            decorationColor: Colors.orange,
-                            color: Colors.orange,
+                            decorationColor: AppColors.primary,
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
@@ -129,16 +130,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     RichText(
                       text: TextSpan(
                         style: TextStyle(
-                          color: Color(0xFF7A7A7A),
+                        color: AppColors.greyText,
                           fontSize: isTablet ? 20 : 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
                         ),
                         children: [
                           TextSpan(text: "Don’t have an account? "),
                           TextSpan(
                             text: "Sign Up",
                             style: TextStyle(
-                              color: Colors.orange,
+                              color: AppColors.primary,
                               decoration: TextDecoration.underline,
                             ),
                             recognizer: TapGestureRecognizer()
