@@ -22,10 +22,7 @@ class AppTheme {
 
     scaffoldBackgroundColor: AppColors.backgroundLight,
 
-    iconTheme: const IconThemeData(
-      size: 24,
-      color: AppColors.primary,
-    ),
+    iconTheme: const IconThemeData(size: 24, color: AppColors.primary),
 
     appBarTheme: const AppBarTheme(
       centerTitle: true,
@@ -51,26 +48,17 @@ class AppTheme {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.primary,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
 
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.danger,
-          width: 1.2,
-        ),
+        borderSide: const BorderSide(color: AppColors.danger, width: 1.2),
       ),
 
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.danger,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
       ),
     ),
 
@@ -79,9 +67,7 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
 
@@ -89,20 +75,13 @@ class AppTheme {
       color: Colors.white,
       elevation: 4,
       shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
 
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: Colors.white,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: Colors.grey,
-      elevation: 8,
+    bottomAppBarTheme: BottomAppBarThemeData(
+      color: AppColors.primaryLight,
     ),
   );
-
-
 
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
@@ -120,10 +99,7 @@ class AppTheme {
 
     scaffoldBackgroundColor: AppColors.backgroundDark,
 
-    iconTheme: const IconThemeData(
-      size: 24,
-      color: Colors.white70,
-    ),
+    iconTheme: const IconThemeData(size: 24, color: Colors.white70),
 
     appBarTheme: const AppBarTheme(
       centerTitle: true,
@@ -141,34 +117,22 @@ class AppTheme {
 
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: Colors.white.withOpacity(0.12),
-          width: 1,
-        ),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.12), width: 1),
       ),
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.primary,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
 
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.danger,
-          width: 1.2,
-        ),
+        borderSide: const BorderSide(color: AppColors.danger, width: 1.2),
       ),
 
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppColors.danger,
-          width: 1.5,
-        ),
+        borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
       ),
     ),
 
@@ -177,9 +141,7 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
 
@@ -187,16 +149,11 @@ class AppTheme {
       color: AppColors.backgroundDarkSecondary,
       elevation: 4,
       shadowColor: Colors.white.withOpacity(0.08),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.backgroundDarkSecondary,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: Colors.grey,
-      elevation: 8,
+    bottomAppBarTheme: BottomAppBarThemeData(
+      color: AppColors.backgroundDarkSecondary,
     ),
   );
 }
