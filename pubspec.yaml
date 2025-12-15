@@ -94,9 +94,10 @@ flutter:
           weight: 700
     
 flutter_native_splash:
-  color: "#ffe6cc"
+  color: "#FFFFFF"
   image: assets/images/payhive.png
   ios: true
+  android: true
 
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic

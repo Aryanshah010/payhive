@@ -27,8 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final double horizontalPadding = isTablet ? 48 : 16;
     final double verticalSpacing = isTablet ? 28 : 16;
-    final double imageHeight = isTablet ? 260 : 190;
-    final double imageWidth = isTablet ? 300 : 228;
+    final double imageHeight = isTablet ? 400 : 290;
+    final double imageWidth = isTablet ? 500 : 328;
     final double titleFontSize = isTablet ? 32 : 24;
 
     return Scaffold(
@@ -41,10 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 'assets/images/payhive.png',
                 height: imageHeight,
                 width: imageWidth,
-                color: Colors.orange,
               ),
-
-              SizedBox(height: verticalSpacing),
 
               Text(
                 "Welcome to Payhive",
@@ -101,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             fontSize: isTablet ? 18 : 14,
                             fontWeight: FontWeight.w400,
-                            decoration: TextDecoration.underline,
                             decorationColor: AppColors.primary,
                             color: AppColors.primary,
                           ),
@@ -109,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                    SizedBox(height: isTablet ? 40 : 30),
+                    SizedBox(height: isTablet ? 20 : 10),
 
                     PrimaryButtonWidget(
                       onPressed: () {
@@ -130,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     RichText(
                       text: TextSpan(
                         style: TextStyle(
-                        color: AppColors.greyText,
+                          color: AppColors.greyText,
                           fontSize: isTablet ? 20 : 14,
                           fontWeight: FontWeight.w400,
                         ),
@@ -138,10 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextSpan(text: "Don’t have an account? "),
                           TextSpan(
                             text: "Sign Up",
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              decoration: TextDecoration.underline,
-                            ),
+                            style: TextStyle(color: AppColors.primary),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
                                 Navigator.push(

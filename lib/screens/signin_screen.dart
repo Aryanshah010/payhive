@@ -30,8 +30,8 @@ class _SigninScreenState extends State<SigninScreen> {
 
           final double horizontalPadding = isTablet ? 48 : 16;
           final double verticalSpacing = isTablet ? 28 : 16;
-          final double imageHeight = isTablet ? 260 : 190;
-          final double imageWidth = isTablet ? 300 : 228;
+          final double imageHeight = isTablet ? 400 : 290;
+          final double imageWidth = isTablet ? 500 : 328;
           final double titleFontSize = isTablet ? 32 : 24;
 
           return SafeArea(
@@ -40,13 +40,11 @@ class _SigninScreenState extends State<SigninScreen> {
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Column(
                   children: [
-
                     Center(
                       child: Image.asset(
                         'assets/images/payhive.png',
                         height: imageHeight,
                         width: imageWidth,
-                        color: Colors.orange,
                       ),
                     ),
 
@@ -136,7 +134,7 @@ class _SigninScreenState extends State<SigninScreen> {
                             ),
                           ),
 
-                          SizedBox(height: verticalSpacing),
+                          SizedBox(height: isTablet ? 60 : 30),
 
                           PrimaryButtonWidget(
                             onPressed: () {
@@ -165,10 +163,7 @@ class _SigninScreenState extends State<SigninScreen> {
                                 TextSpan(text: "Already have an account? "),
                                 TextSpan(
                                   text: "Login",
-                                  style: TextStyle(
-                                    color: AppColors.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
+                                  style: TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       Navigator.push(

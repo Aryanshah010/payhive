@@ -23,7 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final bottomSpacing = w * 0.04;
     final bottomPadding = EdgeInsets.symmetric(horizontal: w * 0.05);
-    final buttonFontSize = w * 0.04;
+    final buttonFontSize = w * 0.03;
     final dotSize = w > 600 ? 12.0 : 8.0;
 
     return Scaffold(
