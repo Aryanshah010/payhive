@@ -18,20 +18,22 @@ class NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : AppColors.greyText;
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
 
     return InkWell(
       onTap: onTap,
       child: SizedBox(
-        height: 48, 
+        height: isTablet ? 84 : 48,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 22, color: color),
-            const SizedBox(height: 2),
+            Icon(icon, size: isTablet ? 36 : 22, color: color),
+            SizedBox(height: isTablet ? 4 : 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: isTablet ? 18 : 11,
                 fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                 color: color,
               ),

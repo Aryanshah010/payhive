@@ -14,24 +14,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
 
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        elevation: 6,
-        shape: const CircleBorder(),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.darkText,
-        child: const Icon(Icons.qr_code),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Dashboard',
+          style: TextStyle(fontSize: isTablet ? 30 : 20),
+        ),
       ),
 
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: isTablet
+          ? FloatingActionButton.large(
+              onPressed: () {},
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.darkText,
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.qr_code, size: 52),
+            )
+          : FloatingActionButton(
+              onPressed: () {},
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.darkText,
+              elevation: 4,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.qr_code, size: 24),
+            ),
+
       bottomNavigationBar: BottomAppBar(
-        height: 64, 
+        height: isTablet ? 90 : 64,
         elevation: 1,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 6,
+        notchMargin: isTablet?8:6,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
