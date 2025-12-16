@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/screens/dashboard_screen.dart';
-// import 'package:payhive/screens/onboarding_screen.dart';
 import 'package:payhive/theme/app_theme.dart';
 
 class App extends StatelessWidget {

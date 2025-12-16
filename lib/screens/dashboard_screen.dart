@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/theme/colors.dart';
 import 'package:payhive/widgets/nav_item_widgets.dart';
+import 'package:payhive/widgets/quick_action_btn_widgets.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,10 +19,99 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isTablet = width >= 600;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Dashboard',
-          style: TextStyle(fontSize: isTablet ? 30 : 20),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Image.asset("assets/images/inAppLogo.png", width: 120),
+                    Icon(Icons.notifications_none_outlined),
+                  ],
+                ),
+
+                SizedBox(height: 8),
+
+                Container(
+                  height: 240,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28.0),
+                    boxShadow: [
+                      BoxShadow(
+                        offset: Offset(0, 4),
+                        blurRadius: 4,
+                        color: Colors.black.withValues(alpha: 0.3),
+                      ),
+                    ],
+                  ),
+
+                  clipBehavior: Clip.antiAlias,
+
+                  child: Column(
+                    children: [
+                      Expanded(
+                        flex: 5,
+                        child: Container(
+                          color: AppColors.primary,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Your Balance",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                Text(
+                                  "NPR 12,800.00",
+                                  style: TextStyle(
+                                    fontFamily: "Poppins",
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Expanded(
+                        flex: 4,
+                        child: Container(
+                          color: AppColors.primaryLight,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              QuickActionBtn(
+                                icon: Icons.arrow_upward,
+                                label: 'Send\nMoney',
+                              ),
+                              QuickActionBtn(
+                                icon: Icons.arrow_downward,
+                                label: 'Request\nMoney',
+                              ),
+                              QuickActionBtn(
+                                icon: Icons.account_balance,
+                                label: 'Bank\nTransfer',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
 
@@ -48,7 +138,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         height: isTablet ? 90 : 64,
         elevation: 1,
         shape: const CircularNotchedRectangle(),
-        notchMargin: isTablet?8:6,
+        notchMargin: isTablet ? 8 : 6,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [

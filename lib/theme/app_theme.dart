@@ -22,7 +22,7 @@ class AppTheme {
 
     scaffoldBackgroundColor: AppColors.backgroundLight,
 
-    iconTheme: const IconThemeData(size: 24, color: AppColors.primary),
+    iconTheme: const IconThemeData(size: 24, color: AppColors.greyText),
 
     appBarTheme: const AppBarTheme(
       centerTitle: true,
@@ -76,12 +76,10 @@ class AppTheme {
       color: Colors.white,
       elevation: 4,
       shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
 
-    bottomAppBarTheme: BottomAppBarThemeData(
-      color: AppColors.primaryLight,
-    ),
+    bottomAppBarTheme: BottomAppBarThemeData(color: AppColors.primaryLight),
   );
 
   static ThemeData darkTheme = ThemeData(
@@ -100,7 +98,7 @@ class AppTheme {
 
     scaffoldBackgroundColor: AppColors.backgroundDark,
 
-    iconTheme: const IconThemeData(size: 24, color: Colors.white70),
+    iconTheme: const IconThemeData(size: 24, color: AppColors.greyText),
 
     appBarTheme: const AppBarTheme(
       centerTitle: true,
