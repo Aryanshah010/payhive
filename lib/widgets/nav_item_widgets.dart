@@ -22,7 +22,7 @@ class NavItem extends StatelessWidget {
     final isTablet = width >= 600;
 
     return InkWell(
-      onTap: onTap,
+      onTap: onTap, 
       child: SizedBox(
         height: isTablet ? 84 : 48,
         child: Column(
@@ -34,7 +34,7 @@ class NavItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: isTablet ? 18 : 11,
-                fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: color,
               ),
             ),

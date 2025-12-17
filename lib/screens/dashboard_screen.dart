@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:payhive/theme/colors.dart';
 import 'package:payhive/widgets/nav_item_widgets.dart';
 import 'package:payhive/widgets/quick_action_btn_widgets.dart';
+import 'package:payhive/widgets/service_tile_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -43,8 +44,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     boxShadow: [
                       BoxShadow(
                         offset: Offset(0, 4),
-                        blurRadius: 4,
-                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        color: const Color.fromARGB(
+                          255,
+                          41,
+                          41,
+                          41,
+                        ).withValues(alpha: 0.8),
                       ),
                     ],
                   ),
@@ -109,6 +115,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
+
+                SizedBox(height: 32),
+
+                Container(
+                  width: double.infinity,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.greyText, width: 1),
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Services",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: "Poppins",
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        SizedBox(height: 16),
+
+                        GridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 2.6,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            ServiceTile(
+                              icon: Icons.network_cell,
+                              label: "Recharge",
+                            ),
+                            ServiceTile(icon: Icons.wifi, label: "Internet"),
+                            ServiceTile(icon: Icons.flight, label: "Flights"),
+                            ServiceTile(icon: Icons.hotel, label: "Hotels"),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -163,6 +216,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               isSelected: selectedIndex == 2,
               onTap: () => setState(() => selectedIndex = 2),
             ),
+
             NavItem(
               icon: Icons.person,
               label: 'Profile',
