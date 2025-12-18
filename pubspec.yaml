@@ -61,13 +61,9 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-      - assets/images/payhive.png
+      - assets/images/
       - assets/images/on_boarding_images/
 
-flutter_native_splash:
-  color: "#ffe6cc"
-  image: assets/images/payhive.png
-  ios: true
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -80,10 +76,29 @@ flutter_native_splash:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+    
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/payhive.png
+  ios: true
+  android: true
+
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

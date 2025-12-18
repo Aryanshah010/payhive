@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/theme/colors.dart';
 import 'package:payhive/widgets/on_boarding_widget.dart';
 import 'package:payhive/widgets/primary_button_widget.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -22,11 +23,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final bottomSpacing = w * 0.04;
     final bottomPadding = EdgeInsets.symmetric(horizontal: w * 0.05);
-    final buttonFontSize = w * 0.04;
+    final buttonFontSize = w * 0.03;
     final dotSize = w > 600 ? 12.0 : 8.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
@@ -96,7 +96,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               "Skip",
                               style: TextStyle(
                                 fontSize: buttonFontSize,
-                                color: Colors.grey,
+                                color: AppColors.greyText,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -106,8 +106,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             controller: _pageController,
                             count: 4,
                             effect: ExpandingDotsEffect(
-                              activeDotColor: const Color(0xFFFF6B00),
-                              dotColor: Colors.grey,
+                              activeDotColor: AppColors.primary,
+                              dotColor: AppColors.greyText,
                               dotHeight: dotSize,
                               dotWidth: dotSize,
                               expansionFactor: 3,
@@ -125,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               "Next",
                               style: TextStyle(
                                 fontSize: buttonFontSize,
-                                color: const Color(0xFFFF6B00),
+                                color:  AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/screens/login_screen.dart';
+import 'package:payhive/theme/colors.dart';
 import 'package:payhive/utils/validator_util.dart';
 import 'package:payhive/widgets/main_text_form_field.dart';
 import 'package:payhive/widgets/primary_button_widget.dart';
@@ -23,16 +24,15 @@ class _SigninScreenState extends State<SigninScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final bool isTablet = constraints.maxWidth >= 600;
 
           final double horizontalPadding = isTablet ? 48 : 16;
           final double verticalSpacing = isTablet ? 28 : 16;
-          final double imageHeight = isTablet ? 260 : 190;
-          final double imageWidth = isTablet ? 300 : 228;
-          final double titleFontSize = isTablet ? 32 : 20;
+          final double imageHeight = isTablet ? 400 : 290;
+          final double imageWidth = isTablet ? 500 : 328;
+          final double titleFontSize = isTablet ? 32 : 24;
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -40,20 +40,19 @@ class _SigninScreenState extends State<SigninScreen> {
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Column(
                   children: [
-
                     Center(
                       child: Image.asset(
                         'assets/images/payhive.png',
                         height: imageHeight,
                         width: imageWidth,
-                        color: Colors.orange,
                       ),
                     ),
 
                     Text(
                       "Create Your Payhive Account",
                       style: TextStyle(
-                        fontWeight: FontWeight.bold,
+                        fontFamily: "Poppins",
+                        fontWeight: FontWeight.w700,
                         fontSize: titleFontSize,
                       ),
                     ),
@@ -135,7 +134,7 @@ class _SigninScreenState extends State<SigninScreen> {
                             ),
                           ),
 
-                          SizedBox(height: verticalSpacing),
+                          SizedBox(height: isTablet ? 60 : 30),
 
                           PrimaryButtonWidget(
                             onPressed: () {
@@ -156,18 +155,15 @@ class _SigninScreenState extends State<SigninScreen> {
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                color: Color(0xFF7A7A7A),
+                                color: AppColors.greyText,
                                 fontSize: isTablet ? 20 : 14,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w400,
                               ),
                               children: [
                                 TextSpan(text: "Already have an account? "),
                                 TextSpan(
                                   text: "Login",
-                                  style: TextStyle(
-                                    color: Colors.orange,
-                                    decoration: TextDecoration.underline,
-                                  ),
+                                  style: TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
                                       Navigator.push(
