@@ -8,6 +8,11 @@ class QuickActionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+
+    final double circleHW = isTablet ? 72 : 46;
+
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () {},
@@ -15,23 +20,28 @@ class QuickActionBtn extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: circleHW,
+            height: circleHW,
             decoration: BoxDecoration(
               color: AppColors.backgroundDarkSecondary,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.primary, size: 24),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: isTablet ? 36 : 24,
+            ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: isTablet?8:4),
+
           Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: isTablet?16:12,
               fontWeight: FontWeight.w600,
               height: 1.2,
-              color: AppColors.darkText
+              color: AppColors.darkText,
             ),
           ),
         ],

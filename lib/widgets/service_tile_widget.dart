@@ -9,8 +9,17 @@ class ServiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+
+    final double horizontalPadding = isTablet ? 24 : 12;
+    final double verticalPadding = isTablet ? 24 : 12;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       decoration: BoxDecoration(
         border: Border.all(color: AppColors.primary, width: 1),
         borderRadius: BorderRadius.circular(4),
@@ -18,11 +27,13 @@ class ServiceTile extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Icon(icon, size: 24, color: AppColors.primary),
-          const SizedBox(width: 16),
+          Icon(icon, size: isTablet ? 36 : 24, color: AppColors.primary),
           Text(
             label,
-            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: isTablet ? 24 : 16,
+            ),
           ),
         ],
       ),

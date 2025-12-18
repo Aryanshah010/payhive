@@ -8,28 +8,31 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final width = MediaQuery.of(context).size.width;
-    // final isTablet = width >= 600;
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+
+    final double horizontalPadding = isTablet ? 48 : 24;
+    final double imageWidth = isTablet ? 220 : 120;
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+            padding: EdgeInsets.symmetric(horizontal:horizontalPadding),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Image.asset("assets/images/inAppLogo.png", width: 120),
-                    Icon(Icons.notifications_none_outlined),
+                    Image.asset("assets/images/inAppLogo.png", width: imageWidth),
+                    Icon(Icons.notifications_none_outlined,size: isTablet?36:24,),
                   ],
                 ),
 
-                SizedBox(height: 8),
+                SizedBox(height: isTablet?16:8),
 
                 Container(
-                  height: 240,
+                  height: isTablet?340:240,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28.0),
@@ -51,14 +54,14 @@ class HomeScreen extends StatelessWidget {
                                   "Your Balance",
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: 20,
+                                    fontSize: isTablet?28:20,
                                   ),
                                 ),
                                 Text(
                                   "NPR 12,800.00",
                                   style: TextStyle(
                                     fontFamily: "Poppins",
-                                    fontSize: 32,
+                                    fontSize: isTablet?42:32,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: -0.5,
                                   ),
@@ -96,17 +99,16 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: 32),
+                SizedBox(height: isTablet?48:32),
 
                 Container(
                   width: double.infinity,
-                  height: 240,
                   decoration: BoxDecoration(
                     border: Border.all(color: AppColors.greyText, width: 1),
                     borderRadius: BorderRadius.circular(16.0),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(isTablet?32:16),
                     child: Column(
                       children: [
                         Text(
@@ -114,18 +116,18 @@ class HomeScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: "Poppins",
-                            fontSize: 20,
+                            fontSize: isTablet?32:20,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
 
-                        SizedBox(height: 16),
+                        SizedBox(height: isTablet?24:16),
 
                         GridView.count(
                           crossAxisCount: 2,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 2.6,
+                          mainAxisSpacing: 20,
+                          crossAxisSpacing: 20,
+                          childAspectRatio: 3.2,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           children: [
