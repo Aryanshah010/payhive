@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/theme/colors.dart';
+import 'package:payhive/app/theme/colors.dart';
 
 class ServiceTile extends StatelessWidget {
   const ServiceTile({super.key, required this.icon, required this.label});

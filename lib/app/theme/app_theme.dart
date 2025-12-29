@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
-import 'package:payhive/theme/colors.dart';
+import 'colors.dart';
 
 class AppTheme {
   AppTheme._();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/theme/colors.dart';
+import 'package:payhive/app/theme/colors.dart';
 
 class NavItem extends StatelessWidget {
   final IconData icon;

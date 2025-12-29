@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/theme/colors.dart';
-import 'package:payhive/widgets/on_boarding_widget.dart';
-import 'package:payhive/widgets/primary_button_widget.dart';
+import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/widgets/primary_button_widget.dart';
+import 'package:payhive/features/onboarding/presentation/widgets/on_boarding_widget.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'signin_screen.dart';
+import '../../../auth/presentation/pages/signin_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

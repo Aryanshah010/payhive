@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/theme/colors.dart';
-import 'package:payhive/widgets/quick_action_btn_widgets.dart';
-import 'package:payhive/widgets/service_tile_widget.dart';
+import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
+import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});

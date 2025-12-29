@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/screens/dashboard_screen.dart';
-import 'package:payhive/screens/signin_screen.dart';
-import 'package:payhive/theme/colors.dart';
-import 'package:payhive/utils/validator_util.dart';
-import 'package:payhive/widgets/main_text_form_field.dart';
-import 'package:payhive/widgets/primary_button_widget.dart';
+import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/validator_util.dart';
+import 'package:payhive/core/widgets/main_text_form_field.dart';
+import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:flutter/gestures.dart';
+import 'package:payhive/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:payhive/features/auth/presentation/pages/signin_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

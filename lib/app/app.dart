@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/screens/dashboard_screen.dart';
-import 'package:payhive/theme/app_theme.dart';
+import 'package:payhive/app/theme/app_theme.dart';
+import 'package:payhive/features/onboarding/presentation/pages/onboarding_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -12,7 +12,7 @@ class App extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: DashboardScreen(),
+      home: OnboardingScreen(),
     );
   }
 }
