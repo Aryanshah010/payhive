@@ -21,6 +21,15 @@ class _SigninScreenState extends State<SigninScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
 
+   @override
+  void dispose() {
+    _fullnameController.dispose();
+    _phoneController.dispose();
+    _createPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
