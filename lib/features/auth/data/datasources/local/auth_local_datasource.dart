@@ -43,4 +43,14 @@ class AuthLocalDatasource implements IAuthDataSource {
       return Future.value(false);
     }
   }
+
+  @override
+  Future<AuthHiveModel?> getUserByPhoneNumber(String phoneNumber) async {
+    try {
+      final user = await _hiveService.getUserByPhoneNumber(phoneNumber);
+      return Future.value(user);
+    } catch (e) {
+      return Future.value(null);
+    }
+  }
 }

@@ -4,4 +4,5 @@ abstract interface class IAuthDataSource{
   Future<bool> registerUser(AuthHiveModel model);
   Future<AuthHiveModel?> login(String phoneNumber,String password);
   Future<bool> isPhoneNumberExists(String phoneNumber);
+  Future<AuthHiveModel?> getUserByPhoneNumber(String phoneNumber);
 }

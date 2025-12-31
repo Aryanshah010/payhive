@@ -52,6 +52,16 @@ class HiveService {
     return null;
   }
 
+  Future<AuthHiveModel?> getUserByPhoneNumber(String phoneNumber) async {
+    final users = _authBox.values.where(
+      (user) => user.phoneNumber == phoneNumber,
+    );
+    if (users.isNotEmpty) {
+      return users.first;
+    }
+    return null;
+  }
+
   bool isPhoneNumberExists(String phoneNumber) {
     final users = _authBox.values.where(
       (user) => user.phoneNumber == phoneNumber,
