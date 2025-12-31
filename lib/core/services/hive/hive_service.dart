@@ -1,7 +1,13 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:payhive/core/constants/hive_table_constants.dart';
 import 'package:payhive/features/auth/data/models/auth_hive_model.dart';
+
+final hiveServiceProvider = Provider<HiveService>((ref) {
+  final hiveService = HiveService();
+  return hiveService;
+});
 
 class HiveService {
   Future<void> init() async {
@@ -44,5 +50,12 @@ class HiveService {
       return users.first;
     }
     return null;
+  }
+
+  bool isPhoneNumberExists(String phoneNumber) {
+    final users = _authBox.values.where(
+      (user) => user.phoneNumber == phoneNumber,
+    );
+    return users.isNotEmpty;
   }
 }

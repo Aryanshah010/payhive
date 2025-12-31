@@ -9,4 +9,5 @@ abstract interface class IAuthRepository {
     String phoneNumber,
     String password,
   );
+  Future<Either<Failure, bool>> isPhoneNumberExists(String phoneNumber);
 }
