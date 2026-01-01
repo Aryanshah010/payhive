@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/features/auth/presentation/pages/login_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/core/widgets/main_text_form_field.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:flutter/gestures.dart';
+import 'package:payhive/features/auth/presentation/pages/login_page.dart';
+import 'package:payhive/features/auth/presentation/state/auth_state.dart';
+import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 
-class SigninScreen extends StatefulWidget {
-  const SigninScreen({super.key});
+
+
+class SignupPage extends ConsumerStatefulWidget {
+  const SignupPage({super.key});
 
   @override
-  State<SigninScreen> createState() => _SigninScreenState();
+  ConsumerState<SignupPage> createState() => _SignupPageState();
 }
 
-class _SigninScreenState extends State<SigninScreen> {
+class _SignupPageState extends ConsumerState<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullnameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -21,7 +27,7 @@ class _SigninScreenState extends State<SigninScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
 
-   @override
+  @override
   void dispose() {
     _fullnameController.dispose();
     _phoneController.dispose();
@@ -30,8 +36,36 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
+  Future<void> _handleSignUp() async {
+    if (_formKey.currentState!.validate()) {
+      ref
+          .read(authViewModelProvider.notifier)
+          .register(
+            phoneNumber: _phoneController.text,
+            password: _createPasswordController.text,
+            fullName: _fullnameController.text,
+          );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
+
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.error) {
+        SnackbarUtil.showError(
+          context,
+          next.errorMessage ?? 'Registration failed. Please try again.',
+        );
+      } else if (next.status == AuthStatus.registered) {
+        SnackbarUtil.showSuccess(
+          context,
+          next.errorMessage ?? 'Registration successful!',
+        );
+      }
+    });
+
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -146,17 +180,10 @@ class _SigninScreenState extends State<SigninScreen> {
                           SizedBox(height: isTablet ? 60 : 30),
 
                           PrimaryButtonWidget(
-                            onPressed: () {
-                              if (_formKey.currentState?.validate() == true) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => LoginScreen(),
-                                  ),
-                                );
-                              }
-                            },
+                            onPressed: _handleSignUp,
                             text: "Sign Up",
+                            isLoading:
+                                authState.status == AuthStatus.loading,
                           ),
 
                           SizedBox(height: isTablet ? 36 : 16),
@@ -179,7 +206,7 @@ class _SigninScreenState extends State<SigninScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              const LoginScreen(),
+                                              const LoginPage(),
                                         ),
                                       );
                                     },

@@ -5,16 +5,16 @@ import 'package:payhive/core/widgets/main_text_form_field.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:flutter/gestures.dart';
 import 'package:payhive/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:payhive/features/auth/presentation/pages/signin_screen.dart';
+import 'package:payhive/features/auth/presentation/pages/signup_page.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SigninScreen(),
+                                    builder: (context) => const SignupPage(),
                                   ),
                                 );
                               },

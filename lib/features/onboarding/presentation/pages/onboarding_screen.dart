@@ -3,7 +3,7 @@ import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/onboarding/presentation/widgets/on_boarding_widget.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../../../auth/presentation/pages/signin_screen.dart';
+import '../../../auth/presentation/pages/signup_page.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -76,7 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const SigninScreen(),
+                              builder: (context) => const SignupPage(),
                             ),
                           );
                         },
