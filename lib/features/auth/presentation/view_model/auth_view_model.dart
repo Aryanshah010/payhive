@@ -54,6 +54,7 @@ class AuthViewModel extends Notifier<AuthState> {
     required String password,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
+    await Future.delayed(const Duration(seconds: 2));
     final params = LoginUsecaseParams(
       phoneNumber: phoneNumber,
       password: password,

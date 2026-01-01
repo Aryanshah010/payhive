@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/core/widgets/main_text_form_field.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:flutter/gestures.dart';
+import 'package:payhive/features/auth/presentation/state/auth_state.dart';
+import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:payhive/features/auth/presentation/pages/signup_page.dart';
 
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -27,6 +31,17 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      await ref
+          .read(authViewModelProvider.notifier)
+          .login(
+            phoneNumber: _phoneController.text,
+            password: _passwordController.text.trim(),
+          );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -37,6 +52,19 @@ class _LoginPageState extends State<LoginPage> {
     final double imageHeight = isTablet ? 400 : 290;
     final double imageWidth = isTablet ? 500 : 328;
     final double titleFontSize = isTablet ? 32 : 24;
+
+    final authState = ref.watch(authViewModelProvider);
+
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+      if (next.status == AuthStatus.error && next.errorMessage != null) {
+        SnackbarUtil.showError(context, next.errorMessage!);
+      } else if (next.status == AuthStatus.authenticated) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => DashboardScreen()),
+        );
+      }
+    });
 
     return Scaffold(
       body: SafeArea(
@@ -115,16 +143,8 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(height: isTablet ? 20 : 10),
 
                     PrimaryButtonWidget(
-                      onPressed: () {
-                        if (_formKey.currentState?.validate() == true) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => DashboardScreen(),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _handleLogin,
+                      isLoading: authState.status == AuthStatus.loading,
                       text: "Login",
                     ),
 
