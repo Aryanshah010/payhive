@@ -1,7 +1,15 @@
 import 'package:equatable/equatable.dart';
 import 'package:payhive/features/auth/domain/entities/auth_entity.dart';
 
-enum AuthStatus { initial, loading, authenticated, unauthenticated,registered, error }
+enum AuthStatus {
+  initial,
+  loading,
+  authenticated,
+  unauthenticated,
+  registered,
+  error,
+}
+
 
 class AuthState extends Equatable {
   final AuthStatus status;
@@ -21,11 +29,11 @@ class AuthState extends Equatable {
   }) {
     return AuthState(
       status: status ?? this.status,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
       authEntity: authEntity ?? this.authEntity,
     );
   }
 
   @override
-  List<Object?> get props => [status, errorMessage, authEntity];  
+  List<Object?> get props => [status, errorMessage, authEntity];
 }

@@ -9,10 +9,10 @@ class AuthEntity extends Equatable {
   const AuthEntity({
     this.authId,
     required this.fullName,
-    this.password,
     required this.phoneNumber,
+    this.password,
   });
 
   @override
-  List<Object?> get props => [authId,fullName,password,phoneNumber];
+  List<Object?> get props => [authId, fullName, phoneNumber, password];
 }
