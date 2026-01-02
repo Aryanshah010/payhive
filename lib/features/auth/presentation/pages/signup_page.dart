@@ -10,8 +10,6 @@ import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/state/auth_state.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 
-
-
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
 
@@ -41,9 +39,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       ref
           .read(authViewModelProvider.notifier)
           .register(
+            fullName: _fullnameController.text,
             phoneNumber: _phoneController.text,
             password: _createPasswordController.text,
-            fullName: _fullnameController.text,
           );
     }
   }
@@ -182,8 +180,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           PrimaryButtonWidget(
                             onPressed: _handleSignUp,
                             text: "Sign Up",
-                            isLoading:
-                                authState.status == AuthStatus.loading,
+                            isLoading: authState.status == AuthStatus.loading,
                           ),
 
                           SizedBox(height: isTablet ? 36 : 16),

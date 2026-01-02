@@ -9,21 +9,22 @@ import 'package:payhive/features/auth/domain/repositories/auth_repository.dart';
 
 //provider
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
-  return AuthRepository(authDataSource: ref.read(authLocalDatasourceProvider));
+  final authDatasource = ref.read(authLocalDatasourceProvider);
+  return AuthRepository(authDatasource: authDatasource);
 });
 
 class AuthRepository implements IAuthRepository {
-  final IAuthDataSource _authDataSource;
+  final IAuthDatasource _authDatasource;
 
-  AuthRepository({required IAuthDataSource authDataSource})
-    : _authDataSource = authDataSource;
+  AuthRepository({required IAuthDatasource authDatasource})
+    : _authDatasource = authDatasource;
 
   @override
   Future<Either<Failure, AuthEntity>> getUserByPhoneNumber(
     String phoneNumber,
   ) async {
     try {
-      final result = await _authDataSource.getUserByPhoneNumber(phoneNumber);
+      final result = await _authDatasource.getUserByPhoneNumber(phoneNumber);
 
       if (result != null) {
         return Right(result.toEntity());
@@ -38,7 +39,7 @@ class AuthRepository implements IAuthRepository {
   @override
   Future<Either<Failure, bool>> isPhoneNumberExists(String phoneNumber) async {
     try {
-      final result = await _authDataSource.isPhoneNumberExists(phoneNumber);
+      final result = await _authDatasource.isPhoneNumberExists(phoneNumber);
       return Right(result);
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
@@ -51,9 +52,9 @@ class AuthRepository implements IAuthRepository {
     String password,
   ) async {
     try {
-      final result = await _authDataSource.login(phoneNumber, password);
-      if (result != null) {
-        final entity = result.toEntity();
+      final user = await _authDatasource.login(phoneNumber, password);
+      if (user != null) {
+        final entity = user.toEntity();
         return Right(entity);
       }
       return Left(
@@ -65,14 +66,14 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> registerUser(AuthEntity entity) async {
+  Future<Either<Failure, bool>> register(AuthEntity entity) async {
     try {
       final model = AuthHiveModel.fromEntity(entity);
-      final result = await _authDataSource.registerUser(model);
+      final result = await _authDatasource.register(model);
       if (result) {
         return Right(true);
       }
-      return Left(LocalDatabaseFailure(message: "Registration failed"));
+      return Left(LocalDatabaseFailure(message: "Failed to register user"));
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }

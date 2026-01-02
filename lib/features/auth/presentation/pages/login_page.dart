@@ -37,7 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           .read(authViewModelProvider.notifier)
           .login(
             phoneNumber: _phoneController.text,
-            password: _passwordController.text.trim(),
+            password: _passwordController.text,
           );
     }
   }
@@ -56,13 +56,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authViewModelProvider);
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
-      if (next.status == AuthStatus.error && next.errorMessage != null) {
-        SnackbarUtil.showError(context, next.errorMessage!);
-      } else if (next.status == AuthStatus.authenticated) {
+      if (next.status == AuthStatus.authenticated) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => DashboardScreen()),
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
+      } else if (next.status == AuthStatus.error && next.errorMessage != null) {
+        SnackbarUtil.showError(context, next.errorMessage!);
       }
     });
 

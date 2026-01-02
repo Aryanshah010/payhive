@@ -3,12 +3,13 @@ import 'package:payhive/core/services/hive/hive_service.dart';
 import 'package:payhive/features/auth/data/datasources/auth_datasource.dart';
 import 'package:payhive/features/auth/data/models/auth_hive_model.dart';
 
-final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
+final authLocalDatasourceProvider = Provider<IAuthDatasource>((ref) {
   final hiveService = ref.watch(hiveServiceProvider);
   return AuthLocalDatasource(hiveService: hiveService);
 });
 
-class AuthLocalDatasource implements IAuthDataSource {
+
+class AuthLocalDatasource implements IAuthDatasource {
   final HiveService _hiveService;
 
   AuthLocalDatasource({required HiveService hiveService})
@@ -17,7 +18,7 @@ class AuthLocalDatasource implements IAuthDataSource {
   @override
   Future<AuthHiveModel?> login(String phoneNumber, String password) async {
     try {
-      final user = await _hiveService.login(phoneNumber, password);
+      final user = await _hiveService.loginUser(phoneNumber, password);
       return Future.value(user);
     } catch (e) {
       return Future.value(null);
@@ -25,7 +26,7 @@ class AuthLocalDatasource implements IAuthDataSource {
   }
 
   @override
-  Future<bool> registerUser(AuthHiveModel model) async {
+  Future<bool> register(AuthHiveModel model) async {
     try {
       await _hiveService.registerUser(model);
       return Future.value(true);

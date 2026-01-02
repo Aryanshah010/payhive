@@ -17,12 +17,11 @@ class AuthViewModel extends Notifier<AuthState> {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(loginUsecaseProvider);
 
-    return const AuthState();
+    return  AuthState();
   }
 
   Future<void> register({
     required String phoneNumber,
-    String? authId,
     required String password,
     required String fullName,
   }) async {
@@ -31,7 +30,6 @@ class AuthViewModel extends Notifier<AuthState> {
     final params = RegisterUsecaseParams(
       fullName: fullName,
       phoneNumber: phoneNumber,
-      authId: authId,
       password: password,
     );
     final result = await _registerUsecase(params);
