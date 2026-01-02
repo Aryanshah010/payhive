@@ -3,7 +3,7 @@ import 'package:payhive/features/auth/domain/usecases/login_usecase.dart';
 import 'package:payhive/features/auth/domain/usecases/register_usecase.dart';
 import 'package:payhive/features/auth/presentation/state/auth_state.dart';
 
-//provider
+// Provider
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   () => AuthViewModel(),
 );
@@ -17,22 +17,31 @@ class AuthViewModel extends Notifier<AuthState> {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(loginUsecaseProvider);
 
-    return  AuthState();
+    return const AuthState();
   }
 
+  void clearStatus() {
+    state = const AuthState();
+  }
+
+  /// Register user
   Future<void> register({
     required String phoneNumber,
     required String password,
     required String fullName,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading);
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
     await Future.delayed(const Duration(seconds: 2));
+
     final params = RegisterUsecaseParams(
       fullName: fullName,
       phoneNumber: phoneNumber,
       password: password,
     );
+
     final result = await _registerUsecase(params);
+
     result.fold(
       (failure) {
         state = state.copyWith(
@@ -41,23 +50,30 @@ class AuthViewModel extends Notifier<AuthState> {
         );
       },
       (isRegistered) {
-        state = state.copyWith(status: AuthStatus.registered);
+        state = state.copyWith(
+          status: AuthStatus.registered,
+          errorMessage: null,
+        );
       },
     );
   }
 
-  //login
+  /// Login user
   Future<void> login({
     required String phoneNumber,
     required String password,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading);
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+
     await Future.delayed(const Duration(seconds: 2));
+
     final params = LoginUsecaseParams(
       phoneNumber: phoneNumber,
       password: password,
     );
+
     final result = await _loginUsecase(params);
+
     result.fold(
       (failure) {
         state = state.copyWith(
@@ -69,6 +85,7 @@ class AuthViewModel extends Notifier<AuthState> {
         state = state.copyWith(
           status: AuthStatus.authenticated,
           authEntity: authEntity,
+          errorMessage: null,
         );
       },
     );

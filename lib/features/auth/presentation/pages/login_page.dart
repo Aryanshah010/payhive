@@ -55,14 +55,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final authState = ref.watch(authViewModelProvider);
 
-    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+    ref.listen<AuthState>(authViewModelProvider, (prev, next) {
+      if (prev?.status == next.status) return;
+
+      if (next.status == AuthStatus.error && next.errorMessage != null) {
+        SnackbarUtil.showError(context, next.errorMessage!);
+      }
+
       if (next.status == AuthStatus.authenticated) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
         );
-      } else if (next.status == AuthStatus.error && next.errorMessage != null) {
-        SnackbarUtil.showError(context, next.errorMessage!);
       }
     });
 
@@ -164,10 +168,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             style: TextStyle(color: AppColors.primary),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
-                                Navigator.push(
+                                ref
+                                    .read(authViewModelProvider.notifier)
+                                    .clearStatus();
+                                Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SignupPage(),
+                                    builder: (_) => const SignupPage(),
                                   ),
                                 );
                               },

@@ -48,21 +48,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authViewModelProvider);
+    ref.listen<AuthState>(authViewModelProvider, (prev, next) {
+      if (prev?.status == next.status) return;
 
-    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
-      if (next.status == AuthStatus.error) {
-        SnackbarUtil.showError(
-          context,
-          next.errorMessage ?? 'Registration failed. Please try again.',
-        );
-      } else if (next.status == AuthStatus.registered) {
-        SnackbarUtil.showSuccess(
-          context,
-          next.errorMessage ?? 'Registration successful!',
-        );
+      if (next.status == AuthStatus.error && next.errorMessage != null) {
+        SnackbarUtil.showError(context, next.errorMessage!);
+      }
+
+      if (next.status == AuthStatus.registered) {
+        SnackbarUtil.showSuccess(context, 'Registration successful!');
       }
     });
+    final authState = ref.watch(authViewModelProvider);
 
     return Scaffold(
       body: LayoutBuilder(
@@ -199,11 +196,13 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                   style: TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
-                                      Navigator.push(
+                                      ref
+                                          .read(authViewModelProvider.notifier)
+                                          .clearStatus();
+                                      Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              const LoginPage(),
+                                          builder: (_) => const LoginPage(),
                                         ),
                                       );
                                     },
