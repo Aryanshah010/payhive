@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/utils/validator_util.dart';
@@ -49,9 +50,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final double horizontalPadding = isTablet ? 48 : 16;
     final double verticalSpacing = isTablet ? 28 : 16;
-    final double imageHeight = isTablet ? 400 : 290;
-    final double imageWidth = isTablet ? 500 : 328;
-    final double titleFontSize = isTablet ? 32 : 24;
+    final double imageWidth = isTablet ? 500 : 250;
+    final double titleFontSize = isTablet ? 32 : 20;
 
     final authState = ref.watch(authViewModelProvider);
 
@@ -63,10 +63,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (next.status == AuthStatus.authenticated) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
-        );
+        AppRoutes.pushReplacement(context, const DashboardScreen());
       }
     });
 
@@ -76,11 +73,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           child: Column(
             children: [
-              Image.asset(
-                'assets/images/payhive.png',
-                height: imageHeight,
-                width: imageWidth,
-              ),
+              Image.asset('assets/images/payhive.png', width: imageWidth),
 
               Text(
                 "Welcome to Payhive",
@@ -171,11 +164,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 ref
                                     .read(authViewModelProvider.notifier)
                                     .clearStatus();
-                                Navigator.pushReplacement(
+                                AppRoutes.pushReplacement(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const SignupPage(),
-                                  ),
+                                  const SignupPage(),
                                 );
                               },
                           ),
