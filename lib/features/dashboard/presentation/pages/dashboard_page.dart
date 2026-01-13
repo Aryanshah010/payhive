@@ -62,7 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
 
       bottomNavigationBar: BottomAppBar(
-        height: isTablet ? 90 : 64,
+        height: isTablet ? 90 : 70,
         elevation: 1,
         shape: const CircularNotchedRectangle(),
         notchMargin: isTablet ? 8 : 6,

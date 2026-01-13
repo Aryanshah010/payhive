@@ -9,19 +9,17 @@ import 'package:payhive/features/auth/domain/repositories/auth_repository.dart';
 
 class RegisterUsecaseParams extends Equatable {
   final String fullName;
-  final String? authId;
   final String phoneNumber;
   final String password;
 
   const RegisterUsecaseParams({
-    this.authId,
     required this.fullName,
     required this.password,
     required this.phoneNumber,
   });
 
   @override
-  List<Object?> get props => [authId, fullName, phoneNumber, password];
+  List<Object?> get props => [fullName, phoneNumber, password];
 }
 
 final registerUsecaseProvider = Provider<RegisterUsecase>((ref) {
@@ -41,7 +39,6 @@ class RegisterUsecase
       fullName: params.fullName,
       phoneNumber: params.phoneNumber,
       password: params.password,
-      authId: params.authId,
     );
     return _authRepository.register(entity);
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/utils/validator_util.dart';
@@ -68,9 +69,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
           final double horizontalPadding = isTablet ? 48 : 16;
           final double verticalSpacing = isTablet ? 28 : 16;
-          final double imageHeight = isTablet ? 400 : 290;
-          final double imageWidth = isTablet ? 500 : 328;
-          final double titleFontSize = isTablet ? 32 : 24;
+          final double imageWidth = isTablet ? 500 : 250;
+          final double titleFontSize = isTablet ? 32 : 18;
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -81,10 +81,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     Center(
                       child: Image.asset(
                         'assets/images/payhive.png',
-                        height: imageHeight,
                         width: imageWidth,
                       ),
                     ),
+                    SizedBox(height: isTablet ? 50 : 20),
 
                     Text(
                       "Create Your Payhive Account",
@@ -199,11 +199,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                       ref
                                           .read(authViewModelProvider.notifier)
                                           .clearStatus();
-                                      Navigator.pushReplacement(
+                                      AppRoutes.pushReplacement(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginPage(),
-                                        ),
+                                        const LoginPage(),
                                       );
                                     },
                                 ),

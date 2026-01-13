@@ -1,8 +1,12 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/core/services/connectivity/network_info.dart';
 import 'package:payhive/features/auth/data/datasources/auth_datasource.dart';
 import 'package:payhive/features/auth/data/datasources/local/auth_local_datasource.dart';
+import 'package:payhive/features/auth/data/datasources/remote/auth_remote_datasource.dart';
+import 'package:payhive/features/auth/data/models/auth_api_model.dart';
 import 'package:payhive/features/auth/data/models/auth_hive_model.dart';
 import 'package:payhive/features/auth/domain/entities/auth_entity.dart';
 import 'package:payhive/features/auth/domain/repositories/auth_repository.dart';
@@ -10,14 +14,27 @@ import 'package:payhive/features/auth/domain/repositories/auth_repository.dart';
 //provider
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   final authDatasource = ref.read(authLocalDatasourceProvider);
-  return AuthRepository(authDatasource: authDatasource);
+  final authRemoteDatasource = ref.read(authRemoteDatasourceProvider);
+  final networkInfo = ref.read(networkInfoProvider);
+  return AuthRepository(
+    authDatasource: authDatasource,
+    authRemoteDatasource: authRemoteDatasource,
+    networkInfo: networkInfo,
+  );
 });
 
 class AuthRepository implements IAuthRepository {
-  final IAuthDatasource _authDatasource;
+  final IAuthLocalDatasource _authDatasource;
+  final IAuthRemoteDatasource _authRemoteDatasource;
+  final NetworkInfo _networkInfo;
 
-  AuthRepository({required IAuthDatasource authDatasource})
-    : _authDatasource = authDatasource;
+  AuthRepository({
+    required IAuthLocalDatasource authDatasource,
+    required IAuthRemoteDatasource authRemoteDatasource,
+    required NetworkInfo networkInfo,
+  }) : _authDatasource = authDatasource,
+       _authRemoteDatasource = authRemoteDatasource,
+       _networkInfo = networkInfo;
 
   @override
   Future<Either<Failure, AuthEntity>> getUserByPhoneNumber(
@@ -51,31 +68,80 @@ class AuthRepository implements IAuthRepository {
     String phoneNumber,
     String password,
   ) async {
-    try {
-      final user = await _authDatasource.login(phoneNumber, password);
-      if (user != null) {
-        final entity = user.toEntity();
-        return Right(entity);
+    if (await _networkInfo.isConnected) {
+      try {
+        final apiModel = await _authRemoteDatasource.login(
+          phoneNumber,
+          password,
+        );
+        if (apiModel != null) {
+          final entity = apiModel.toEntity();
+          return Right(entity);
+        }
+        return const Left(ApiFalilure(message: "Invalid credientials"));
+      } on DioException catch (e) {
+        return Left(
+          ApiFalilure(
+            message: e.response?.data['message'] ?? 'Login Failed',
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(LocalDatabaseFailure(message: e.toString()));
       }
-      return Left(
-        LocalDatabaseFailure(message: "Invalid phone number or password"),
-      );
-    } catch (e) {
-      return Left(LocalDatabaseFailure(message: e.toString()));
+    } else {
+      try {
+        final model = await _authDatasource.login(phoneNumber, password);
+        if (model != null) {
+          final entity = model.toEntity();
+          return Right(entity);
+        }
+        return const Left(
+          LocalDatabaseFailure(message: "Invalid phonenumber or password"),
+        );
+      } catch (e) {
+        return Left(LocalDatabaseFailure(message: e.toString()));
+      }
     }
   }
 
   @override
   Future<Either<Failure, bool>> register(AuthEntity entity) async {
-    try {
-      final model = AuthHiveModel.fromEntity(entity);
-      final result = await _authDatasource.register(model);
-      if (result) {
-        return Right(true);
+    if (await _networkInfo.isConnected) {
+      try {
+        final apiModel = AuthApiModel.fromEntity(entity);
+        await _authRemoteDatasource.register(apiModel);
+        return const Right(true);
+      } on DioException catch (e) {
+        return Left(
+          ApiFalilure(
+            message: e.response?.data['message'] ?? 'Registration Failed from api',
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
       }
-      return Left(LocalDatabaseFailure(message: "Failed to register user"));
-    } catch (e) {
-      return Left(LocalDatabaseFailure(message: e.toString()));
+    } else {
+      try {
+        final existingUser = await _authDatasource.isPhoneNumberExists(
+          entity.phoneNumber,
+        );
+        if (existingUser) {
+          return const Left(
+            LocalDatabaseFailure(message: "Phone Number already registered"),
+          );
+        }
+        final authModel = AuthHiveModel(
+          fullName: entity.fullName,
+          phoneNumber: entity.phoneNumber,
+          password: entity.password,
+        );
+        await _authDatasource.register(authModel);
+        return const Right(true);
+      } catch (e) {
+        return Left(LocalDatabaseFailure(message: e.toString()));
+      }
     }
   }
 }
