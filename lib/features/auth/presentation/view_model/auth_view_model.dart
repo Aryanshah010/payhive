@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/features/auth/domain/usecases/login_usecase.dart';
+import 'package:payhive/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:payhive/features/auth/domain/usecases/register_usecase.dart';
 import 'package:payhive/features/auth/presentation/state/auth_state.dart';
 
@@ -11,11 +12,15 @@ final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
 class AuthViewModel extends Notifier<AuthState> {
   late final RegisterUsecase _registerUsecase;
   late final LoginUsecase _loginUsecase;
+  late final LogoutUsecase _logoutUsecase;
+
 
   @override
   AuthState build() {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(loginUsecaseProvider);
+    _logoutUsecase = ref.read(logoutUsecaseProvider);
+
 
     return const AuthState();
   }
@@ -90,4 +95,22 @@ class AuthViewModel extends Notifier<AuthState> {
       },
     );
   }
+  
+  Future<void> logout() async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    final result = await _logoutUsecase();
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      ),
+      (success) => state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        user: null,
+      ),
+    );
+  }
+
 }
