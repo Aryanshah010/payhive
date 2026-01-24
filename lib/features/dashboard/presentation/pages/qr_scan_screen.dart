@@ -24,7 +24,7 @@ class _QrScanScreenState extends State<QrScanScreen>
   bool _cameraGranted = false;
   bool _permissionChecked = false;
   bool _isProcessing = false;
-  bool _galleryDenied = false; 
+  bool _galleryDenied = false;
   int _currentPage = 0;
 
   String? scannedQrData;
@@ -130,7 +130,7 @@ class _QrScanScreenState extends State<QrScanScreen>
   }
 
   Future<void> _scanFromGallery() async {
-    if (_galleryDenied) return; 
+    if (_galleryDenied) return;
 
     final permission = Platform.isIOS ? Permission.photos : Permission.photos;
     final status = await permission.status;
@@ -154,8 +154,10 @@ class _QrScanScreenState extends State<QrScanScreen>
           context,
           "Gallery access denied. Returning to home.",
         );
-        await Future.delayed(const Duration(milliseconds: 1000));
-        Navigator.of(context).pop();
+        await Future.delayed(const Duration(milliseconds: 2000));
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
       return;
     }

@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +19,71 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   get _profileImageUrl => null;
+
+  XFile? _profileImage;
+  final ImagePicker _imagePicker = ImagePicker();
+
+  Future<bool> _askPermissionFromUser(Permission permission) async {
+    final status = await permission.status;
+    if (status.isGranted) {
+      return true;
+    }
+    if (status.isDenied) {
+      final result = await permission.request();
+      return result.isGranted;
+    }
+
+    if (status.isPermanentlyDenied) {
+      _showPermissionDeniedDialog();
+      return false;
+    }
+    return false;
+  }
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Permission Required"),
+        content: const Text(
+          "This feature requires permission to access your  gallery. Please enable it in your device settings.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickFromGallery() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() {
+          _profileImage = image;
+        });
+      }
+    } catch (e) {
+      debugPrint("Gallery error $e");
+      if (mounted) {
+        SnackbarUtil.showError(context, 'Unable to access gallery');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,13 +129,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Container(
                           width: 120,
                           height: 120,
-                          padding: const EdgeInsets.all(3), // border thickness
+                          padding: const EdgeInsets.all(3),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white.withOpacity(
-                                0.6,
-                              ), // subtle stroke
+                              color: Colors.white.withOpacity(0.6),
                               width: 1.5,
                             ),
                           ),
@@ -76,7 +143,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               child: SizedBox(
                                 width: 112,
                                 height: 112,
-                                child: _profileImageUrl == null
+                                child: _profileImage != null
+                                    ? Image.file(
+                                        File(_profileImage!.path),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : _profileImageUrl == null
                                     ? Center(
                                         child: Text(
                                           'A',
@@ -96,21 +168,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
 
-                        // Edit icon overlay
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.8),
-                              width: 1,
+                        GestureDetector(
+                          onTap: () async {
+                            bool granted = await _askPermissionFromUser(
+                              Permission.photos,
+                            );
+                            if (!granted) return;
+                            await _pickFromGallery();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.8),
+                                width: 1,
+                              ),
                             ),
-                          ),
-                          child: const Icon(
-                            Icons.edit,
-                            size: 18,
-                            color: Colors.white,
+                            child: const Icon(
+                              Icons.edit,
+                              size: 18,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
