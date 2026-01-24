@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
@@ -7,7 +6,7 @@ class ApiEndpoints {
 
   static const bool isPhysicalDevice = false;
 
-  static const String compIpAddress = "192.168.1.88";
+  static const String compIpAddress = "192.168.1.86";
 
   static String get baseUrl {
     if (isPhysicalDevice) {
