@@ -5,6 +5,7 @@ import 'package:payhive/core/api/api_client.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
 import 'package:payhive/core/services/storage/token_service.dart';
 import 'package:payhive/features/profile/data/datasources/profile_datasource.dart';
+import 'package:payhive/features/profile/data/models/profile_api_model.dart';
 
 final profileRemoteDatasourceProvider = Provider<IProfileRemoteDataSource>((
   ref,
@@ -43,5 +44,19 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
     );
 
     return response.data['data']['imageUrl'] as String;
+  }
+
+  @override
+  Future<ProfileApiModel> getProfile() async {
+    final token = _tokenService.getToken();
+
+    final response = await _apiClient.get(
+      ApiEndpoints.profile,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    final data = response.data['data'] as Map<String, dynamic>;
+
+    return ProfileApiModel.fromJson(data);
   }
 }

@@ -1,24 +1,57 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/features/profile/domain/usecase/get_profile_usecase.dart';
 import 'package:payhive/features/profile/domain/usecase/upload_photo_usecase.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 
-// Provider
 final profileViewModelProvider =
     NotifierProvider<ProfileViewModel, ProfileState>(() => ProfileViewModel());
 
 class ProfileViewModel extends Notifier<ProfileState> {
+  late final GetProfileUsecase _getProfileUsecase;
   late final UploadPhotoUsecase _uploadPhotoUsecase;
+
+  bool _hasLoaded = false;
 
   @override
   ProfileState build() {
+    _getProfileUsecase = ref.read(getProfileUsecaseProvider);
     _uploadPhotoUsecase = ref.read(uploadPhotoUsecaseProvider);
+
+    if (!_hasLoaded) {
+      _hasLoaded = true;
+      Future.microtask(loadProfile);
+    }
+
     return ProfileState.initial();
   }
 
-  Future<void> uploadImage(File photo) async {
-    
+  Future<void> loadProfile() async {
     state = state.copyWith(status: ProfileStatus.loading, errorMessage: null);
+
+    final result = await _getProfileUsecase();
+
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: ProfileStatus.error,
+          errorMessage: failure.message,
+        );
+      },
+      (profile) {
+        state = state.copyWith(
+          status: ProfileStatus.loaded,
+          fullName: profile.fullName,
+          phoneNumber: profile.phoneNumber,
+          imageUrl: profile.imageUrl,
+        );
+      },
+    );
+  }
+
+  Future<void> uploadImage(File photo) async {
+    state = state.copyWith(status: ProfileStatus.loading, errorMessage: null);
+
     final result = await _uploadPhotoUsecase(photo);
 
     result.fold(
@@ -28,11 +61,13 @@ class ProfileViewModel extends Notifier<ProfileState> {
           errorMessage: failure.message,
         );
       },
-      (imageUrl) {
+      (imageUrl) async {
         state = state.copyWith(
           status: ProfileStatus.updated,
           imageUrl: imageUrl,
         );
+
+        await loadProfile();
       },
     );
   }

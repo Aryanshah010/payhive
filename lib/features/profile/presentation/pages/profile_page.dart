@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/api/api_endpoints.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
+import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -19,9 +21,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfilePage> {
-  get _profileImageUrl => null;
-
-  XFile? _profileImage;
+  XFile? _localPreviewImage;
   final ImagePicker _imagePicker = ImagePicker();
 
   Future<bool> _askPermissionFromUser(Permission permission) async {
@@ -74,9 +74,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
       );
 
       if (image != null) {
-        setState(() {
-          _profileImage = image;
-        });
+        setState(() => _localPreviewImage = image);
 
         await ref
             .read(profileViewModelProvider.notifier)
@@ -92,6 +90,25 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final profileState = ref.watch(profileViewModelProvider);
+
+    ref.listen(profileViewModelProvider, (prev, next) {
+      if (next.status == ProfileStatus.updated) {
+        setState(() => _localPreviewImage = null);
+      }
+
+      if (next.status == ProfileStatus.error) {
+        SnackbarUtil.showError(
+          context,
+          next.errorMessage ?? 'Something went wrong',
+        );
+      }
+    });
+
+    final fullName = profileState.fullName ?? '';
+    final phone = profileState.phoneNumber ?? '';
+    final backendImage = profileState.imageUrl;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
@@ -117,9 +134,9 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                 ),
                 child: Column(
                   children: [
-                    Text(
+                    const Text(
                       'My Profile',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -148,31 +165,28 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                               child: SizedBox(
                                 width: 112,
                                 height: 112,
-                                child: _profileImage != null
+                                child: _localPreviewImage != null
                                     ? Image.file(
-                                        File(_profileImage!.path),
+                                        File(_localPreviewImage!.path),
                                         fit: BoxFit.cover,
                                       )
-                                    : _profileImageUrl == null
-                                    ? Center(
-                                        child: Text(
-                                          'A',
-                                          style: TextStyle(
-                                            fontSize: 44,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                      )
-                                    : Image.network(
-                                        _profileImageUrl!,
+                                    : backendImage != null
+                                    ? Image.network(
+                                        ApiEndpoints.mediaServerUrl +
+                                            backendImage,
                                         fit: BoxFit.cover,
-                                      ),
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return _buildInitialAvatar(
+                                                fullName,
+                                              );
+                                            },
+                                      )
+                                    : _buildInitialAvatar(fullName),
                               ),
                             ),
                           ),
                         ),
-
                         GestureDetector(
                           onTap: () async {
                             bool granted = await _askPermissionFromUser(
@@ -202,18 +216,21 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                     ),
 
                     const SizedBox(height: 16),
-                    const Text(
-                      'Aryan Shah',
-                      style: TextStyle(
+                    Text(
+                      fullName,
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      '9876543210',
-                      style: TextStyle(fontSize: 14, color: Colors.white70),
+                    Text(
+                      phone,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                 ),
@@ -284,6 +301,19 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
               const SizedBox(height: 32),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitialAvatar(String fullName) {
+    return Center(
+      child: Text(
+        fullName.isNotEmpty ? fullName[0].toUpperCase() : '',
+        style: TextStyle(
+          fontSize: 44,
+          color: AppColors.primary,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
