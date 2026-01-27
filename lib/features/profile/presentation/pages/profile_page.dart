@@ -8,16 +8,17 @@ import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
+import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+class ProfilePage extends ConsumerStatefulWidget {
+  const ProfilePage({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfilePage> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfilePage> {
   get _profileImageUrl => null;
 
   XFile? _profileImage;
@@ -76,6 +77,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         setState(() {
           _profileImage = image;
         });
+
+        await ref
+            .read(profileViewModelProvider.notifier)
+            .uploadImage(File(image.path));
       }
     } catch (e) {
       debugPrint("Gallery error $e");

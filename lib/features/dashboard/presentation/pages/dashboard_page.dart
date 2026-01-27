@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
-import 'package:payhive/features/dashboard/presentation/pages/profile_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/qr_scan_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/statement_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
+import 'package:payhive/features/profile/presentation/pages/profile_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const HomeScreen(),
     const StatementScreen(),
     const SupportScreen(),
-    const ProfileScreen(),
+    const ProfilePage(),
   ];
 
   @override
