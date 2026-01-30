@@ -14,13 +14,11 @@ class AuthViewModel extends Notifier<AuthState> {
   late final LoginUsecase _loginUsecase;
   late final LogoutUsecase _logoutUsecase;
 
-
   @override
   AuthState build() {
     _registerUsecase = ref.read(registerUsecaseProvider);
     _loginUsecase = ref.read(loginUsecaseProvider);
     _logoutUsecase = ref.read(logoutUsecaseProvider);
-
 
     return const AuthState();
   }
@@ -89,13 +87,13 @@ class AuthViewModel extends Notifier<AuthState> {
       (authEntity) {
         state = state.copyWith(
           status: AuthStatus.authenticated,
-          authEntity: authEntity,
+          user: authEntity,
           errorMessage: null,
         );
       },
     );
   }
-  
+
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading);
 
@@ -113,4 +111,7 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
+  void clearError() {
+    state = state.copyWith(errorMessage: null);
+  }
 }
