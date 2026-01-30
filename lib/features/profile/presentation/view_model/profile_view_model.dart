@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:payhive/features/profile/domain/usecase/get_profile_usecase.dart';
-import 'package:payhive/features/profile/domain/usecase/upload_photo_usecase.dart';
+import 'package:payhive/features/profile/domain/usecases/get_profile_usecase.dart';
+import 'package:payhive/features/profile/domain/usecases/upload_photo_usecase.dart';
+
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 
 final profileViewModelProvider =
