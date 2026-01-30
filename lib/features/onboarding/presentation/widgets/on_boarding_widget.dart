@@ -27,7 +27,12 @@ class OnBoardingWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(image, height: imageHeight, fit: BoxFit.contain),
+          Image.asset(
+            image,
+            height: imageHeight,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const SizedBox(),
+          ),
 
           SizedBox(height: w * 0.06),
 
