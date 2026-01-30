@@ -65,4 +65,14 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
       return null;
     }
   }
+
+  @override
+  Future<bool> logout() async {
+    try {
+      await _userSessionService.clearUserSession();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 }

@@ -18,21 +18,28 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal:horizontalPadding),
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Image.asset("assets/images/inAppLogo.png", width: imageWidth),
-                    Icon(Icons.notifications_none_outlined,size: isTablet?36:24,),
+                    Image.asset(
+                      "assets/images/inAppLogo.png",
+                      width: imageWidth,
+                      errorBuilder: (_, __, ___) => const SizedBox(),
+                    ),
+                    Icon(
+                      Icons.notifications_none_outlined,
+                      size: isTablet ? 36 : 24,
+                    ),
                   ],
                 ),
 
-                SizedBox(height: isTablet?16:8),
+                SizedBox(height: isTablet ? 16 : 8),
 
                 Container(
-                  height: isTablet?340:240,
+                  height: isTablet ? 340 : 240,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(28.0),
@@ -54,14 +61,14 @@ class HomeScreen extends StatelessWidget {
                                   "Your Balance",
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    fontSize: isTablet?28:20,
+                                    fontSize: isTablet ? 28 : 20,
                                   ),
                                 ),
                                 Text(
                                   "NPR 12,800.00",
                                   style: TextStyle(
                                     fontFamily: "Poppins",
-                                    fontSize: isTablet?42:32,
+                                    fontSize: isTablet ? 42 : 32,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: -0.5,
                                   ),
@@ -99,7 +106,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
 
-                SizedBox(height: isTablet?48:32),
+                SizedBox(height: isTablet ? 48 : 32),
 
                 Container(
                   width: double.infinity,
@@ -108,7 +115,7 @@ class HomeScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16.0),
                   ),
                   child: Padding(
-                    padding: EdgeInsets.all(isTablet?32:16),
+                    padding: EdgeInsets.all(isTablet ? 32 : 16),
                     child: Column(
                       children: [
                         Text(
@@ -116,12 +123,12 @@ class HomeScreen extends StatelessWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: "Poppins",
-                            fontSize: isTablet?32:20,
+                            fontSize: isTablet ? 32 : 20,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
 
-                        SizedBox(height: isTablet?24:16),
+                        SizedBox(height: isTablet ? 24 : 16),
 
                         GridView.count(
                           crossAxisCount: 2,

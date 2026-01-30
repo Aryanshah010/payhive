@@ -27,20 +27,12 @@ class _SplashPageState extends ConsumerState<SplashPage>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fade = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    );
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
 
     _scale = Tween<double>(
       begin: 0.92,
       end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _startFlow();
   }
@@ -48,14 +40,15 @@ class _SplashPageState extends ConsumerState<SplashPage>
   Future<void> _startFlow() async {
     final userSessionService = ref.read(userSessionServiceProvider);
 
-    final Future<void> animationFuture =
-        _controller.forward().then((_) {});
+    final Future<void> animationFuture = _controller.forward().then((_) {});
 
-    final Future<bool> sessionFuture =
-        Future.microtask(() => userSessionService.isLoggedIn());
+    final Future<bool> sessionFuture = Future.microtask(
+      () => userSessionService.isLoggedIn(),
+    );
 
-    final Future<void> minDuration =
-        Future.delayed(const Duration(milliseconds: 600));
+    final Future<void> minDuration = Future.delayed(
+      const Duration(milliseconds: 600),
+    );
 
     final results = await Future.wait([
       animationFuture,
@@ -84,9 +77,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
   Widget build(BuildContext context) {
     final minSide = MediaQuery.of(context).size.shortestSide;
 
-    final logoSize = minSide < 600
-        ? minSide * 0.75
-        : minSide * 0.50;
+    final logoSize = minSide < 600 ? minSide * 0.75 : minSide * 0.50;
 
     return Scaffold(
       body: SafeArea(
@@ -100,6 +91,14 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 width: logoSize,
                 fit: BoxFit.contain,
                 semanticLabel: 'Payhive logo',
+
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.account_balance_wallet,
+                    size: 120,
+                    color: Colors.grey,
+                  );
+                },
               ),
             ),
           ),

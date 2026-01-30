@@ -6,6 +6,7 @@ abstract interface class IAuthLocalDatasource{
   Future<AuthHiveModel?> login(String phoneNumber,String password);
   Future<bool> isPhoneNumberExists(String phoneNumber);
   Future<AuthHiveModel?> getUserByPhoneNumber(String phoneNumber);
+  Future<bool> logout();
 }
 
 abstract interface class IAuthRemoteDatasource{
