@@ -47,6 +47,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     final double horizontalPadding = isTablet ? 48 : 16;
     final double verticalSpacing = isTablet ? 28 : 16;
@@ -63,6 +65,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }
 
       if (next.status == AuthStatus.authenticated) {
+        FocusManager.instance.primaryFocus?.unfocus();
         AppRoutes.pushReplacement(context, const DashboardScreen());
       }
     });
@@ -77,10 +80,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
               Text(
                 "Welcome to Payhive",
-                style: TextStyle(
-                  fontFamily: "Poppins",
+                style: textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: titleFontSize,
+                  color: colorScheme.onSurface,
+                  fontFamily: "Poppins",
                 ),
               ),
 
@@ -113,7 +117,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           _obscurePassword
                               ? Icons.visibility_off
                               : Icons.visibility,
-                          color: AppColors.greyText,
+                          color: colorScheme.onSurface.withOpacity(0.6),
                         ),
                         onPressed: () => setState(
                           () => _obscurePassword = !_obscurePassword,
@@ -150,7 +154,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     RichText(
                       text: TextSpan(
                         style: TextStyle(
-                          color: AppColors.greyText,
+                          color: colorScheme.onSurface.withOpacity(0.6),
                           fontSize: isTablet ? 20 : 14,
                           fontWeight: FontWeight.w400,
                         ),
@@ -161,6 +165,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             style: TextStyle(color: AppColors.primary),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
+                                FocusManager.instance.primaryFocus?.unfocus();
                                 ref
                                     .read(authViewModelProvider.notifier)
                                     .clearStatus();

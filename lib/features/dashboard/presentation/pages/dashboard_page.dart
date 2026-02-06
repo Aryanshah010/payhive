@@ -28,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: lstBottomScreen[_selectedIndex],
@@ -42,7 +43,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               },
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.darkText,
+              foregroundColor: colorScheme.onPrimary,
               elevation: 4,
               shape: const CircleBorder(),
               child: const Icon(Icons.qr_code, size: 52),
@@ -55,7 +56,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 );
               },
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.darkText,
+              foregroundColor: colorScheme.onPrimary,
               elevation: 4,
               shape: const CircleBorder(),
               child: const Icon(Icons.qr_code, size: 26),

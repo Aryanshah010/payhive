@@ -176,6 +176,7 @@ class _QrScanScreenState extends State<QrScanScreen>
   }
 
   Widget _buildScannerPage() {
+    final colorScheme = Theme.of(context).colorScheme;
     if (!_permissionChecked) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -212,7 +213,7 @@ class _QrScanScreenState extends State<QrScanScreen>
               painter: ScannerOverlayPainter(
                 scanWindow: scanWindow,
                 overlayColor: Colors.black.withOpacity(0.55),
-                borderColor: AppColors.backgroundLight,
+                borderColor: colorScheme.onSurface.withOpacity(0.9),
                 borderWidth: 3.0,
                 borderRadius: 16.0,
               ),
@@ -301,6 +302,7 @@ class _QrScanScreenState extends State<QrScanScreen>
   }
 
   Widget _buildMyQrPage() {
+    final colorScheme = Theme.of(context).colorScheme;
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -311,9 +313,10 @@ class _QrScanScreenState extends State<QrScanScreen>
               backgroundColor: AppColors.primaryLight,
               child: Text(
                 userName.isNotEmpty ? userName[0] : '',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ),
@@ -325,17 +328,19 @@ class _QrScanScreenState extends State<QrScanScreen>
             const SizedBox(height: 6),
             Text(
               "PayHive ID: $payHiveId",
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(
+                color: colorScheme.onSurface.withOpacity(0.6),
+              ),
             ),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardTheme.color ?? colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: colorScheme.shadow.withOpacity(0.12),
                     blurRadius: 8,
                   ),
                 ],

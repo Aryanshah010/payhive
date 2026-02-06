@@ -91,6 +91,11 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileViewModelProvider);
+    final colorScheme = Theme.of(context).colorScheme;
+    final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+    final double scale = isTablet ? 1.25 : 1.0;
 
     ref.listen(profileViewModelProvider, (prev, next) {
       if (next.status == ProfileStatus.updated) {
@@ -110,7 +115,6 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     final backendImage = profileState.imageUrl;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -118,7 +122,12 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
               // HEADER
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                padding: EdgeInsets.fromLTRB(
+                  20 * scale,
+                  24 * scale,
+                  20 * scale,
+                  32 * scale,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -134,37 +143,37 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'My Profile',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 20 * scale,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: 28 * scale),
 
                     // AVATAR
                     Stack(
                       alignment: Alignment.bottomRight,
                       children: [
                         Container(
-                          width: 120,
-                          height: 120,
-                          padding: const EdgeInsets.all(3),
+                          width: 120 * scale,
+                          height: 120 * scale,
+                          padding: EdgeInsets.all(3 * scale),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Colors.white.withOpacity(0.6),
-                              width: 1.5,
+                              width: 1.5 * scale,
                             ),
                           ),
                           child: CircleAvatar(
                             backgroundColor: Colors.white,
                             child: ClipOval(
                               child: SizedBox(
-                                width: 112,
-                                height: 112,
+                                width: 112 * scale,
+                                height: 112 * scale,
                                 child: _localPreviewImage != null
                                     ? Image.file(
                                         File(_localPreviewImage!.path),
@@ -179,10 +188,11 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                                             (context, error, stackTrace) {
                                               return _buildInitialAvatar(
                                                 fullName,
+                                                scale,
                                               );
                                             },
                                       )
-                                    : _buildInitialAvatar(fullName),
+                                    : _buildInitialAvatar(fullName, scale),
                               ),
                             ),
                           ),
@@ -196,18 +206,18 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                             await _pickFromGallery();
                           },
                           child: Container(
-                            padding: const EdgeInsets.all(6),
+                            padding: EdgeInsets.all(6 * scale),
                             decoration: BoxDecoration(
                               color: Colors.black,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: Colors.white.withOpacity(0.8),
-                                width: 1,
+                                width: 1 * scale,
                               ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.edit,
-                              size: 18,
+                              size: 18 * scale,
                               color: Colors.white,
                             ),
                           ),
@@ -215,20 +225,20 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16 * scale),
                     Text(
                       fullName,
-                      style: const TextStyle(
-                        fontSize: 22,
+                      style: TextStyle(
+                        fontSize: 22 * scale,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6 * scale),
                     Text(
                       phone,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: TextStyle(
+                        fontSize: 14 * scale,
                         color: Colors.white70,
                       ),
                     ),
@@ -236,21 +246,21 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              SizedBox(height: 24 * scale),
 
               // MENU CARD
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16 * scale),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: EdgeInsets.symmetric(vertical: 8 * scale),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(20 * scale),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+                        color: colorScheme.shadow.withOpacity(0.12),
+                        blurRadius: 20 * scale,
+                        offset: Offset(0, 8 * scale),
                       ),
                     ],
                   ),
@@ -261,19 +271,19 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                         title: 'Update KYC',
                         onTap: () {},
                       ),
-                      _divider(),
+                      _divider(context),
                       MenuItem(
                         icon: Icons.security_rounded,
                         title: 'Security',
                         onTap: () {},
                       ),
-                      _divider(),
+                      _divider(context),
                       MenuItem(
                         icon: Icons.devices_rounded,
                         title: 'Manage Devices',
                         onTap: () {},
                       ),
-                      _divider(),
+                      _divider(context),
                       MenuItem(
                         icon: Icons.info_outline_rounded,
                         title: 'About',
@@ -284,11 +294,11 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: 20 * scale),
 
               // LOGOUT
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16 * scale),
                 child: MenuItem(
                   icon: Icons.logout_rounded,
                   title: 'Logout',
@@ -298,7 +308,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              SizedBox(height: 32 * scale),
             ],
           ),
         ),
@@ -306,12 +316,12 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _buildInitialAvatar(String fullName) {
+  Widget _buildInitialAvatar(String fullName, double scale) {
     return Center(
       child: Text(
         fullName.isNotEmpty ? fullName[0].toUpperCase() : '',
         style: TextStyle(
-          fontSize: 44,
+          fontSize: 44 * scale,
           color: AppColors.primary,
           fontWeight: FontWeight.bold,
         ),
@@ -319,10 +329,11 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _divider() {
+  Widget _divider(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Divider(height: 1, color: AppColors.greyText.withOpacity(0.2)),
+      child: Divider(height: 1, color: colorScheme.outlineVariant),
     );
   }
 
@@ -339,7 +350,15 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Cancel', style: TextStyle(color: AppColors.greyText)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Theme.of(dialogContext)
+                    .colorScheme
+                    .onSurface
+                    .withOpacity(0.6),
+              ),
+            ),
           ),
           TextButton(
             onPressed: () async {

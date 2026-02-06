@@ -47,7 +47,7 @@ class QuickActionBtn extends StatelessWidget {
               fontSize: isTablet?16:12,
               fontWeight: FontWeight.w600,
               height: 1.2,
-              color: AppColors.darkText,
+              color:AppColors.darkText,
             ),
           ),
         ],

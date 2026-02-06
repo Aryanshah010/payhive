@@ -6,31 +6,45 @@ import 'colors.dart';
 class AppTheme {
   AppTheme._();
 
+  static final ColorScheme _lightScheme = ColorScheme.fromSeed(
+    seedColor: AppColors.primary,
+    brightness: Brightness.light,
+    error: AppColors.danger,
+    surface: AppColors.backgroundLight,
+    outline: AppColors.borderGrey.withOpacity(0.8),
+    outlineVariant: AppColors.borderGrey.withOpacity(0.5),
+  );
+
+  static final ColorScheme _darkScheme = ColorScheme.fromSeed(
+    seedColor: AppColors.primary,
+    brightness: Brightness.dark,
+    error: AppColors.danger,
+    surface: AppColors.backgroundDarkSecondary,
+    outline: Colors.white.withOpacity(0.12),
+    outlineVariant: Colors.white.withOpacity(0.06),
+  );
+
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     fontFamily: "Inter",
     brightness: Brightness.light,
 
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.light,
-      error: AppColors.danger,
-      surface: AppColors.backgroundLight,
-      outline: AppColors.borderGrey.withOpacity(0.6),
-      outlineVariant: AppColors.borderGrey.withOpacity(0.3),
-    ),
+    colorScheme: _lightScheme,
 
     scaffoldBackgroundColor: AppColors.backgroundLight,
 
-    iconTheme: const IconThemeData(size: 24, color: AppColors.greyText),
+    iconTheme: IconThemeData(
+      size: 24,
+      color: _lightScheme.onSurface.withOpacity(0.6),
+    ),
 
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       centerTitle: true,
       backgroundColor: AppColors.primaryLight,
       titleTextStyle: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: AppColors.darkText,
+        color: _lightScheme.onSurface,
       ),
     ),
 
@@ -42,7 +56,7 @@ class AppTheme {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: AppColors.borderGrey.withOpacity(0.6),
+          color: _lightScheme.outline,
           width: 1,
         ),
       ),
@@ -87,25 +101,21 @@ class AppTheme {
     fontFamily: "Inter",
     brightness: Brightness.dark,
 
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      brightness: Brightness.dark,
-      error: AppColors.danger,
-      surface: AppColors.backgroundDarkSecondary,
-      outline: Colors.white.withOpacity(0.12),
-      outlineVariant: Colors.white.withOpacity(0.06),
-    ),
+    colorScheme: _darkScheme,
 
     scaffoldBackgroundColor: AppColors.backgroundDark,
 
-    iconTheme: const IconThemeData(size: 24, color: AppColors.greyText),
+    iconTheme: IconThemeData(
+      size: 24,
+      color: _darkScheme.onSurface.withOpacity(0.6),
+    ),
 
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       centerTitle: true,
       titleTextStyle: TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        color: AppColors.lightText,
+        color: _darkScheme.onSurface,
       ),
     ),
 
@@ -116,7 +126,7 @@ class AppTheme {
 
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.12), width: 1),
+        borderSide: BorderSide(color: _darkScheme.outline, width: 1),
       ),
 
       focusedBorder: OutlineInputBorder(

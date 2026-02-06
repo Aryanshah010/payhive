@@ -17,12 +17,15 @@ class NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.greyText;
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = isSelected
+        ? AppColors.primary
+        : colorScheme.onSurface.withOpacity(0.6);
 
     return InkWell(
-      onTap: onTap, 
+      onTap: onTap,
       child: SizedBox(
         height: isTablet ? 84 : 48,
         child: Column(

@@ -19,6 +19,14 @@ class MenuItem extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width >= 600;
+    final double iconBoxSize = isTablet ? 64 : 48;
+    final double iconSize = isTablet ? 30 : 24;
+    final double titleSize = isTablet ? 20 : 16;
+    final double trailingSize = isTablet ? 20 : 16;
+    final double padding = isTablet ? 20 : 16;
     return Container(
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
       child: Material(
@@ -27,12 +35,12 @@ class MenuItem extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(padding),
             child: Row(
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: iconBoxSize,
+                  height: iconBoxSize,
                   decoration: BoxDecoration(
                     color: (iconColor ?? AppColors.primary).withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
@@ -40,25 +48,25 @@ class MenuItem extends StatelessWidget {
                   child: Icon(
                     icon,
                     color: iconColor ?? AppColors.primary,
-                    size: 24,
+                    size: iconSize,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: isTablet ? 20 : 16),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: titleSize,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.darkText,
+                      color: titleColor ?? colorScheme.onSurface,
                     ),
                   ),
                 ),
                 trailing ??
                     Icon(
                       Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                      color: AppColors.greyText,
+                      size: trailingSize,
+                      color: colorScheme.onSurface.withOpacity(0.6),
                     ),
               ],
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/app/theme/colors.dart';
+
 class BalanceCardWidget extends StatelessWidget {
   const BalanceCardWidget({super.key, required this.balance});
 
@@ -11,9 +12,12 @@ class BalanceCardWidget extends StatelessWidget {
     final isTablet = width >= 600;
     final colorScheme = Theme.of(context).colorScheme;
     final EdgeInsets padding = EdgeInsets.symmetric(
-      horizontal: isTablet ? 24 : 18,
-      vertical: isTablet ? 20 : 14,
+      horizontal: isTablet ? 28 : 18,
+      vertical: isTablet ? 22 : 14,
     );
+    final double labelFont = isTablet ? 20 : 14;
+    final double valueFont = isTablet ? 32 : 20;
+    final double iconSize = isTablet ? 30 : 22;
 
     return Card(
       child: Padding(
@@ -27,7 +31,7 @@ class BalanceCardWidget extends StatelessWidget {
                 Text(
                   "Current Balance",
                   style: TextStyle(
-                    fontSize: isTablet ? 18 : 14,
+                    fontSize: labelFont,
                     fontWeight: FontWeight.w500,
                     color: colorScheme.onSurface.withOpacity(0.6),
                   ),
@@ -36,7 +40,7 @@ class BalanceCardWidget extends StatelessWidget {
                 Text(
                   balance,
                   style: TextStyle(
-                    fontSize: isTablet ? 28 : 20,
+                    fontSize: valueFont,
                     fontWeight: FontWeight.w700,
                     color: AppColors.primary,
                   ),
@@ -46,7 +50,7 @@ class BalanceCardWidget extends StatelessWidget {
             Icon(
               Icons.refresh,
               color: AppColors.primary,
-              size: isTablet ? 28 : 22,
+              size: iconSize,
             ),
           ],
         ),

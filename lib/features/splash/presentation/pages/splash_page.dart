@@ -93,10 +93,13 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 semanticLabel: 'Payhive logo',
 
                 errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
+                  return Icon(
                     Icons.account_balance_wallet,
                     size: 120,
-                    color: Colors.grey,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.4),
                   );
                 },
               ),

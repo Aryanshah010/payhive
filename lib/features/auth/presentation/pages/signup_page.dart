@@ -49,6 +49,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     ref.listen<AuthState>(authViewModelProvider, (prev, next) {
       if (prev?.status == next.status) return;
 
@@ -57,6 +59,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       }
 
       if (next.status == AuthStatus.registered) {
+        FocusManager.instance.primaryFocus?.unfocus();
         SnackbarUtil.showSuccess(context, 'Registration successful!');
       }
     });
@@ -88,10 +91,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                     Text(
                       "Create Your Payhive Account",
-                      style: TextStyle(
-                        fontFamily: "Poppins",
+                      style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: titleFontSize,
+                        color: colorScheme.onSurface,
+                        fontFamily: "Poppins",
                       ),
                     ),
 
@@ -136,7 +140,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                 _obscurePassword
                                     ? Icons.visibility_off
                                     : Icons.visibility,
-                                color: Colors.grey,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                               ),
                               onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword,
@@ -164,7 +168,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                 _obscurePassword
                                     ? Icons.visibility_off
                                     : Icons.visibility,
-                                color: Colors.grey,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                               ),
                               onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword,
@@ -185,7 +189,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                color: AppColors.greyText,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontSize: isTablet ? 20 : 14,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -196,6 +200,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                   style: TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
                                       ref
                                           .read(authViewModelProvider.notifier)
                                           .clearStatus();
