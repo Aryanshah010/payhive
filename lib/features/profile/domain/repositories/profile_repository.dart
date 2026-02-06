@@ -6,4 +6,5 @@ import 'package:payhive/features/profile/domain/enitity/profile_entity.dart';
 abstract interface class IProfileRepository {
   Future<Either<Failure, String>> uploadProfileImage(File image);
   Future<Either<Failure, ProfileEntity>> getProfile();
+  Future<Either<Failure, bool>> setPin({required String newPin, String? oldPin});
 }

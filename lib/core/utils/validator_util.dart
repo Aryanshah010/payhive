@@ -73,4 +73,13 @@ class ValidatorUtil {
 
     return null;
   }
+
+  String? validatePin(String value) {
+  final cleaned = value.trim();
+  if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
+    return 'PIN must be exactly 4 digits.';
+  }
+  return null;
+}
+
 }

@@ -31,3 +31,23 @@ class NetworkFailure extends Failure {
   const NetworkFailure({String message = 'Network connection failed.'})
     : super(message);
 }
+
+//Validation failure for client-side checks
+class ValidationFailure extends Failure {
+  const ValidationFailure({required String message}) : super(message);
+}
+
+//PIN lockout failure (HTTP 423)
+class PinLockoutFailure extends Failure {
+  final int remainingMs;
+  final int? statusCode;
+
+  const PinLockoutFailure({
+    required String message,
+    required this.remainingMs,
+    this.statusCode,
+  }) : super(message);
+
+  @override
+  List<Object?> get props => [message, remainingMs, statusCode];
+}

@@ -27,6 +27,14 @@ class ApiEndpoints {
   static const String authRegister = '/auth/register';
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
+  static const String profilePin = '/profile/pin';
+
+  // Transactions
+  static const String transactionsPreview = '/transactions/preview';
+  static const String transactionsConfirm = '/transactions/confirm';
+  static const String transactionsBeneficiary = '/transactions/beneficiary';
+  static const String transactionsHistory = '/transactions';
+  static String transactionDetail(String txId) => '/transactions/$txId';
 
   static String profileImage(String filename) =>
       '$mediaServerUrl/profilePicture/$filename';
