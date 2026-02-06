@@ -1,16 +1,157 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_success_page.dart';
+import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
+import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/amount_keypad_widget.dart';
 import 'package:payhive/features/send_money/presentation/widgets/balance_card_widget.dart';
 
-class SendMoneyAmountPage extends StatelessWidget {
+class SendMoneyAmountPage extends ConsumerStatefulWidget {
   const SendMoneyAmountPage({super.key});
 
   static const double tabletBreakpoint = 600;
   static const double tabletContentMaxWidth = 820;
+
+  @override
+  ConsumerState<SendMoneyAmountPage> createState() =>
+      _SendMoneyAmountPageState();
+}
+
+class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
+  final TextEditingController _remarkController = TextEditingController();
+  bool _pinSheetOpen = false;
+
+  get tabletContentMaxWidth => SendMoneyAmountPage.tabletContentMaxWidth;
+
+  num get tabletBreakpoint => SendMoneyAmountPage.tabletBreakpoint;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = ref.read(sendMoneyViewModelProvider);
+    _remarkController.text = state.remark ?? '';
+  }
+
+  @override
+  void dispose() {
+    _remarkController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openPinSheet() async {
+    if (_pinSheetOpen) return;
+    _pinSheetOpen = true;
+    final pinController = TextEditingController();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final state = ref.watch(sendMoneyViewModelProvider);
+            final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+            final colorScheme = Theme.of(context).colorScheme;
+            final isLocked =
+                state.status == SendMoneyStatus.locked &&
+                state.lockoutRemainingMs > 0;
+
+            String lockoutText = '';
+            if (isLocked) {
+              final totalSeconds = (state.lockoutRemainingMs / 1000).ceil();
+              final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+              final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+              lockoutText = 'Try again in $minutes:$seconds';
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: colorScheme.outline.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Enter PIN",
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 4,
+                    decoration: InputDecoration(
+                      counterText: '',
+                      hintText: "4-digit PIN",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  if (isLocked)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        lockoutText,
+                        style: TextStyle(
+                          color: colorScheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Opacity(
+                    opacity: isLocked ? 0.6 : 1,
+                    child: IgnorePointer(
+                      ignoring: isLocked,
+                      child: PrimaryButtonWidget(
+                        onPressed: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          viewModel.confirmTransfer(pinController.text);
+                        },
+                        isLoading:
+                            state.action == SendMoneyAction.confirm &&
+                            state.status == SendMoneyStatus.loading,
+                        text: "CONFIRM",
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    pinController.dispose();
+    _pinSheetOpen = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +166,40 @@ class SendMoneyAmountPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
+
+    final state = ref.watch(sendMoneyViewModelProvider);
+    final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+
+    ref.listen<SendMoneyState>(sendMoneyViewModelProvider, (prev, next) {
+      if (prev?.status == next.status) return;
+
+      if (next.status == SendMoneyStatus.error && next.errorMessage != null) {
+        SnackbarUtil.showError(context, next.errorMessage!);
+        viewModel.clearStatus();
+      }
+
+      if (next.status == SendMoneyStatus.previewSuccess) {
+        viewModel.clearStatus();
+        Future.microtask(_openPinSheet);
+      }
+
+      if (next.status == SendMoneyStatus.confirmSuccess) {
+        viewModel.clearStatus();
+        if (_pinSheetOpen) {
+          Navigator.of(context).pop();
+        }
+        AppRoutes.push(context, const SendMoneySuccessPage());
+      }
+    });
+
+    final recipientName = state.recipient?.fullName.isNotEmpty == true
+        ? state.recipient!.fullName
+        : "Recipient";
+    final recipientPhone = state.recipient?.phoneNumber.isNotEmpty == true
+        ? state.recipient!.phoneNumber
+        : state.phoneNumber;
+
+    final amountDisplay = state.amountInput.isEmpty ? '0' : state.amountInput;
 
     final Widget formContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -45,7 +220,7 @@ class SendMoneyAmountPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "John Doe",
+                recipientName,
                 style: textTheme.titleMedium?.copyWith(
                   fontSize: 16 * scale,
                   fontWeight: FontWeight.w700,
@@ -54,7 +229,7 @@ class SendMoneyAmountPage extends StatelessWidget {
               ),
               SizedBox(height: isPhone ? 4 : 6),
               Text(
-                "Payhive ID : 9872300011",
+                "Payhive ID : $recipientPhone",
                 style: TextStyle(
                   fontSize: 12 * scale,
                   color: colorScheme.onSurface.withOpacity(0.6),
@@ -98,7 +273,7 @@ class SendMoneyAmountPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      "Rs. 120",
+                      "Rs. $amountDisplay",
                       style: TextStyle(
                         fontSize: 14 * scale,
                         fontWeight: FontWeight.w700,
@@ -112,6 +287,7 @@ class SendMoneyAmountPage extends StatelessWidget {
               Divider(height: isPhone ? 16 : 24),
 
               TextField(
+                controller: _remarkController,
                 style: TextStyle(fontSize: 14 * scale),
                 decoration: InputDecoration(
                   hintText: "Remarks (optional)",
@@ -126,10 +302,38 @@ class SendMoneyAmountPage extends StatelessWidget {
                     horizontal: isPhone ? 8 : 12,
                   ),
                 ),
+                onChanged: viewModel.setRemark,
               ),
             ],
           ),
         ),
+        if (state.warning != null && state.warning!.trim().isNotEmpty) ...[
+          SizedBox(height: isPhone ? 12 : 16),
+          Container(
+            padding: EdgeInsets.all(isPhone ? 12 : 16),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: colorScheme.error),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    state.warning!,
+                    style: TextStyle(
+                      fontSize: 12 * scale,
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
 
@@ -139,15 +343,20 @@ class SendMoneyAmountPage extends StatelessWidget {
     final Widget keypadSection = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AmountKeypadWidget(maxWidth: keypadWidth),
+        AmountKeypadWidget(
+          maxWidth: keypadWidth,
+          onKeyTap: viewModel.appendAmountKey,
+          onBackspace: viewModel.backspaceAmount,
+        ),
         SizedBox(height: sectionSpacing),
         SizedBox(
           width: isPhone ? double.infinity : keypadWidth,
           child: PrimaryButtonWidget(
             text: "CONTINUE",
             onPressed: () {
-              AppRoutes.push(context, const SendMoneySuccessPage());
+              viewModel.previewTransfer();
             },
+            isLoading: state.action == SendMoneyAction.preview,
           ),
         ),
       ],

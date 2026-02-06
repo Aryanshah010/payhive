@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
+import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
 
-class SendMoneySuccessPage extends StatelessWidget {
+class SendMoneySuccessPage extends ConsumerWidget {
   const SendMoneySuccessPage({super.key});
 
   static const double tabletBreakpoint = 600;
@@ -12,7 +15,7 @@ class SendMoneySuccessPage extends StatelessWidget {
   static const double tabletContentMaxWidth = 820;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= tabletBreakpoint;
     final isPhone = width < tabletBreakpoint;
@@ -21,6 +24,22 @@ class SendMoneySuccessPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
+
+    final state = ref.watch(sendMoneyViewModelProvider);
+    final receipt = state.receipt;
+    final dateText = receipt != null
+        ? DateFormat('dd MMMM yyyy hh:mm a').format(receipt.createdAt)
+        : '--';
+
+    final fromName = receipt?.from.fullName ?? 'Sender';
+    final toName = receipt?.to.fullName ?? 'Receiver';
+    final fromPhone = receipt?.from.phoneNumber ?? '';
+    final toPhone = receipt?.to.phoneNumber ?? '';
+    final txId = receipt?.txId ?? '--';
+    final amountText =
+        receipt != null ? receipt.amount.toStringAsFixed(2) : '--';
+    final remarkText =
+        (receipt?.remark?.isNotEmpty ?? false) ? receipt!.remark! : '--';
 
     final double horizontalPadding = isPhone ? 16 : (isTabletNarrow ? 44 : 52);
     final double sectionSpacing = isPhone ? 16 : (isTabletNarrow ? 28 : 32);
@@ -137,18 +156,12 @@ class SendMoneySuccessPage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        const InfoRow(label: "From", value: "John Doe"),
-                        const InfoRow(label: "To", value: "Jane"),
-                        const InfoRow(
-                          label: "Transaction ID",
-                          value: "16A579HYC",
-                        ),
-                        const InfoRow(
-                          label: "Date&Time",
-                          value: "12 November 2025 04:26 pm",
-                        ),
-                        const InfoRow(label: "Amount(NPR)", value: "4934.08"),
-                        const InfoRow(label: "Remarks", value: "Paid"),
+                        InfoRow(label: "From", value: fromName),
+                        InfoRow(label: "To", value: toName),
+                        InfoRow(label: "Transaction ID", value: txId),
+                        InfoRow(label: "Date&Time", value: dateText),
+                        InfoRow(label: "Amount(NPR)", value: amountText),
+                        InfoRow(label: "Remarks", value: remarkText),
                         Divider(height: isTablet ? 28 : 22),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -168,7 +181,7 @@ class SendMoneySuccessPage extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    "9871000000",
+                                    toPhone.isNotEmpty ? toPhone : "--",
                                     style: TextStyle(
                                       fontSize: 13 * scale,
                                       fontWeight: FontWeight.w600,
@@ -193,7 +206,7 @@ class SendMoneySuccessPage extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    "9872300011",
+                                    fromPhone.isNotEmpty ? fromPhone : "--",
                                     style: TextStyle(
                                       fontSize: 13 * scale,
                                       fontWeight: FontWeight.w600,
@@ -211,7 +224,10 @@ class SendMoneySuccessPage extends StatelessWidget {
                   SizedBox(height: sectionSpacing),
                   PrimaryButtonWidget(
                     // Send-money flow is pushed from Home; popping to the first route returns to Home/Dashboard.
-                    onPressed: () => AppRoutes.popToFirst(context),
+                    onPressed: () {
+                      ref.read(sendMoneyViewModelProvider.notifier).resetFlow();
+                      AppRoutes.popToFirst(context);
+                    },
                     text: "DONE",
                   ),
                   SizedBox(height: isTablet ? 24 : 16),
