@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
+import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -89,6 +91,12 @@ class HomeScreen extends StatelessWidget {
                               QuickActionBtn(
                                 icon: Icons.arrow_upward,
                                 label: 'Send\nMoney',
+                                onTap: () {
+                                  AppRoutes.push(
+                                    context,
+                                    const SendMoneyInitialPage(),
+                                  );
+                                },
                               ),
                               QuickActionBtn(
                                 icon: Icons.arrow_downward,
