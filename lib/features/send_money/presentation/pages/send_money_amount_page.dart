@@ -204,7 +204,6 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
 
       if (next.status == SendMoneyStatus.previewSuccess) {
         viewModel.clearStatus();
-        // schedule bottom sheet after this frame, but only if still mounted
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           _openPinSheet();
@@ -225,6 +224,7 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
             context,
             SendMoneySuccessPage(receiptArg: receiptToPass),
           );
+          viewModel.resetFlow();
         });
 
       }
@@ -289,7 +289,6 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // header row with badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -375,7 +374,6 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
       ],
     );
 
-    // --- Keypad (phone-like, just larger on tablet) ---
     final double? keypadWidth = isPhone ? null : 440;
 
     final Widget keypadSection = Column(

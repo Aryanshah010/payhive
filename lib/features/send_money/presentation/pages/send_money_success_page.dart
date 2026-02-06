@@ -6,14 +6,12 @@ import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
-
-// import the entity type (optional but explicit)
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 
 class SendMoneySuccessPage extends ConsumerWidget {
   final ReceiptEntity? receiptArg;
 
-  const SendMoneySuccessPage({Key? key, this.receiptArg}) : super(key: key);
+  const SendMoneySuccessPage({super.key, this.receiptArg});
 
   static const double tabletBreakpoint = 600;
   static const double wideBreakpoint = 900;
@@ -31,7 +29,6 @@ class SendMoneySuccessPage extends ConsumerWidget {
     final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
 
     final state = ref.watch(sendMoneyViewModelProvider);
-    // prefer passed receiptArg, otherwise fall back to provider state
     final receipt = receiptArg ?? state.receipt;
 
     final dateText = receipt != null
@@ -43,10 +40,12 @@ class SendMoneySuccessPage extends ConsumerWidget {
     final fromPhone = receipt?.from.phoneNumber ?? '';
     final toPhone = receipt?.to.phoneNumber ?? '';
     final txId = receipt?.txId ?? '--';
-    final amountText =
-        receipt != null ? receipt.amount.toStringAsFixed(2) : '--';
-    final remarkText =
-        (receipt?.remark?.isNotEmpty ?? false) ? receipt!.remark! : '--';
+    final amountText = receipt != null
+        ? receipt.amount.toStringAsFixed(2)
+        : '--';
+    final remarkText = (receipt?.remark?.isNotEmpty ?? false)
+        ? receipt!.remark!
+        : '--';
 
     final double horizontalPadding = isPhone ? 16 : (isTabletNarrow ? 44 : 52);
     final double sectionSpacing = isPhone ? 16 : (isTabletNarrow ? 28 : 32);
@@ -230,7 +229,6 @@ class SendMoneySuccessPage extends ConsumerWidget {
                   ),
                   SizedBox(height: sectionSpacing),
                   PrimaryButtonWidget(
-                    // Send-money flow is pushed from Home; popping to the first route returns to Home/Dashboard.
                     onPressed: () {
                       ref.read(sendMoneyViewModelProvider.notifier).resetFlow();
                       AppRoutes.popToFirst(context);
