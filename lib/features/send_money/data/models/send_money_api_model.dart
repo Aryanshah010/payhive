@@ -20,7 +20,11 @@ class RecipientApiModel {
   }
 
   RecipientEntity toEntity() {
-    return RecipientEntity(id: id, fullName: fullName, phoneNumber: phoneNumber);
+    return RecipientEntity(
+      id: id,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+    );
   }
 }
 
@@ -31,20 +35,24 @@ class PreviewApiModel {
   PreviewApiModel({required this.recipient, this.warning});
 
   factory PreviewApiModel.fromJson(Map<String, dynamic> json) {
-    final recipientJson = (json['recipient'] ?? json['to'] ?? json['beneficiary'])
-        as Map<String, dynamic>?;
+    final rawRecipient =
+        json['recipient'] ?? json['to'] ?? json['beneficiary'] ?? {};
+
+    // coerce to Map<String, dynamic> safely
+    final Map<String, dynamic> recipientMap = (rawRecipient is Map)
+        ? Map<String, dynamic>.from(rawRecipient as Map)
+        : <String, dynamic>{};
 
     final rawWarning = json['warning'];
     String? warning;
     if (rawWarning is String && rawWarning.trim().isNotEmpty) {
       warning = rawWarning;
     } else if (rawWarning is bool && rawWarning) {
-      warning =
-          'This amount is significantly higher than your recent average.';
+      warning = 'This amount is significantly higher than your recent average.';
     }
 
     return PreviewApiModel(
-      recipient: RecipientApiModel.fromJson(recipientJson ?? {}),
+      recipient: RecipientApiModel.fromJson(recipientMap),
       warning: warning,
     );
   }
@@ -74,14 +82,29 @@ class ReceiptApiModel {
   });
 
   factory ReceiptApiModel.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> payload =
+        (json['receipt'] is Map)
+            ? Map<String, dynamic>.from(json['receipt'] as Map)
+            : json;
+
+    final rawFrom = payload['from'] ?? {};
+    final rawTo = payload['to'] ?? {};
+
+    final Map<String, dynamic> fromMap = (rawFrom is Map)
+        ? Map<String, dynamic>.from(rawFrom as Map)
+        : <String, dynamic>{};
+    final Map<String, dynamic> toMap = (rawTo is Map)
+        ? Map<String, dynamic>.from(rawTo as Map)
+        : <String, dynamic>{};
+
     return ReceiptApiModel(
-      txId: (json['txId'] ?? json['_id'] ?? '').toString(),
-      status: (json['status'] ?? '').toString(),
-      amount: _parseAmount(json['amount']),
-      remark: json['remark']?.toString(),
-      from: RecipientApiModel.fromJson((json['from'] ?? {}) as Map<String, dynamic>),
-      to: RecipientApiModel.fromJson((json['to'] ?? {}) as Map<String, dynamic>),
-      createdAt: _parseDate(json['createdAt']),
+      txId: (payload['txId'] ?? payload['_id'] ?? '').toString(),
+      status: (payload['status'] ?? '').toString(),
+      amount: _parseAmount(payload['amount']),
+      remark: payload['remark']?.toString(),
+      from: RecipientApiModel.fromJson(fromMap),
+      to: RecipientApiModel.fromJson(toMap),
+      createdAt: _parseDate(payload['createdAt']),
     );
   }
 

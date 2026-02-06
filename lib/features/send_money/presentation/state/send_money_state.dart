@@ -26,6 +26,8 @@ class SendMoneyState extends Equatable {
   final ReceiptEntity? receipt;
   final String? errorMessage;
   final int lockoutRemainingMs;
+  final String? confirmIdempotencyKey;
+  final bool confirmLocked;
 
   const SendMoneyState({
     required this.status,
@@ -38,6 +40,8 @@ class SendMoneyState extends Equatable {
     this.receipt,
     this.errorMessage,
     required this.lockoutRemainingMs,
+    this.confirmIdempotencyKey,
+    required this.confirmLocked,
   });
 
   factory SendMoneyState.initial() {
@@ -47,6 +51,7 @@ class SendMoneyState extends Equatable {
       phoneNumber: '',
       amountInput: '',
       lockoutRemainingMs: 0,
+      confirmLocked: false,
     );
   }
 
@@ -61,6 +66,8 @@ class SendMoneyState extends Equatable {
     Object? receipt = _unset,
     Object? errorMessage = _unset,
     int? lockoutRemainingMs,
+    Object? confirmIdempotencyKey = _unset,
+    bool? confirmLocked,
   }) {
     return SendMoneyState(
       status: status ?? this.status,
@@ -77,6 +84,11 @@ class SendMoneyState extends Equatable {
               ? this.errorMessage
               : errorMessage as String?,
       lockoutRemainingMs: lockoutRemainingMs ?? this.lockoutRemainingMs,
+      confirmIdempotencyKey:
+          confirmIdempotencyKey == _unset
+              ? this.confirmIdempotencyKey
+              : confirmIdempotencyKey as String?,
+      confirmLocked: confirmLocked ?? this.confirmLocked,
     );
   }
 
@@ -92,5 +104,7 @@ class SendMoneyState extends Equatable {
     receipt,
     errorMessage,
     lockoutRemainingMs,
+    confirmIdempotencyKey,
+    confirmLocked,
   ];
 }

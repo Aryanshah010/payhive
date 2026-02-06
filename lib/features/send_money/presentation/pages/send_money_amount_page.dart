@@ -23,6 +23,7 @@ class SendMoneyAmountPage extends ConsumerStatefulWidget {
 
 class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
   final TextEditingController _remarkController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
   bool _pinSheetOpen = false;
 
   get tabletContentMaxWidth => SendMoneyAmountPage.tabletContentMaxWidth;
@@ -39,118 +40,137 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
   @override
   void dispose() {
     _remarkController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
   Future<void> _openPinSheet() async {
-    if (_pinSheetOpen) return;
+    if (_pinSheetOpen || !mounted) return;
     _pinSheetOpen = true;
-    final pinController = TextEditingController();
+    _pinController.clear();
 
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return Consumer(
-          builder: (context, ref, _) {
-            final state = ref.watch(sendMoneyViewModelProvider);
-            final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
-            final colorScheme = Theme.of(context).colorScheme;
-            final isLocked =
-                state.status == SendMoneyStatus.locked &&
-                state.lockoutRemainingMs > 0;
+    try {
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (sheetContext) {
+          return Consumer(
+            builder: (sheetContext, ref, _) {
+              final state = ref.watch(sendMoneyViewModelProvider);
+              final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+              final colorScheme = Theme.of(sheetContext).colorScheme;
+              final isLocked =
+                  state.status == SendMoneyStatus.locked &&
+                  state.lockoutRemainingMs > 0;
+              final isConfirming =
+                  state.action == SendMoneyAction.confirm &&
+                  state.status == SendMoneyStatus.loading;
+              final isConfirmLocked = state.confirmLocked;
+              final isConfirmDisabled =
+                  isLocked || isConfirming || isConfirmLocked;
 
-            String lockoutText = '';
-            if (isLocked) {
-              final totalSeconds = (state.lockoutRemainingMs / 1000).ceil();
-              final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
-              final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
-              lockoutText = 'Try again in $minutes:$seconds';
-            }
+              String lockoutText = '';
+              if (isLocked) {
+                final totalSeconds = (state.lockoutRemainingMs / 1000).ceil();
+                final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+                final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+                lockoutText = 'Try again in $minutes:$seconds';
+              }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 48,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.outline.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    "Enter PIN",
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: pinController,
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    maxLength: 4,
-                    decoration: InputDecoration(
-                      counterText: '',
-                      hintText: "4-digit PIN",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  if (isLocked)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        lockoutText,
-                        style: TextStyle(
-                          color: colorScheme.error,
-                          fontWeight: FontWeight.w600,
+              return Padding(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 16,
+                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 48,
+                          height: 5,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: colorScheme.outline.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
                       ),
-                    ),
-                  const SizedBox(height: 16),
-                  Opacity(
-                    opacity: isLocked ? 0.6 : 1,
-                    child: IgnorePointer(
-                      ignoring: isLocked,
-                      child: PrimaryButtonWidget(
-                        onPressed: () {
-                          FocusManager.instance.primaryFocus?.unfocus();
-                          viewModel.confirmTransfer(pinController.text);
-                        },
-                        isLoading:
-                            state.action == SendMoneyAction.confirm &&
-                            state.status == SendMoneyStatus.loading,
-                        text: "CONFIRM",
+                      Text(
+                        "Enter PIN",
+                        style: Theme.of(sheetContext).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _pinController,
+                        keyboardType: TextInputType.number,
+                        obscureText: true,
+                        maxLength: 4,
+                        decoration: InputDecoration(
+                          counterText: '',
+                          hintText: "4-digit PIN",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      if (isLocked)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            lockoutText,
+                            style: TextStyle(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      Opacity(
+                        opacity: isConfirmDisabled ? 0.6 : 1,
+                        child: IgnorePointer(
+                          ignoring: isConfirmDisabled,
+                          child: PrimaryButtonWidget(
+                            onPressed: () {
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              viewModel.confirmTransfer(_pinController.text);
+                            },
+                            isLoading: isConfirming,
+                            text: "CONFIRM",
+                          ),
+                        ),
+                      ),
+                      if (isConfirmLocked && !isConfirming)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text(
+                            "Confirmation already submitted. Start a new transfer.",
+                            style: TextStyle(
+                              color: colorScheme.onSurface.withOpacity(0.7),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-
-    pinController.dispose();
-    _pinSheetOpen = false;
+                ),
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      _pinController.clear();
+      _pinSheetOpen = false;
+    }
   }
 
   @override
@@ -169,6 +189,10 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
 
     final state = ref.watch(sendMoneyViewModelProvider);
     final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+    final isConfirmLocked = state.confirmLocked;
+    final isConfirming =
+        state.action == SendMoneyAction.confirm &&
+        state.status == SendMoneyStatus.loading;
 
     ref.listen<SendMoneyState>(sendMoneyViewModelProvider, (prev, next) {
       if (prev?.status == next.status) return;
@@ -180,15 +204,29 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
 
       if (next.status == SendMoneyStatus.previewSuccess) {
         viewModel.clearStatus();
-        Future.microtask(_openPinSheet);
+        // schedule bottom sheet after this frame, but only if still mounted
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _openPinSheet();
+        });
       }
 
       if (next.status == SendMoneyStatus.confirmSuccess) {
-        viewModel.clearStatus();
-        if (_pinSheetOpen) {
+        final receiptToPass = next.receipt;
+
+        if (_pinSheetOpen && Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
-        AppRoutes.push(context, const SendMoneySuccessPage());
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+
+          AppRoutes.push(
+            context,
+            SendMoneySuccessPage(receiptArg: receiptToPass),
+          );
+        });
+
       }
     });
 
@@ -351,38 +389,59 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
         SizedBox(height: sectionSpacing),
         SizedBox(
           width: isPhone ? double.infinity : keypadWidth,
-          child: PrimaryButtonWidget(
-            text: "CONTINUE",
-            onPressed: () {
-              viewModel.previewTransfer();
-            },
-            isLoading: state.action == SendMoneyAction.preview,
+          child: Opacity(
+            opacity: isConfirmLocked ? 0.6 : 1,
+            child: IgnorePointer(
+              ignoring: isConfirmLocked,
+              child: PrimaryButtonWidget(
+                text: "CONTINUE",
+                onPressed: () {
+                  viewModel.previewTransfer();
+                },
+                isLoading: state.action == SendMoneyAction.preview,
+              ),
+            ),
           ),
         ),
+        if (isConfirmLocked)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              "Transfer already submitted. Change amount or start a new transfer.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
       ],
     );
 
-    return Scaffold(
-      appBar: AppBar(title: const Text("Send Money")),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPadding,
-            // vertical: isPhone ? 20 : 20,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isPhone ? 600 : tabletContentMaxWidth,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  formContent,
-                  SizedBox(height: sectionSpacing),
-                  keypadSection,
-                  SizedBox(height: isPhone ? 28 : 40),
-                ],
+    return WillPopScope(
+      onWillPop: () async => !isConfirming,
+      child: Scaffold(
+        appBar: AppBar(title: const Text("Send Money")),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              // vertical: isPhone ? 20 : 20,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: isPhone ? 600 : tabletContentMaxWidth,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    formContent,
+                    SizedBox(height: sectionSpacing),
+                    keypadSection,
+                    SizedBox(height: isPhone ? 28 : 40),
+                  ],
+                ),
               ),
             ),
           ),

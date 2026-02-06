@@ -7,8 +7,13 @@ import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
 
+// import the entity type (optional but explicit)
+import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
+
 class SendMoneySuccessPage extends ConsumerWidget {
-  const SendMoneySuccessPage({super.key});
+  final ReceiptEntity? receiptArg;
+
+  const SendMoneySuccessPage({Key? key, this.receiptArg}) : super(key: key);
 
   static const double tabletBreakpoint = 600;
   static const double wideBreakpoint = 900;
@@ -26,7 +31,9 @@ class SendMoneySuccessPage extends ConsumerWidget {
     final cardColor = Theme.of(context).cardTheme.color ?? colorScheme.surface;
 
     final state = ref.watch(sendMoneyViewModelProvider);
-    final receipt = state.receipt;
+    // prefer passed receiptArg, otherwise fall back to provider state
+    final receipt = receiptArg ?? state.receipt;
+
     final dateText = receipt != null
         ? DateFormat('dd MMMM yyyy hh:mm a').format(receipt.createdAt)
         : '--';
