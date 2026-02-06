@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/app/routes/app_routes.dart';
-import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
 import 'package:payhive/features/send_money/presentation/widgets/send_money_header.dart';
@@ -12,6 +11,8 @@ class SendMoneySuccessPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     final double horizontalPadding = isTablet ? 32 : 20;
     final double sectionSpacing = isTablet ? 28 : 20;
@@ -28,23 +29,23 @@ class SendMoneySuccessPage extends StatelessWidget {
               Container(
                 width: isTablet ? 90 : 72,
                 height: isTablet ? 90 : 72,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
                 child: Icon(
                   Icons.check,
-                  color: Colors.white,
+                  color: colorScheme.onPrimary,
                   size: isTablet ? 48 : 36,
                 ),
               ),
               SizedBox(height: isTablet ? 16 : 12),
               Text(
                 "Payment Success!",
-                style: TextStyle(
+                style: textTheme.titleLarge?.copyWith(
                   fontSize: isTablet ? 26 : 20,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
+                  color: colorScheme.primary,
                 ),
               ),
               SizedBox(height: sectionSpacing),
@@ -56,9 +57,9 @@ class SendMoneySuccessPage extends StatelessWidget {
                       icon: const Icon(Icons.share, size: 18),
                       label: const Text("Share"),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.darkText,
+                        foregroundColor: colorScheme.onSurface,
                         side: BorderSide(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: colorScheme.primary.withOpacity(0.4),
                         ),
                         padding: EdgeInsets.symmetric(
                           vertical: isTablet ? 16 : 12,
@@ -76,9 +77,9 @@ class SendMoneySuccessPage extends StatelessWidget {
                       icon: const Icon(Icons.download, size: 18),
                       label: const Text("PDF"),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.darkText,
+                        foregroundColor: colorScheme.onSurface,
                         side: BorderSide(
-                          color: AppColors.primary.withOpacity(0.4),
+                          color: colorScheme.primary.withOpacity(0.4),
                         ),
                         padding: EdgeInsets.symmetric(
                           vertical: isTablet ? 16 : 12,
@@ -96,9 +97,9 @@ class SendMoneySuccessPage extends StatelessWidget {
                 width: double.infinity,
                 padding: EdgeInsets.all(isTablet ? 20 : 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.borderGrey),
+                  border: Border.all(color: colorScheme.outlineVariant),
                 ),
                 child: Column(
                   children: [
@@ -123,7 +124,7 @@ class SendMoneySuccessPage extends StatelessWidget {
                                 "Receiver Payhive Id:",
                                 style: TextStyle(
                                   fontSize: isTablet ? 14 : 12,
-                                  color: AppColors.greyText,
+                                  color: colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -132,6 +133,7 @@ class SendMoneySuccessPage extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: isTablet ? 16 : 13,
                                   fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                             ],
@@ -145,7 +147,7 @@ class SendMoneySuccessPage extends StatelessWidget {
                                 "Sender Payhive Id:",
                                 style: TextStyle(
                                   fontSize: isTablet ? 14 : 12,
-                                  color: AppColors.greyText,
+                                  color: colorScheme.onSurface.withOpacity(0.6),
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -154,6 +156,7 @@ class SendMoneySuccessPage extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: isTablet ? 16 : 13,
                                   fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
                                 ),
                               ),
                             ],

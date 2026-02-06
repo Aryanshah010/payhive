@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/app/theme/colors.dart';
-
 class AmountKeypadWidget extends StatelessWidget {
   const AmountKeypadWidget({super.key, this.onKeyTap, this.onBackspace});
 
@@ -11,6 +9,7 @@ class AmountKeypadWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final keys = [
       '1',
@@ -27,7 +26,7 @@ class AmountKeypadWidget extends StatelessWidget {
       'back',
     ];
 
-    final double keySize = isTablet ? 80 : 20;
+    final double keySize = isTablet ? 80 : 60;
     final double fontSize = isTablet ? 22 : 16;
 
     return Padding(
@@ -50,14 +49,14 @@ class AmountKeypadWidget extends StatelessWidget {
             child: Container(
               height: keySize,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: colorScheme.primary,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Center(
                 child: isBack
                     ? Icon(
                         Icons.backspace_outlined,
-                        color: AppColors.darkText,
+                        color: colorScheme.onPrimary,
                         size: isTablet ? 26 : 20,
                       )
                     : Text(
@@ -65,7 +64,7 @@ class AmountKeypadWidget extends StatelessWidget {
                         style: TextStyle(
                           fontSize: fontSize,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.darkText,
+                          color: colorScheme.onPrimary,
                         ),
                       ),
               ),

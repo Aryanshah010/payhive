@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/app/theme/colors.dart';
-
 class InfoRow extends StatelessWidget {
   const InfoRow({super.key, required this.label, required this.value});
 
@@ -11,6 +9,7 @@ class InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: isTablet ? 6 : 4),
@@ -21,7 +20,7 @@ class InfoRow extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: isTablet ? 16 : 12,
-              color: AppColors.greyText,
+              color: colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           Flexible(
@@ -31,7 +30,7 @@ class InfoRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: isTablet ? 16 : 12,
                 fontWeight: FontWeight.w600,
-                color: AppColors.darkText,
+                color: colorScheme.onSurface,
               ),
             ),
           ),

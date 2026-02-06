@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:payhive/app/theme/colors.dart';
-
 class ReceiverChip extends StatelessWidget {
   const ReceiverChip({super.key, required this.name});
 
@@ -10,6 +8,7 @@ class ReceiverChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -18,14 +17,14 @@ class ReceiverChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderGrey),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Text(
         name,
         style: TextStyle(
           fontSize: isTablet ? 16 : 12,
           fontWeight: FontWeight.w500,
-          color: AppColors.darkText,
+          color: colorScheme.onSurface,
         ),
       ),
     );
