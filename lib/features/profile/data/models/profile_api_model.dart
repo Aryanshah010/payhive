@@ -4,6 +4,7 @@ class ProfileApiModel {
   final String? id;
   final String fullName;
   final String phoneNumber;
+  final String email;
   final String? imageUrl;
   final bool hasPin;
 
@@ -11,6 +12,7 @@ class ProfileApiModel {
     this.id,
     required this.fullName,
     required this.phoneNumber,
+    required this.email,
     this.imageUrl,
     this.hasPin = false,
   });
@@ -20,6 +22,7 @@ class ProfileApiModel {
       id: json['_id']?.toString(),
       fullName: json['fullName'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
+      email: json['email'] ?? '',
       imageUrl: json['imageUrl'],
       hasPin: json['hasPin'] == true,
     );
@@ -29,6 +32,7 @@ class ProfileApiModel {
     '_id': id,
     'fullName': fullName,
     'phoneNumber': phoneNumber,
+    'email': email,
     'imageUrl': imageUrl,
     'hasPin': hasPin,
   };
@@ -38,6 +42,7 @@ class ProfileApiModel {
       id: id,
       fullName: fullName,
       phoneNumber: phoneNumber,
+      email: email,
       imageUrl: imageUrl,
       hasPin: hasPin,
     );
@@ -48,6 +53,7 @@ class ProfileApiModel {
       id: entity.id,
       fullName: entity.fullName,
       phoneNumber: entity.phoneNumber,
+      email: entity.email,
       imageUrl: entity.imageUrl,
       hasPin: entity.hasPin,
     );

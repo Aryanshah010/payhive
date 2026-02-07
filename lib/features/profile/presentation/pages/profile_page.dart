@@ -113,6 +113,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
 
     final fullName = profileState.fullName ?? '';
     final phone = profileState.phoneNumber ?? '';
+    final email = profileState.email ?? '';
     final backendImage = profileState.imageUrl;
 
     return Scaffold(
@@ -230,7 +231,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                     Text(
                       fullName,
                       style: TextStyle(
-                        fontSize: 22 * scale,
+                        fontSize: 24 * scale,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -239,8 +240,15 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                     Text(
                       phone,
                       style: TextStyle(
-                        fontSize: 14 * scale,
+                        fontSize: 16 * scale,
                         color: Colors.white70,
+                      ),
+                    ),
+                    Text(
+                      email,
+                      style: TextStyle(
+                        fontSize: 12 * scale,
+                        color: Colors.white60,
                       ),
                     ),
                   ],

@@ -4,6 +4,7 @@ class ProfileEntity extends Equatable {
   final String? id;
   final String fullName;
   final String phoneNumber;
+  final String email;
   final String? imageUrl;
   final bool hasPin;
 
@@ -11,6 +12,7 @@ class ProfileEntity extends Equatable {
     this.id,
     required this.fullName,
     required this.phoneNumber,
+    required this.email,
     this.imageUrl,
     this.hasPin = false,
   });
