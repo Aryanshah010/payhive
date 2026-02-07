@@ -11,6 +11,7 @@ import 'package:payhive/features/auth/presentation/state/auth_state.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:payhive/features/auth/presentation/pages/signup_page.dart';
+import 'package:payhive/features/auth/presentation/pages/forgot_password_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -128,7 +129,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          FocusManager.instance.primaryFocus?.unfocus();
+                          AppRoutes.push(context, const ForgotPasswordPage());
+                        },
                         child: Text(
                           "Forget Password?",
                           style: TextStyle(

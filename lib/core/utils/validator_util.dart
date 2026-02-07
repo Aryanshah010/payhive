@@ -60,6 +60,20 @@ class ValidatorUtil {
     return null;
   }
 
+  static String? emailValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Please enter your email";
+    }
+
+    final trimmedEmail = value.trim().toLowerCase();
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    if (!emailRegex.hasMatch(trimmedEmail)) {
+      return "Please enter a valid email address";
+    }
+
+    return null;
+  }
+
   static String? confirmPasswordValidator({
     required String? value,
     required String? originalPassword,

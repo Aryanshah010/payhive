@@ -135,6 +135,7 @@ class AuthRepository implements IAuthRepository {
         final authModel = AuthHiveModel(
           fullName: entity.fullName,
           phoneNumber: entity.phoneNumber,
+          email: entity.email,
           password: entity.password,
         );
         await _authDatasource.register(authModel);
@@ -155,6 +156,63 @@ class AuthRepository implements IAuthRepository {
       return const Left(LocalDatabaseFailure(message: "Failed to logout"));
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String?>> requestPasswordReset(String email) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final token = await _authRemoteDatasource.requestPasswordReset(email);
+        if (token != null && token.isNotEmpty) {
+          return Right(token);
+        }
+        return const Left(
+          ApiFalilure(message: "Failed to send password reset email"),
+        );
+      } on DioException catch (e) {
+        return Left(
+          ApiFalilure(
+            message:
+                e.response?.data['message'] ?? 'Failed to send reset email',
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final success = await _authRemoteDatasource.resetPassword(
+          token: token,
+          newPassword: newPassword,
+        );
+        if (success) {
+          return const Right(true);
+        }
+        return const Left(ApiFalilure(message: "Password reset failed"));
+      } on DioException catch (e) {
+        return Left(
+          ApiFalilure(
+            message: e.response?.data['message'] ?? 'Password reset failed',
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    } else {
+      return const Left(NetworkFailure());
     }
   }
 }

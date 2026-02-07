@@ -4,6 +4,7 @@ class AuthApiModel {
   final String? id;
   final String fullName;
   final String phoneNumber;
+  final String? email;
   final String? password;
 
   AuthApiModel({
@@ -11,11 +12,17 @@ class AuthApiModel {
     required this.fullName,
     this.password,
     required this.phoneNumber,
+    this.email,
   });
 
   //toJSON
   Map<String, dynamic> toJson() {
-    return {"fullName": fullName, "phoneNumber": phoneNumber, "password": password};
+    return {
+      "fullName": fullName,
+      "phoneNumber": phoneNumber,
+      "email": email,
+      "password": password,
+    };
   }
 
   //fromJSON
@@ -24,12 +31,18 @@ class AuthApiModel {
       id: json['_id'] as String,
       fullName: json['fullName'] as String,
       phoneNumber: json['phoneNumber'] as String,
+      email: json['email'] as String?,
     );
   }
 
   //toEntity
   AuthEntity toEntity() {
-    return AuthEntity(authId: id, fullName: fullName, phoneNumber: phoneNumber);
+    return AuthEntity(
+      authId: id,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+      email: email,
+    );
   }
 
   //fromEntity
@@ -38,6 +51,7 @@ class AuthApiModel {
       fullName: entity.fullName,
       phoneNumber: entity.phoneNumber,
       password: entity.password,
+      email: entity.email,
     );
   }
 

@@ -25,6 +25,8 @@ class ApiEndpoints {
 
   static const String authLogin = '/auth/login';
   static const String authRegister = '/auth/register';
+  static const String authRequestPasswordReset = '/auth/request-password-reset';
+  static String authResetPassword(String token) => '/auth/reset-password/$token';
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
   static const String profilePin = '/profile/pin';

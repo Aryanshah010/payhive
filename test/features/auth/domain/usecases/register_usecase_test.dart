@@ -20,6 +20,7 @@ void main() {
   const params = RegisterUsecaseParams(
     fullName: 'John Doe',
     phoneNumber: '9800000000',
+    email: 'john@example.com',
     password: 'password123',
   );
 
@@ -28,6 +29,7 @@ void main() {
       const AuthEntity(
         fullName: 'fake',
         phoneNumber: '0000000000',
+        email: 'fake@example.com',
         password: 'fake',
       ),
     );
@@ -48,6 +50,7 @@ void main() {
           AuthEntity(
             fullName: params.fullName,
             phoneNumber: params.phoneNumber,
+            email: params.email,
             password: params.password,
           ),
         ),

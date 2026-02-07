@@ -53,7 +53,6 @@ class SendMoneySuccessPage extends ConsumerWidget {
     final double successIconSize = isPhone ? 36 : 52;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Send Money")),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
