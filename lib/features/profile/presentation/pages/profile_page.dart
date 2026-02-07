@@ -10,6 +10,7 @@ import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
+import 'package:payhive/features/profile/presentation/pages/pin_management_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -272,21 +273,50 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                         onTap: () {},
                       ),
                       _divider(context),
-                      MenuItem(
-                        icon: Icons.security_rounded,
-                        title: 'Security',
-                        onTap: () {},
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16 * scale),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                0,
+                                12 * scale,
+                                0,
+                                8 * scale,
+                              ),
+                              child: Text(
+                                'Security',
+                                style: TextStyle(
+                                  fontSize: 14 * scale,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            MenuItem(
+                              icon: Icons.fingerprint_rounded,
+                              title: 'Fingerprint',
+                              onTap: () {},
+                            ),
+                            MenuItem(
+                              icon: Icons.pin_rounded,
+                              title: 'PIN',
+                              onTap: () {
+                                final hasPin = profileState.hasPin;
+                                AppRoutes.push(
+                                  context,
+                                  PinManagementPage(hasPin: hasPin),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                       _divider(context),
                       MenuItem(
                         icon: Icons.devices_rounded,
                         title: 'Manage Devices',
-                        onTap: () {},
-                      ),
-                      _divider(context),
-                      MenuItem(
-                        icon: Icons.info_outline_rounded,
-                        title: 'About',
                         onTap: () {},
                       ),
                     ],
@@ -353,10 +383,9 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
             child: Text(
               'Cancel',
               style: TextStyle(
-                color: Theme.of(dialogContext)
-                    .colorScheme
-                    .onSurface
-                    .withOpacity(0.6),
+                color: Theme.of(
+                  dialogContext,
+                ).colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
           ),

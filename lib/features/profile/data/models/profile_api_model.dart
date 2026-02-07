@@ -5,12 +5,14 @@ class ProfileApiModel {
   final String fullName;
   final String phoneNumber;
   final String? imageUrl;
+  final bool hasPin;
 
   ProfileApiModel({
     this.id,
     required this.fullName,
     required this.phoneNumber,
     this.imageUrl,
+    this.hasPin = false,
   });
 
   factory ProfileApiModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class ProfileApiModel {
       fullName: json['fullName'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
       imageUrl: json['imageUrl'],
+      hasPin: json['hasPin'] == true,
     );
   }
 
@@ -27,6 +30,7 @@ class ProfileApiModel {
     'fullName': fullName,
     'phoneNumber': phoneNumber,
     'imageUrl': imageUrl,
+    'hasPin': hasPin,
   };
 
   ProfileEntity toEntity() {
@@ -35,6 +39,7 @@ class ProfileApiModel {
       fullName: fullName,
       phoneNumber: phoneNumber,
       imageUrl: imageUrl,
+      hasPin: hasPin,
     );
   }
 
@@ -44,6 +49,7 @@ class ProfileApiModel {
       fullName: entity.fullName,
       phoneNumber: entity.phoneNumber,
       imageUrl: entity.imageUrl,
+      hasPin: entity.hasPin,
     );
   }
 }

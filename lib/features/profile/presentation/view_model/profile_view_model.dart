@@ -45,6 +45,7 @@ class ProfileViewModel extends Notifier<ProfileState> {
           fullName: profile.fullName,
           phoneNumber: profile.phoneNumber,
           imageUrl: profile.imageUrl,
+          hasPin: profile.hasPin,
         );
       },
     );

@@ -7,6 +7,7 @@ class ProfileState extends Equatable {
   final String? fullName;
   final String? phoneNumber;
   final String? imageUrl;
+  final bool hasPin;
   final String? errorMessage;
 
   const ProfileState({
@@ -14,6 +15,7 @@ class ProfileState extends Equatable {
     this.fullName,
     this.phoneNumber,
     this.imageUrl,
+    this.hasPin = false,
     this.errorMessage,
   });
 
@@ -26,6 +28,7 @@ class ProfileState extends Equatable {
     String? fullName,
     String? phoneNumber,
     String? imageUrl,
+    bool? hasPin,
     String? errorMessage,
   }) {
     return ProfileState(
@@ -33,6 +36,7 @@ class ProfileState extends Equatable {
       fullName: fullName ?? this.fullName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       imageUrl: imageUrl ?? this.imageUrl,
+      hasPin: hasPin ?? this.hasPin,
       errorMessage: errorMessage,
     );
   }
@@ -43,6 +47,7 @@ class ProfileState extends Equatable {
     fullName,
     phoneNumber,
     imageUrl,
+    hasPin,
     errorMessage,
   ];
 }
