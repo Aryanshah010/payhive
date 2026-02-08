@@ -221,9 +221,7 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
 
     result.fold(
       (failure) {
-        if (failure is ValidationFailure) {
-          state = state.copyWith(confirmLocked: false);
-        }
+        state = state.copyWith(confirmLocked: false);
         _handleFailure(failure);
       },
       (receipt) {

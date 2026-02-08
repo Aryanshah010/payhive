@@ -32,7 +32,9 @@ class SendMoneySuccessPage extends ConsumerWidget {
     final receipt = receiptArg ?? state.receipt;
 
     final dateText = receipt != null
-        ? DateFormat('dd MMMM yyyy hh:mm a').format(receipt.createdAt)
+        ? DateFormat(
+            'dd MMMM yyyy hh:mm a',
+          ).format(receipt.createdAt.toLocal())
         : '--';
 
     final fromName = receipt?.from.fullName ?? 'Sender';

@@ -71,6 +71,9 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
               final isConfirmLocked = state.confirmLocked;
               final isConfirmDisabled =
                   isLocked || isConfirming || isConfirmLocked;
+              final showError =
+                  state.status == SendMoneyStatus.error &&
+                  state.errorMessage != null;
 
               String lockoutText = '';
               if (isLocked) {
@@ -120,8 +123,19 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          ),
                         ),
-                      ),
+                      if (showError)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            state.errorMessage!,
+                            style: TextStyle(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       if (isLocked)
                         Padding(
                           padding: const EdgeInsets.only(top: 6),
@@ -198,8 +212,10 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
       if (prev?.status == next.status) return;
 
       if (next.status == SendMoneyStatus.error && next.errorMessage != null) {
-        SnackbarUtil.showError(context, next.errorMessage!);
-        viewModel.clearStatus();
+        if (!_pinSheetOpen) {
+          SnackbarUtil.showError(context, next.errorMessage!);
+          viewModel.clearStatus();
+        }
       }
 
       if (next.status == SendMoneyStatus.previewSuccess) {

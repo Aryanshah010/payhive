@@ -22,6 +22,7 @@ void main() {
       id: '1',
       fullName: 'John Doe',
       phoneNumber: '9800000000',
+      email: 'john.doe@example.com',
       imageUrl: 'https://example.com/profile.jpg',
     );
 
