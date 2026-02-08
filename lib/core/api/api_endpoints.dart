@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const bool isPhysicalDevice = false;
-  static const String _ipAddress = '192.168.1.86';
+  static const bool isPhysicalDevice = true;
+  static const String _ipAddress = '192.168.1.116';
   static const int _port = 5050;
 
   // Base URLs
@@ -30,6 +30,7 @@ class ApiEndpoints {
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
   static const String profilePin = '/profile/pin';
+  static const String profileVerifyPin = '/profile/verify-pin';
 
   // Transactions
   static const String transactionsPreview = '/transactions/preview';

@@ -72,4 +72,14 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
   }
+
+  @override
+  Future<void> verifyPin(String pin) async {
+    final token = _tokenService.getToken();
+    await _apiClient.post(
+      ApiEndpoints.profileVerifyPin,
+      data: {'pin': pin},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
 }

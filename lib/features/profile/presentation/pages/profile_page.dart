@@ -8,7 +8,9 @@ import 'package:payhive/core/api/api_endpoints.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
+import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
+import 'package:payhive/features/profile/presentation/pages/fingerprint_setup_sheet.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/pages/pin_management_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
@@ -115,6 +117,8 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     final phone = profileState.phoneNumber ?? '';
     final email = profileState.email ?? '';
     final backendImage = profileState.imageUrl;
+    final biometricEnabled =
+        ref.watch(biometricStorageServiceProvider).isEnabled();
 
     return Scaffold(
       body: SafeArea(
@@ -305,7 +309,30 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                             MenuItem(
                               icon: Icons.fingerprint_rounded,
                               title: 'Fingerprint',
-                              onTap: () {},
+                              trailing: biometricEnabled
+                                  ? Text(
+                                      'Enabled',
+                                      style: TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14 * scale,
+                                      ),
+                                    )
+                                  : null,
+                              onTap: () {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(24),
+                                    ),
+                                  ),
+                                  builder: (sheetContext) {
+                                    return const FingerprintSetupSheet();
+                                  },
+                                );
+                              },
                             ),
                             MenuItem(
                               icon: Icons.pin_rounded,

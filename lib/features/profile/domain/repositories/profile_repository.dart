@@ -7,4 +7,5 @@ abstract interface class IProfileRepository {
   Future<Either<Failure, String>> uploadProfileImage(File image);
   Future<Either<Failure, ProfileEntity>> getProfile();
   Future<Either<Failure, bool>> setPin({required String newPin, String? oldPin});
+  Future<Either<Failure, bool>> verifyPin({required String pin});
 }

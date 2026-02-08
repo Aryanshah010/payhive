@@ -85,4 +85,29 @@ class ProfileRepository implements IProfileRepository {
       return Left(ApiFalilure(message: "No Internet connection"));
     }
   }
+
+  @override
+  Future<Either<Failure, bool>> verifyPin({required String pin}) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        await _profileRemoteDatasource.verifyPin(pin);
+        return const Right(true);
+      } on DioException catch (e) {
+        final data = e.response?.data;
+        final message = data is Map && data['message'] != null
+            ? data['message'].toString()
+            : 'PIN verification failed';
+        return Left(
+          ApiFalilure(
+            message: message,
+            statusCode: e.response?.statusCode,
+          ),
+        );
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFalilure(message: "No Internet connection"));
+    }
+  }
 }

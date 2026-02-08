@@ -6,4 +6,5 @@ abstract interface class IProfileRemoteDataSource{
   Future<String> uploadProfileImage(File image);
   Future<ProfileApiModel> getProfile();
   Future<void> setPin({required String newPin, String? oldPin});
+  Future<void> verifyPin(String pin);
 }
