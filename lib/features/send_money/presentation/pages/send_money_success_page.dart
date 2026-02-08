@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/share_and_pdf_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
@@ -32,9 +33,7 @@ class SendMoneySuccessPage extends ConsumerWidget {
     final receipt = receiptArg ?? state.receipt;
 
     final dateText = receipt != null
-        ? DateFormat(
-            'dd MMMM yyyy hh:mm a',
-          ).format(receipt.createdAt.toLocal())
+        ? DateFormat('dd MMMM yyyy hh:mm a').format(receipt.createdAt.toLocal())
         : '--';
 
     final fromName = receipt?.from.fullName ?? 'Sender';
@@ -101,7 +100,11 @@ class SendMoneySuccessPage extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                            if (receipt != null) {
+                              await sharePdf(context, receipt);
+                            }
+                          },
                           icon: Icon(Icons.share, size: isTablet ? 20 : 18),
                           label: Text(
                             "Share",
@@ -127,7 +130,11 @@ class SendMoneySuccessPage extends ConsumerWidget {
                       SizedBox(width: isTablet ? 16 : 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                            if (receipt != null) {
+                              await savePdfToDevice(context, receipt);
+                            }
+                          },
                           icon: Icon(Icons.download, size: isTablet ? 20 : 18),
                           label: Text(
                             "PDF",
