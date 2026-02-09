@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -24,14 +25,17 @@ class BiometricService {
   }
 
   Future<bool> authenticate({required String reason}) async {
-    try {
-      return await _auth.authenticate(
-        localizedReason: reason,
-        biometricOnly: true,
-        persistAcrossBackgrounding: true,
-      );
-    } catch (_) {
-      return false;
-    }
+  try {
+    final didAuthenticate = await _auth.authenticate(
+      localizedReason: reason,
+      biometricOnly: true,
+    );
+    return didAuthenticate;
+  } catch (e, st) {
+    debugPrint('Biometric authentication error: $e');
+    debugPrint('$st');
+    return false;
   }
+}
+
 }
