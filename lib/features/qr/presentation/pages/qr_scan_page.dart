@@ -1,28 +1,30 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:payhive/features/dashboard/presentation/widgets/scanner_overlay_painter.dart';
+import 'package:payhive/features/qr/presentation/widgets/my_qr_page_widget.dart';
+import 'package:payhive/features/qr/presentation/widgets/scanner_overlay_painter.dart';
+import 'package:payhive/features/qr/presentation/widgets/swipe_animation_widget.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 
-class QrScanScreen extends StatefulWidget {
-  const QrScanScreen({super.key});
+class QrScanPage extends StatefulWidget {
+  const QrScanPage({super.key});
 
   @override
-  State<QrScanScreen> createState() => _QrScanScreenState();
+  State<QrScanPage> createState() => _QrScanPageState();
 }
 
-class _QrScanScreenState extends State<QrScanScreen>
+class _QrScanPageState extends State<QrScanPage>
     with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   late final MobileScannerController _scannerController;
 
   bool _cameraGranted = false;
   bool _permissionChecked = false;
+  bool _askedCameraRequest = false;
   bool _isProcessing = false;
   bool _galleryDenied = false;
   int _currentPage = 0;
@@ -36,7 +38,12 @@ class _QrScanScreenState extends State<QrScanScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _scannerController = MobileScannerController(facing: CameraFacing.back);
+
+    _scannerController = MobileScannerController(
+      facing: CameraFacing.back,
+      autoStart: false,
+    );
+
     _pageController.addListener(_onPageChangedInternal);
     _checkCameraPermission();
   }
@@ -59,47 +66,55 @@ class _QrScanScreenState extends State<QrScanScreen>
   }
 
   void _onPageChangedInternal() {
-    final page = (_pageController.hasClients)
+    final page = _pageController.hasClients
         ? _pageController.page?.round() ?? 0
         : 0;
+
     if (page != _currentPage) {
       _currentPage = page;
       _updateScannerState();
     }
   }
 
-  Future<void> _checkCameraPermission() async {
+  Future<void> _checkCameraPermission({bool forceRequest = false}) async {
     _permissionChecked = false;
-    setState(() {});
+    if (mounted) setState(() {});
 
     final status = await Permission.camera.status;
 
     if (status.isGranted) {
       _cameraGranted = true;
-    } else {
+    } else if (forceRequest || !_askedCameraRequest) {
+      _askedCameraRequest = true;
       final result = await Permission.camera.request();
       _cameraGranted = result.isGranted;
+    } else {
+      _cameraGranted = false;
     }
 
     _permissionChecked = true;
-    setState(() {});
-
+    if (mounted) setState(() {});
     _updateScannerState();
   }
 
   void _updateScannerState() {
-    if (_currentPage == 0 && _cameraGranted) {
-      _scannerController.start();
-    } else {
-      _scannerController.stop();
-    }
+    if (!mounted || !_permissionChecked) return;
+
+    try {
+      if (_currentPage == 0 && _cameraGranted) {
+        _scannerController.start();
+      } else {
+        _scannerController.stop();
+      }
+    } catch (_) {}
   }
 
   void _handleQrResult(String value) {
     if (_isProcessing) return;
-    _isProcessing = true;
 
+    _isProcessing = true;
     scannedQrData = value;
+
     SnackbarUtil.showSuccess(context, "Valid QR detected");
 
     Future.delayed(const Duration(seconds: 1), () {
@@ -116,7 +131,9 @@ class _QrScanScreenState extends State<QrScanScreen>
     try {
       final String? data = await QrCodeToolsPlugin.decodeFrom(file.path);
 
-      if (data == null || data.isEmpty) throw Exception("Invalid QR");
+      if (data == null || data.isEmpty) {
+        throw Exception("Invalid QR");
+      }
 
       scannedQrData = data;
       if (mounted) {
@@ -133,6 +150,7 @@ class _QrScanScreenState extends State<QrScanScreen>
     if (_galleryDenied) return;
 
     final permission = Platform.isIOS ? Permission.photos : Permission.photos;
+
     final status = await permission.status;
 
     if (status.isGranted || status.isLimited) {
@@ -150,26 +168,18 @@ class _QrScanScreenState extends State<QrScanScreen>
 
       _galleryDenied = true;
       if (mounted) {
-        SnackbarUtil.showError(
-          context,
-          "Gallery access denied. Returning to home.",
-        );
-        await Future.delayed(const Duration(milliseconds: 2000));
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+        SnackbarUtil.showError(context, "Gallery access denied.");
       }
       return;
     }
 
     if (status.isPermanentlyDenied) {
+      _galleryDenied = true;
       if (mounted) {
-        _galleryDenied = true;
         SnackbarUtil.showError(
           context,
           "Gallery permission permanently denied. Enable it from settings.",
         );
-        await Future.delayed(const Duration(milliseconds: 2000));
         await openAppSettings();
       }
     }
@@ -177,6 +187,7 @@ class _QrScanScreenState extends State<QrScanScreen>
 
   Widget _buildScannerPage() {
     final colorScheme = Theme.of(context).colorScheme;
+
     if (!_permissionChecked) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -200,7 +211,8 @@ class _QrScanScreenState extends State<QrScanScreen>
         LayoutBuilder(
           builder: (context, constraints) {
             final screenSize = constraints.biggest;
-            final scanSize = 260.0;
+            const scanSize = 260.0;
+
             final scanWindow = Rect.fromLTWH(
               (screenSize.width - scanSize) / 2,
               (screenSize.height - scanSize) / 2 - 40,
@@ -214,14 +226,13 @@ class _QrScanScreenState extends State<QrScanScreen>
                 scanWindow: scanWindow,
                 overlayColor: Colors.black.withOpacity(0.55),
                 borderColor: colorScheme.onSurface.withOpacity(0.9),
-                borderWidth: 3.0,
-                borderRadius: 16.0,
+                borderWidth: 3,
+                borderRadius: 16,
               ),
             );
           },
         ),
 
-        // Top button
         SafeArea(
           child: Align(
             alignment: Alignment.topCenter,
@@ -247,7 +258,6 @@ class _QrScanScreenState extends State<QrScanScreen>
           ),
         ),
 
-        // Bottom hint
         SafeArea(
           child: Align(
             alignment: Alignment.bottomCenter,
@@ -256,11 +266,15 @@ class _QrScanScreenState extends State<QrScanScreen>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(Icons.qr_code_scanner, color: Colors.white),
+                  SwipeArrowHint(),
                   SizedBox(width: 8),
                   Text(
-                    "Swipe left to view My QR",
-                    style: TextStyle(color: Colors.white),
+                    "Swipe left to view your QR",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -278,7 +292,7 @@ class _QrScanScreenState extends State<QrScanScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.camera, size: 64),
+            const Icon(Icons.camera_alt_outlined, size: 64),
             const SizedBox(height: 16),
             const Text(
               "Camera permission is required to scan QR codes.",
@@ -286,86 +300,13 @@ class _QrScanScreenState extends State<QrScanScreen>
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _checkCameraPermission,
+              onPressed: () => _checkCameraPermission(forceRequest: true),
               child: const Text("Try Again"),
             ),
             TextButton(
-              onPressed: () async {
-                await openAppSettings();
-              },
+              onPressed: openAppSettings,
               child: const Text("Open Settings"),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMyQrPage() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 36,
-              backgroundColor: AppColors.primaryLight,
-              child: Text(
-                userName.isNotEmpty ? userName[0] : '',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              userName,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              "PayHive ID: $payHiveId",
-              style: TextStyle(
-                color: colorScheme.onSurface.withOpacity(0.6),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardTheme.color ?? colorScheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorScheme.shadow.withOpacity(0.12),
-                    blurRadius: 8,
-                  ),
-                ],
-              ),
-              child: QrImageView(
-                data: "payhive://user?id=$payHiveId",
-                size: 220,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "Ask others to scan this QR to send you money",
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            if (scannedQrData != null) ...[
-              const Divider(),
-              const SizedBox(height: 8),
-              const Text(
-                "Last scanned (temp):",
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(scannedQrData!),
-            ],
           ],
         ),
       ),
@@ -378,7 +319,15 @@ class _QrScanScreenState extends State<QrScanScreen>
       appBar: AppBar(title: const Text("Scan QR")),
       body: PageView(
         controller: _pageController,
-        children: [_buildScannerPage(), _buildMyQrPage()],
+        children: [
+          _buildScannerPage(),
+          BuildMyQrPage(
+            context: context,
+            userName: userName,
+            payHiveId: payHiveId,
+            scannedQrData: scannedQrData,
+          ),
+        ],
       ),
     );
   }

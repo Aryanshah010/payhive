@@ -90,90 +90,93 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
                   top: 16,
                   bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
                 ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 48,
-                          height: 5,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: colorScheme.outline.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        "Enter PIN",
-                        style: Theme.of(sheetContext).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _pinController,
-                        keyboardType: TextInputType.number,
-                        obscureText: true,
-                        maxLength: 4,
-                        decoration: InputDecoration(
-                          counterText: '',
-                          hintText: "4-digit PIN",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          ),
-                        ),
-                      if (showError)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            state.errorMessage!,
-                            style: TextStyle(
-                              color: colorScheme.error,
-                              fontWeight: FontWeight.w600,
+                child: SafeArea(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 48,
+                            height: 5,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: colorScheme.outline.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                           ),
                         ),
-                      if (isLocked)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            lockoutText,
-                            style: TextStyle(
-                              color: colorScheme.error,
-                              fontWeight: FontWeight.w600,
+                        Text(
+                          "Enter PIN",
+                          style: Theme.of(sheetContext).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _pinController,
+                          keyboardType: TextInputType.number,
+                          obscureText: true,
+                          maxLength: 4,
+                          decoration: InputDecoration(
+                            counterText: '',
+                            hintText: "4-digit PIN",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            ),
+                          ),
+                        if (showError)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              state.errorMessage!,
+                              style: TextStyle(
+                                color: colorScheme.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        if (isLocked)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              lockoutText,
+                              style: TextStyle(
+                                color: colorScheme.error,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        Opacity(
+                          opacity: isConfirmDisabled ? 0.6 : 1,
+                          child: IgnorePointer(
+                            ignoring: isConfirmDisabled,
+                            child: PrimaryButtonWidget(
+                              onPressed: () {
+                                FocusManager.instance.primaryFocus?.unfocus();
+                                viewModel.confirmTransfer(_pinController.text);
+                              },
+                              isLoading: isConfirming,
+                              text: "CONFIRM",
                             ),
                           ),
                         ),
-                      const SizedBox(height: 16),
-                      Opacity(
-                        opacity: isConfirmDisabled ? 0.6 : 1,
-                        child: IgnorePointer(
-                          ignoring: isConfirmDisabled,
-                          child: PrimaryButtonWidget(
-                            onPressed: () {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              viewModel.confirmTransfer(_pinController.text);
-                            },
-                            isLoading: isConfirming,
-                            text: "CONFIRM",
-                          ),
-                        ),
-                      ),
-                      if (isConfirmLocked && !isConfirming)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            "Confirmation already submitted. Start a new transfer.",
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.7),
-                              fontWeight: FontWeight.w600,
+                        if (isConfirmLocked && !isConfirming)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              "Confirmation already submitted. Start a new transfer.",
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.7),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                        ),
-                    ],
+                        const SizedBox(height: 16),
+                      ],
+                    ),
                   ),
                 ),
               );

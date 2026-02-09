@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
-import 'package:payhive/features/dashboard/presentation/pages/qr_scan_screen.dart';
+import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
 import 'package:payhive/features/dashboard/presentation/pages/statement_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
@@ -39,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => QrScanScreen()),
+                  MaterialPageRoute(builder: (context) => QrScanPage()),
                 );
               },
               backgroundColor: AppColors.primary,
@@ -52,7 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => QrScanScreen()),
+                  MaterialPageRoute(builder: (context) => QrScanPage()),
                 );
               },
               backgroundColor: AppColors.primary,

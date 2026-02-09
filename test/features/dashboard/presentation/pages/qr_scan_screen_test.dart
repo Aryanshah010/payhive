@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
-import 'package:payhive/features/dashboard/presentation/pages/qr_scan_screen.dart';
+import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
 
 class FakePermissionHandler extends PermissionHandlerPlatform {
   final PermissionStatus cameraStatus;
@@ -49,7 +49,7 @@ void main() {
   testWidgets('shows loading indicator before permission check completes', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanScreen()));
+    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
@@ -57,7 +57,7 @@ void main() {
   testWidgets('shows permission denied UI when camera permission is denied', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanScreen()));
+    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
 
     await tester.pumpAndSettle();
 
@@ -74,7 +74,7 @@ void main() {
   testWidgets('can swipe to My QR page even when camera permission is denied', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanScreen()));
+    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
 
     await tester.pumpAndSettle();
 
@@ -90,7 +90,7 @@ void main() {
   testWidgets('My QR page shows user name and PayHive ID', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanScreen()));
+    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
 
     await tester.pumpAndSettle();
     await tester.drag(find.byType(PageView), const Offset(-400, 0));
