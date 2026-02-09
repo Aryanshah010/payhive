@@ -12,6 +12,7 @@
 
 
 
+
     <application
         android:label="payhive"
         android:name="${applicationName}"

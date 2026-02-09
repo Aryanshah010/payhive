@@ -1,9 +1,13 @@
+// ignore_for_file: use_build_context_synchronously
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/pdf_downloader.dart';
 import 'package:payhive/core/utils/share_and_pdf_util.dart';
+import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
@@ -131,10 +135,32 @@ class SendMoneySuccessPage extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () async {
-                            if (receipt != null) {
-                              await savePdfToDevice(context, receipt);
+                            if (receipt == null) return;
+
+                            try {
+                              final bytes = await buildPdfBytes(receipt);
+
+                              if (Platform.isAndroid) {
+                                await PdfDownloader.saveToDownloads(
+                                  bytes: bytes,
+                                  filename: 'receipt_${receipt.txId}.pdf',
+                                );
+
+                                SnackbarUtil.showInfo(
+                                  context,
+                                  'Saved to Downloads',
+                                );
+                              } else if (Platform.isIOS) {
+                                await sharePdf(context, receipt);
+                              }
+                            } catch (e) {
+                              SnackbarUtil.showError(
+                                context,
+                                'Failed to save PDF',
+                              );
                             }
                           },
+
                           icon: Icon(Icons.download, size: isTablet ? 20 : 18),
                           label: Text(
                             "PDF",

@@ -45,35 +45,22 @@ class BuildMyQrPage extends StatelessWidget {
                   ),
                 ],
               ),
-              child: QrImageView(
-                data: "payhive://user?id=$payHiveId",
-                size: 220,
-                errorStateBuilder: (cxt, err) => const Center(
-                  child: Text(
-                    "Uh oh! Something went wrong...",
-                    textAlign: TextAlign.center,
-                  ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-
-
+                child: QrImageView(
+                  data: "payhive://user?id=$payHiveId",
+                  size: 220,
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Scan to receive money",
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            if (scannedQrData != null) ...[
-              const Divider(),
-              const SizedBox(height: 8),
-              const Text(
-                "Last scanned (temp):",
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(scannedQrData!),
-            ],
+            const Text("Scan to receive money", textAlign: TextAlign.center),
           ],
         ),
       ),
