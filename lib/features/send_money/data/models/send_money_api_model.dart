@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_cast
+
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 
 class RecipientApiModel {

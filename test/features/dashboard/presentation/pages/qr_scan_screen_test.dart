@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
+import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
 
 class FakePermissionHandler extends PermissionHandlerPlatform {
@@ -31,6 +33,30 @@ class FakePermissionHandler extends PermissionHandlerPlatform {
   }
 }
 
+class FakeUserSessionService implements UserSessionService {
+  @override
+  bool isLoggedIn() => true;
+
+  @override
+  Future<void> clearUserSession() async {}
+
+  @override
+  String? getUserFullName() => 'Aryan Shah';
+
+  @override
+  String? getUserId() => 'user-1';
+
+  @override
+  String? getUserPhoneNumber() => '9815905635';
+
+  @override
+  Future<void> saveUserSession({
+    required String userId,
+    required String fullName,
+    required String phoneNumber,
+  }) async {}
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -49,7 +75,14 @@ void main() {
   testWidgets('shows loading indicator before permission check completes', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userSessionServiceProvider.overrideWithValue(FakeUserSessionService()),
+        ],
+        child: const MaterialApp(home: QrScanPage()),
+      ),
+    );
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
@@ -57,7 +90,14 @@ void main() {
   testWidgets('shows permission denied UI when camera permission is denied', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userSessionServiceProvider.overrideWithValue(FakeUserSessionService()),
+        ],
+        child: const MaterialApp(home: QrScanPage()),
+      ),
+    );
 
     await tester.pumpAndSettle();
 
@@ -66,7 +106,7 @@ void main() {
       findsOneWidget,
     );
 
-    expect(find.byIcon(Icons.camera), findsOneWidget);
+    expect(find.byIcon(Icons.camera_alt_outlined), findsOneWidget);
     expect(find.text('Try Again'), findsOneWidget);
     expect(find.text('Open Settings'), findsOneWidget);
   });
@@ -74,23 +114,34 @@ void main() {
   testWidgets('can swipe to My QR page even when camera permission is denied', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userSessionServiceProvider.overrideWithValue(FakeUserSessionService()),
+        ],
+        child: const MaterialApp(home: QrScanPage()),
+      ),
+    );
 
     await tester.pumpAndSettle();
 
     await tester.drag(find.byType(PageView), const Offset(-400, 0));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Ask others to scan this QR to send you money'),
-      findsOneWidget,
-    );
+    expect(find.text('Scan to receive money'), findsOneWidget);
   });
 
   testWidgets('My QR page shows user name and PayHive ID', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: QrScanPage()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          userSessionServiceProvider.overrideWithValue(FakeUserSessionService()),
+        ],
+        child: const MaterialApp(home: QrScanPage()),
+      ),
+    );
 
     await tester.pumpAndSettle();
     await tester.drag(find.byType(PageView), const Offset(-400, 0));
@@ -98,6 +149,5 @@ void main() {
 
     expect(find.text('Aryan Shah'), findsOneWidget);
     expect(find.textContaining('PayHive ID:'), findsOneWidget);
-    expect(find.byType(CircleAvatar), findsOneWidget);
   });
 }

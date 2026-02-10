@@ -1,23 +1,31 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:payhive/app/routes/app_routes.dart';
+import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/qr/presentation/widgets/my_qr_page_widget.dart';
 import 'package:payhive/features/qr/presentation/widgets/scanner_overlay_painter.dart';
 import 'package:payhive/features/qr/presentation/widgets/swipe_animation_widget.dart';
+import 'package:payhive/features/qr/presentation/view_model/qr_scan_view_model.dart';
+import 'package:payhive/features/send_money/presentation/pages/send_money_amount_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
 import 'package:payhive/app/theme/colors.dart';
-import 'package:payhive/core/utils/snackbar_util.dart';
+import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
+import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
+import 'package:payhive/core/services/storage/user_session_service.dart';
 
-class QrScanPage extends StatefulWidget {
+class QrScanPage extends ConsumerStatefulWidget {
   const QrScanPage({super.key});
 
   @override
-  State<QrScanPage> createState() => _QrScanPageState();
+  ConsumerState<QrScanPage> createState() => _QrScanPageState();
 }
 
-class _QrScanPageState extends State<QrScanPage>
+class _QrScanPageState extends ConsumerState<QrScanPage>
     with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   late final MobileScannerController _scannerController;
@@ -25,14 +33,13 @@ class _QrScanPageState extends State<QrScanPage>
   bool _cameraGranted = false;
   bool _permissionChecked = false;
   bool _askedCameraRequest = false;
-  bool _isProcessing = false;
   bool _galleryDenied = false;
+  bool _scannerPausedByInvalid = false;
   int _currentPage = 0;
+  Timer? _invalidPauseTimer;
 
-  String? scannedQrData;
-
-  final String userName = "Aryan Shah";
-  final String payHiveId = "9876543210";
+  String _userName = "User";
+  String _payHiveId = "0000000000";
 
   @override
   void initState() {
@@ -46,6 +53,7 @@ class _QrScanPageState extends State<QrScanPage>
 
     _pageController.addListener(_onPageChangedInternal);
     _checkCameraPermission();
+    _loadUserInfo();
   }
 
   @override
@@ -53,6 +61,7 @@ class _QrScanPageState extends State<QrScanPage>
     WidgetsBinding.instance.removeObserver(this);
     _pageController.removeListener(_onPageChangedInternal);
     _pageController.dispose();
+    _invalidPauseTimer?.cancel();
     _scannerController.dispose();
     super.dispose();
   }
@@ -99,9 +108,13 @@ class _QrScanPageState extends State<QrScanPage>
 
   void _updateScannerState() {
     if (!mounted || !_permissionChecked) return;
+    final isProcessing = ref.read(qrScanViewModelProvider).isProcessing;
 
     try {
-      if (_currentPage == 0 && _cameraGranted) {
+      if (_currentPage == 0 &&
+          _cameraGranted &&
+          !isProcessing &&
+          !_scannerPausedByInvalid) {
         _scannerController.start();
       } else {
         _scannerController.stop();
@@ -110,15 +123,45 @@ class _QrScanPageState extends State<QrScanPage>
   }
 
   void _handleQrResult(String value) {
-    if (_isProcessing) return;
+    _handleQrPayload(value);
+  }
 
-    _isProcessing = true;
-    scannedQrData = value;
+  void _handleQrPayload(String raw) {
+    final qrViewModel = ref.read(qrScanViewModelProvider.notifier);
+    final result = qrViewModel.handleScan(raw);
 
-    SnackbarUtil.showSuccess(context, "Valid QR detected");
+    if (result.ignored) return;
+    if (result.invalid) {
+      _pauseScannerAfterInvalid();
+      SnackbarUtil.showError(context, "Invalid QR code");
+      return;
+    }
 
-    Future.delayed(const Duration(seconds: 1), () {
-      _isProcessing = false;
+    final phone = result.phone;
+    if (phone == null) return;
+
+    _scannerController.stop();
+
+    final sendMoneyViewModel = ref.read(sendMoneyViewModelProvider.notifier);
+    sendMoneyViewModel.resetFlow();
+    sendMoneyViewModel.setPhoneNumber(phone);
+
+    SnackbarUtil.showInfo(context, "Checking beneficiary...");
+    sendMoneyViewModel.lookupBeneficiary();
+  }
+
+  void _pauseScannerAfterInvalid() {
+    _invalidPauseTimer?.cancel();
+    _scannerPausedByInvalid = true;
+    try {
+      _scannerController.stop();
+    } catch (_) {}
+
+    final pauseDuration =
+        ref.read(qrScanViewModelProvider.notifier).invalidPauseDuration;
+    _invalidPauseTimer = Timer(pauseDuration, () {
+      _scannerPausedByInvalid = false;
+      _updateScannerState();
     });
   }
 
@@ -135,15 +178,27 @@ class _QrScanPageState extends State<QrScanPage>
         throw Exception("Invalid QR");
       }
 
-      scannedQrData = data;
       if (mounted) {
-        SnackbarUtil.showSuccess(context, "Valid QR detected from gallery");
+        _handleQrPayload(data);
       }
     } catch (_) {
       if (mounted) {
         SnackbarUtil.showError(context, "No valid QR found in selected image");
       }
     }
+  }
+
+  void _loadUserInfo() {
+    final session = ref.read(userSessionServiceProvider);
+    final name = session.getUserFullName();
+    final phone = session.getUserPhoneNumber();
+
+    setState(() {
+      _userName = (name == null || name.trim().isEmpty) ? "User" : name;
+      _payHiveId = (phone == null || phone.trim().isEmpty)
+          ? "0000000000"
+          : phone;
+    });
   }
 
   Future<void> _scanFromGallery() async {
@@ -187,6 +242,7 @@ class _QrScanPageState extends State<QrScanPage>
 
   Widget _buildScannerPage() {
     final colorScheme = Theme.of(context).colorScheme;
+    final qrState = ref.watch(qrScanViewModelProvider);
 
     if (!_permissionChecked) {
       return const Center(child: CircularProgressIndicator());
@@ -281,6 +337,29 @@ class _QrScanPageState extends State<QrScanPage>
             ),
           ),
         ),
+
+        if (qrState.isProcessing)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.55),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: Colors.white),
+                  const SizedBox(height: 12),
+                  //loading spinner till the lookup is done
+                  const Text(
+                    "Processing...",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -315,6 +394,34 @@ class _QrScanPageState extends State<QrScanPage>
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+    final qrViewModel = ref.read(qrScanViewModelProvider.notifier);
+    final qrState = ref.watch(qrScanViewModelProvider);
+    ref.listen<SendMoneyState>(sendMoneyViewModelProvider, (prev, next) {
+      if (prev?.status == next.status) return;
+
+      if (next.status == SendMoneyStatus.error && next.errorMessage != null) {
+        final rawMessage = next.errorMessage!;
+        final displayMessage =
+            rawMessage.trim().toLowerCase() == 'recipient not found'
+                ? 'No Payhive user for this number.'
+                : rawMessage;
+        SnackbarUtil.showError(context, displayMessage);
+        viewModel.clearStatus();
+        qrViewModel.markProcessingComplete();
+        _updateScannerState();
+      }
+
+      if (next.status == SendMoneyStatus.lookupSuccess) {
+        viewModel.clearStatus();
+        qrViewModel.markProcessingComplete();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          AppRoutes.push(context, const SendMoneyAmountPage());
+        });
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(title: const Text("Scan QR")),
       body: PageView(
@@ -323,9 +430,9 @@ class _QrScanPageState extends State<QrScanPage>
           _buildScannerPage(),
           BuildMyQrPage(
             context: context,
-            userName: userName,
-            payHiveId: payHiveId,
-            scannedQrData: scannedQrData,
+            userName: _userName,
+            payHiveId: _payHiveId,
+            scannedQrData: qrState.scannedData,
           ),
         ],
       ),
