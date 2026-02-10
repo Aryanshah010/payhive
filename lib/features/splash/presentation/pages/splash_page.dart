@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
+import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
+import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:payhive/features/onboarding/presentation/pages/onboarding_screen.dart';
 
@@ -39,11 +41,15 @@ class _SplashPageState extends ConsumerState<SplashPage>
 
   Future<void> _startFlow() async {
     final userSessionService = ref.read(userSessionServiceProvider);
+    final biometricStorage = ref.read(biometricStorageServiceProvider);
 
     final Future<void> animationFuture = _controller.forward().then((_) {});
 
     final Future<bool> sessionFuture = Future.microtask(
       () => userSessionService.isLoggedIn(),
+    );
+    final Future<bool> biometricFuture = Future.microtask(
+      () => biometricStorage.isEnabled(),
     );
 
     final Future<void> minDuration = Future.delayed(
@@ -53,15 +59,19 @@ class _SplashPageState extends ConsumerState<SplashPage>
     final results = await Future.wait([
       animationFuture,
       sessionFuture,
+      biometricFuture,
       minDuration,
     ]);
 
     if (!mounted) return;
 
     final isLoggedIn = results[1] as bool;
+    final biometricEnabled = results[2] as bool;
 
     if (isLoggedIn) {
       AppRoutes.pushReplacement(context, const DashboardScreen());
+    } else if (biometricEnabled) {
+      AppRoutes.pushReplacement(context, const LoginPage());
     } else {
       AppRoutes.pushReplacement(context, const OnboardingScreen());
     }
