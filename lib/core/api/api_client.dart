@@ -29,6 +29,7 @@ class ApiClient {
 
     // Add interceptors
     _dio.interceptors.add(_AuthInterceptor());
+    _dio.interceptors.add(_RedactingLoggerInterceptor());
 
     // Auto retry on network failures
     _dio.interceptors.add(
@@ -54,8 +55,8 @@ class ApiClient {
     if (kDebugMode) {
       _dio.interceptors.add(
         PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
+          requestHeader: false,
+          requestBody: false,
           responseBody: true,
           responseHeader: false,
           error: true,
@@ -173,5 +174,57 @@ class _AuthInterceptor extends Interceptor {
       _storage.delete(key: _tokenKey);
     }
     handler.next(err);
+  }
+}
+
+class _RedactingLoggerInterceptor extends Interceptor {
+  static const Set<String> _sensitiveKeys = {
+    'password',
+    'pin',
+    'oldPin',
+    'newPin',
+    'confirmPin',
+  };
+
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) {
+    if (kDebugMode) {
+      final sanitized = _sanitizeData(options.data);
+      final sanitizedHeaders = Map<String, dynamic>.from(options.headers);
+      if (sanitizedHeaders.containsKey('Authorization')) {
+        sanitizedHeaders['Authorization'] = '***';
+      }
+
+      debugPrint('╔══ Request ║ ${options.method}');
+      debugPrint('║ ${options.uri}');
+      if (options.queryParameters.isNotEmpty) {
+        debugPrint('║ Query: ${options.queryParameters}');
+      }
+      debugPrint('║ Headers: $sanitizedHeaders');
+      if (sanitized != null) {
+        debugPrint('║ Body: $sanitized');
+      }
+      debugPrint('╚══════════════════════════════════════════════');
+    }
+
+    handler.next(options);
+  }
+
+  dynamic _sanitizeData(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final sanitized = <String, dynamic>{};
+      data.forEach((key, value) {
+        if (_sensitiveKeys.contains(key)) {
+          sanitized[key] = '***';
+        } else {
+          sanitized[key] = value;
+        }
+      });
+      return sanitized;
+    }
+    return data;
   }
 }

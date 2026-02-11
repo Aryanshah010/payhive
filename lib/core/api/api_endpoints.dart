@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const bool isPhysicalDevice = true;
+  static const bool isPhysicalDevice = false;
   static const String _ipAddress = '192.168.1.102';
   static const int _port = 5050;
 
@@ -31,6 +31,12 @@ class ApiEndpoints {
   static const String profile = '/auth/me';
   static const String profilePin = '/profile/pin';
   static const String profileVerifyPin = '/profile/verify-pin';
+
+  // Devices
+  static const String devices = '/devices';
+  static const String devicesPending = '/devices/pending';
+  static String deviceAllow(String deviceId) => '/devices/$deviceId/allow';
+  static String deviceBlock(String deviceId) => '/devices/$deviceId/block';
 
   // Transactions
   static const String transactionsPreview = '/transactions/preview';
