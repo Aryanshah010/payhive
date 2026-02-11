@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
-import 'package:payhive/features/dashboard/presentation/pages/qr_scan_screen.dart';
+import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
 import 'package:payhive/features/dashboard/presentation/pages/statement_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
@@ -28,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: lstBottomScreen[_selectedIndex],
@@ -38,11 +39,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => QrScanScreen()),
+                  MaterialPageRoute(builder: (context) => QrScanPage()),
                 );
               },
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.darkText,
+              foregroundColor: colorScheme.onPrimary,
               elevation: 4,
               shape: const CircleBorder(),
               child: const Icon(Icons.qr_code, size: 52),
@@ -51,11 +52,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => QrScanScreen()),
+                  MaterialPageRoute(builder: (context) => QrScanPage()),
                 );
               },
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.darkText,
+              foregroundColor: colorScheme.onPrimary,
               elevation: 4,
               shape: const CircleBorder(),
               child: const Icon(Icons.qr_code, size: 26),

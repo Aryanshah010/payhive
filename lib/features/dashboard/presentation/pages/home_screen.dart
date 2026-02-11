@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
+import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,6 +12,8 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     final double horizontalPadding = isTablet ? 48 : 24;
     final double imageWidth = isTablet ? 220 : 120;
@@ -59,18 +63,20 @@ class HomeScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   "Your Balance",
-                                  style: TextStyle(
+                                  style: textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w500,
                                     fontSize: isTablet ? 28 : 20,
+                                    color: colorScheme.onPrimary,
                                   ),
                                 ),
                                 Text(
                                   "NPR 12,800.00",
-                                  style: TextStyle(
-                                    fontFamily: "Poppins",
+                                  style: textTheme.headlineMedium?.copyWith(
                                     fontSize: isTablet ? 42 : 32,
                                     fontWeight: FontWeight.w700,
                                     letterSpacing: -0.5,
+                                    color: colorScheme.onPrimary,
+                                    fontFamily: "Poppins",
                                   ),
                                 ),
                               ],
@@ -89,6 +95,12 @@ class HomeScreen extends StatelessWidget {
                               QuickActionBtn(
                                 icon: Icons.arrow_upward,
                                 label: 'Send\nMoney',
+                                onTap: () {
+                                  AppRoutes.push(
+                                    context,
+                                    const SendMoneyInitialPage(),
+                                  );
+                                },
                               ),
                               QuickActionBtn(
                                 icon: Icons.arrow_downward,
@@ -111,7 +123,12 @@ class HomeScreen extends StatelessWidget {
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppColors.greyText, width: 1),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.borderGrey.withOpacity(0.60)
+                          : colorScheme.outline,
+                      width: 1,
+                    ),
                     borderRadius: BorderRadius.circular(16.0),
                   ),
                   child: Padding(
@@ -121,10 +138,11 @@ class HomeScreen extends StatelessWidget {
                         Text(
                           "Services",
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: "Poppins",
+                          style: textTheme.titleLarge?.copyWith(
                             fontSize: isTablet ? 32 : 20,
                             fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                            fontFamily: "Poppins",
                           ),
                         ),
 

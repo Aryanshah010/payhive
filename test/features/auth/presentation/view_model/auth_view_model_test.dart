@@ -27,6 +27,7 @@ void main() {
       const RegisterUsecaseParams(
         fullName: 'fallback',
         phoneNumber: '0000000000',
+        email: 'fallback@example.com',
         password: 'fallback',
       ),
     );
@@ -36,12 +37,13 @@ void main() {
     );
 
     registerFallbackValue(
-      const AuthEntity(
-        authId: 'fallback',
-        fullName: 'fallback',
-        phoneNumber: '0000000000',
-        password: 'fallback',
-      ),
+        const AuthEntity(
+          authId: 'fallback',
+          fullName: 'fallback',
+          phoneNumber: '0000000000',
+          email: 'fallback@example.com',
+          password: 'fallback',
+        ),
     );
   });
 
@@ -67,6 +69,7 @@ void main() {
     authId: '1',
     fullName: 'Test User',
     phoneNumber: '9800000000',
+    email: 'test@example.com',
     password: 'Password123',
   );
 
@@ -91,6 +94,7 @@ void main() {
           await viewModel.register(
             fullName: 'Test User',
             phoneNumber: '9800000000',
+            email: 'test@example.com',
             password: 'password123',
           );
 
@@ -111,6 +115,7 @@ void main() {
         await viewModel.register(
           fullName: 'Test User',
           phoneNumber: '9800000000',
+          email: 'test@example.com',
           password: 'password123',
         );
 
@@ -132,11 +137,13 @@ void main() {
         await viewModel.register(
           fullName: 'Test User',
           phoneNumber: '9800000000',
+          email: 'test@example.com',
           password: 'password123',
         );
 
         expect(captured?.fullName, 'Test User');
         expect(captured?.phoneNumber, '9800000000');
+        expect(captured?.email, 'test@example.com');
       });
     });
 

@@ -59,4 +59,27 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
 
     return ProfileApiModel.fromJson(data);
   }
+
+  @override
+  Future<void> setPin({required String newPin, String? oldPin}) async {
+    final token = _tokenService.getToken();
+    await _apiClient.put(
+      ApiEndpoints.profilePin,
+      data: {
+        'pin': newPin,
+        if (oldPin != null && oldPin.trim().isNotEmpty) 'oldPin': oldPin.trim(),
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<void> verifyPin(String pin) async {
+    final token = _tokenService.getToken();
+    await _apiClient.post(
+      ApiEndpoints.profileVerifyPin,
+      data: {'pin': pin},
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
 }

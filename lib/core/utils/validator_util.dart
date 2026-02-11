@@ -60,6 +60,20 @@ class ValidatorUtil {
     return null;
   }
 
+  static String? emailValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return "Please enter your email";
+    }
+
+    final trimmedEmail = value.trim().toLowerCase();
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    if (!emailRegex.hasMatch(trimmedEmail)) {
+      return "Please enter a valid email address";
+    }
+
+    return null;
+  }
+
   static String? confirmPasswordValidator({
     required String? value,
     required String? originalPassword,
@@ -73,4 +87,13 @@ class ValidatorUtil {
 
     return null;
   }
+
+  String? validatePin(String value) {
+  final cleaned = value.trim();
+  if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
+    return 'PIN must be exactly 4 digits.';
+  }
+  return null;
+}
+
 }

@@ -55,5 +55,7 @@
 		<string>PayHive needs access to your photo library to select an image.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>PayHive needs to save QR codes to your photo library.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>PayHive needs Touch ID access for biometric authentication.</string>
 	</dict>
 </plist>

@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const bool isPhysicalDevice = false;
-  static const String _ipAddress = '192.168.1.86';
+  static const bool isPhysicalDevice = true;
+  static const String _ipAddress = '192.168.1.102';
   static const int _port = 5050;
 
   // Base URLs
@@ -25,8 +25,19 @@ class ApiEndpoints {
 
   static const String authLogin = '/auth/login';
   static const String authRegister = '/auth/register';
+  static const String authRequestPasswordReset = '/auth/request-password-reset';
+  static String authResetPassword(String token) => '/auth/reset-password/$token';
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
+  static const String profilePin = '/profile/pin';
+  static const String profileVerifyPin = '/profile/verify-pin';
+
+  // Transactions
+  static const String transactionsPreview = '/transactions/preview';
+  static const String transactionsConfirm = '/transactions/confirm';
+  static const String transactionsBeneficiary = '/transactions/beneficiary';
+  static const String transactionsHistory = '/transactions';
+  static String transactionDetail(String txId) => '/transactions/$txId';
 
   static String profileImage(String filename) =>
       '$mediaServerUrl/profilePicture/$filename';

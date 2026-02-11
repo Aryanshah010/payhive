@@ -6,14 +6,18 @@ class ProfileState extends Equatable {
   final ProfileStatus status;
   final String? fullName;
   final String? phoneNumber;
+  final String? email;
   final String? imageUrl;
+  final bool hasPin;
   final String? errorMessage;
 
   const ProfileState({
     required this.status,
     this.fullName,
     this.phoneNumber,
+    this.email,
     this.imageUrl,
+    this.hasPin = false,
     this.errorMessage,
   });
 
@@ -25,14 +29,18 @@ class ProfileState extends Equatable {
     ProfileStatus? status,
     String? fullName,
     String? phoneNumber,
+    String? email,
     String? imageUrl,
+    bool? hasPin,
     String? errorMessage,
   }) {
     return ProfileState(
       status: status ?? this.status,
       fullName: fullName ?? this.fullName,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      email: email ?? this.email,
       imageUrl: imageUrl ?? this.imageUrl,
+      hasPin: hasPin ?? this.hasPin,
       errorMessage: errorMessage,
     );
   }
@@ -42,7 +50,9 @@ class ProfileState extends Equatable {
     status,
     fullName,
     phoneNumber,
+    email,
     imageUrl,
+    hasPin,
     errorMessage,
   ];
 }

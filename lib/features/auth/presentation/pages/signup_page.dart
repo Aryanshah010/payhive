@@ -21,6 +21,7 @@ class SignupPage extends ConsumerStatefulWidget {
 class _SignupPageState extends ConsumerState<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullnameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _createPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -29,6 +30,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   @override
   void dispose() {
     _fullnameController.dispose();
+    _emailController.dispose();
     _phoneController.dispose();
     _createPasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -42,6 +44,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
           .register(
             fullName: _fullnameController.text,
             phoneNumber: _phoneController.text,
+            email: _emailController.text,
             password: _createPasswordController.text,
           );
     }
@@ -49,6 +52,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     ref.listen<AuthState>(authViewModelProvider, (prev, next) {
       if (prev?.status == next.status) return;
 
@@ -57,7 +62,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       }
 
       if (next.status == AuthStatus.registered) {
+        FocusManager.instance.primaryFocus?.unfocus();
+
         SnackbarUtil.showSuccess(context, 'Registration successful!');
+
+        Future.delayed(const Duration(milliseconds: 500), () {
+          ref.read(authViewModelProvider.notifier).clearStatus();
+
+          if (mounted) {
+            // ignore: use_build_context_synchronously
+            AppRoutes.pushReplacement(context, const LoginPage());
+          }
+        });
       }
     });
     final authState = ref.watch(authViewModelProvider);
@@ -88,10 +104,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
                     Text(
                       "Create Your Payhive Account",
-                      style: TextStyle(
-                        fontFamily: "Poppins",
+                      style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: titleFontSize,
+                        color: colorScheme.onSurface,
+                        fontFamily: "Poppins",
                       ),
                     ),
 
@@ -108,6 +125,17 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                             label: "Full Name",
                             validator: (value) =>
                                 ValidatorUtil.fullnameValidator(value),
+                          ),
+
+                          SizedBox(height: verticalSpacing),
+
+                          MainTextFormField(
+                            keyboardType: TextInputType.emailAddress,
+                            prefixIcon: Icons.email_outlined,
+                            controller: _emailController,
+                            hintText: "Enter your email",
+                            label: "Email",
+                            validator: ValidatorUtil.emailValidator,
                           ),
 
                           SizedBox(height: verticalSpacing),
@@ -136,7 +164,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                 _obscurePassword
                                     ? Icons.visibility_off
                                     : Icons.visibility,
-                                color: Colors.grey,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                               ),
                               onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword,
@@ -164,7 +192,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                 _obscurePassword
                                     ? Icons.visibility_off
                                     : Icons.visibility,
-                                color: Colors.grey,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                               ),
                               onPressed: () => setState(
                                 () => _obscurePassword = !_obscurePassword,
@@ -185,7 +213,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                color: AppColors.greyText,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontSize: isTablet ? 20 : 14,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -196,6 +224,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                   style: TextStyle(color: AppColors.primary),
                                   recognizer: TapGestureRecognizer()
                                     ..onTap = () {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
                                       ref
                                           .read(authViewModelProvider.notifier)
                                           .clearStatus();

@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:payhive/app/theme/colors.dart';
 
 class QuickActionBtn extends StatelessWidget {
-  const QuickActionBtn({super.key, required this.icon, required this.label});
+  const QuickActionBtn({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +21,7 @@ class QuickActionBtn extends StatelessWidget {
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () {},
+      onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -41,7 +47,7 @@ class QuickActionBtn extends StatelessWidget {
               fontSize: isTablet?16:12,
               fontWeight: FontWeight.w600,
               height: 1.2,
-              color: AppColors.darkText,
+              color:AppColors.darkText,
             ),
           ),
         ],

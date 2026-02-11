@@ -20,6 +20,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final w = size.width;
+    final colorScheme = Theme.of(context).colorScheme;
 
     final bottomSpacing = w * 0.04;
     final bottomPadding = EdgeInsets.symmetric(horizontal: w * 0.05);
@@ -96,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               "Skip",
                               style: TextStyle(
                                 fontSize: buttonFontSize,
-                                color: AppColors.greyText,
+                                color: colorScheme.onSurface.withOpacity(0.6),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -107,7 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             count: 4,
                             effect: ExpandingDotsEffect(
                               activeDotColor: AppColors.primary,
-                              dotColor: AppColors.greyText,
+                              dotColor: colorScheme.outlineVariant,
                               dotHeight: dotSize,
                               dotWidth: dotSize,
                               expansionFactor: 3,
@@ -125,7 +126,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               "Next",
                               style: TextStyle(
                                 fontSize: buttonFontSize,
-                                color:  AppColors.primary,
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

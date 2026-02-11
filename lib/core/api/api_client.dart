@@ -144,6 +144,8 @@ class _AuthInterceptor extends Interceptor {
   static const List<String> _publicEndpoints = [
     ApiEndpoints.authLogin,
     ApiEndpoints.authRegister,
+    ApiEndpoints.authRequestPasswordReset,
+    '/auth/reset-password',
   ];
 
   bool _isPublicEndpoint(String path) {
