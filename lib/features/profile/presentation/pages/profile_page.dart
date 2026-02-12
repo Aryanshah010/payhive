@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/app/theme/theme_notifier.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
@@ -118,8 +119,9 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     final phone = profileState.phoneNumber ?? '';
     final email = profileState.email ?? '';
     final backendImage = profileState.imageUrl;
-    final biometricEnabled =
-        ref.watch(biometricStorageServiceProvider).isEnabled();
+    final biometricEnabled = ref
+        .watch(biometricStorageServiceProvider)
+        .isEnabled();
 
     return Scaffold(
       body: SafeArea(
@@ -349,6 +351,34 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                           ],
                         ),
                       ),
+                      _divider(context),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final mode = ref.watch(themeNotifierProvider);
+                          final isDark = mode == ThemeMode.dark;
+
+                          return MenuItem(
+                            icon: isDark
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                            title: isDark ? 'Light Mode' : 'Dark Mode',
+                            trailing: Switch.adaptive(
+                              value: isDark,
+                              onChanged: (value) {
+                                ref
+                                    .read(themeNotifierProvider.notifier)
+                                    .setTheme(
+                                      value ? ThemeMode.dark : ThemeMode.light,
+                                    );
+                              },
+                            ),
+                            onTap: () {
+                              ref.read(themeNotifierProvider.notifier).toggle();
+                            },
+                          );
+                        },
+                      ),
+
                       _divider(context),
                       MenuItem(
                         icon: Icons.devices_rounded,
