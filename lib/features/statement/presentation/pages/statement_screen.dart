@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
+import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
 import 'package:payhive/features/statement/presentation/state/statement_state.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_view_model.dart';
 import 'package:payhive/features/statement/presentation/widgets/statement_item_tile.dart';
@@ -255,9 +257,20 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
             );
           }
 
+          final transaction = state.transactions[index];
+
           return StatementItemTile(
-            transaction: state.transactions[index],
+            transaction: transaction,
             currentUserId: currentUserId,
+            onTap: () {
+              AppRoutes.push(
+                context,
+                StatementDetailPage(
+                  txId: transaction.txId,
+                  initialReceipt: transaction,
+                ),
+              );
+            },
             onUndoTap: () {
               SnackbarUtil.showInfo(
                 context,
