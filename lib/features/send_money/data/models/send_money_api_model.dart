@@ -72,6 +72,7 @@ class ReceiptApiModel {
   final RecipientApiModel from;
   final RecipientApiModel to;
   final DateTime createdAt;
+  final String? direction;
 
   ReceiptApiModel({
     required this.txId,
@@ -81,13 +82,13 @@ class ReceiptApiModel {
     required this.from,
     required this.to,
     required this.createdAt,
+    this.direction,
   });
 
   factory ReceiptApiModel.fromJson(Map<String, dynamic> json) {
-    final Map<String, dynamic> payload =
-        (json['receipt'] is Map)
-            ? Map<String, dynamic>.from(json['receipt'] as Map)
-            : json;
+    final Map<String, dynamic> payload = (json['receipt'] is Map)
+        ? Map<String, dynamic>.from(json['receipt'] as Map)
+        : json;
 
     final rawFrom = payload['from'] ?? {};
     final rawTo = payload['to'] ?? {};
@@ -107,6 +108,7 @@ class ReceiptApiModel {
       from: RecipientApiModel.fromJson(fromMap),
       to: RecipientApiModel.fromJson(toMap),
       createdAt: _parseDate(payload['createdAt']),
+      direction: payload['direction']?.toString(),
     );
   }
 
@@ -119,6 +121,7 @@ class ReceiptApiModel {
       from: from.toEntity(),
       to: to.toEntity(),
       createdAt: createdAt,
+      direction: direction,
     );
   }
 }

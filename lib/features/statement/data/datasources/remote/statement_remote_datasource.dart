@@ -6,14 +6,14 @@ import 'package:payhive/core/services/storage/token_service.dart';
 import 'package:payhive/features/statement/data/datasources/statement_datasource.dart';
 import 'package:payhive/features/statement/data/models/statement_api_model.dart';
 
-final statementRemoteDatasourceProvider = Provider<IStatementRemoteDatasource>(
-  (ref) {
-    return StatementRemoteDatasource(
-      apiClient: ref.read(apiClientProvider),
-      tokenService: ref.read(tokenServiceProvider),
-    );
-  },
-);
+final statementRemoteDatasourceProvider = Provider<IStatementRemoteDatasource>((
+  ref,
+) {
+  return StatementRemoteDatasource(
+    apiClient: ref.read(apiClientProvider),
+    tokenService: ref.read(tokenServiceProvider),
+  );
+});
 
 class StatementRemoteDatasource implements IStatementRemoteDatasource {
   final ApiClient _apiClient;
@@ -34,10 +34,21 @@ class StatementRemoteDatasource implements IStatementRemoteDatasource {
   Future<TransactionHistoryApiModel> getHistory({
     required int page,
     required int limit,
+    String search = '',
+    String direction = 'all',
   }) async {
+    final queryParameters = <String, dynamic>{'page': page, 'limit': limit};
+    final normalizedSearch = search.trim();
+    if (normalizedSearch.isNotEmpty) {
+      queryParameters['search'] = normalizedSearch;
+    }
+    if (direction != 'all') {
+      queryParameters['direction'] = direction;
+    }
+
     final response = await _apiClient.get(
       ApiEndpoints.transactionsHistory,
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: queryParameters,
       options: _authOptions(),
     );
 

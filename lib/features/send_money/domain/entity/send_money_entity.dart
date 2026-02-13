@@ -33,6 +33,7 @@ class ReceiptEntity extends Equatable {
   final RecipientEntity from;
   final RecipientEntity to;
   final DateTime createdAt;
+  final String? direction;
 
   const ReceiptEntity({
     required this.txId,
@@ -42,9 +43,18 @@ class ReceiptEntity extends Equatable {
     required this.from,
     required this.to,
     required this.createdAt,
+    this.direction,
   });
 
   @override
-  List<Object?> get props => [txId, status, amount, remark, from, to, createdAt];
+  List<Object?> get props => [
+    txId,
+    status,
+    amount,
+    remark,
+    from,
+    to,
+    createdAt,
+    direction,
+  ];
 }
-

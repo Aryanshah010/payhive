@@ -32,12 +32,16 @@ class StatementRepository implements IStatementRepository {
   Future<Either<Failure, TransactionHistoryEntity>> getHistory({
     required int page,
     required int limit,
+    String search = '',
+    String direction = 'all',
   }) async {
     if (await _networkInfo.isConnected) {
       try {
         final model = await _remoteDatasource.getHistory(
           page: page,
           limit: limit,
+          search: search,
+          direction: direction,
         );
         return Right(model.toEntity());
       } on DioException catch (e) {

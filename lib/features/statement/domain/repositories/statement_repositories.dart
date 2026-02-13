@@ -7,6 +7,8 @@ abstract interface class IStatementRepository {
   Future<Either<Failure, TransactionHistoryEntity>> getHistory({
     required int page,
     required int limit,
+    String search,
+    String direction,
   });
 
   Future<Either<Failure, ReceiptEntity>> getDetail({required String txId});

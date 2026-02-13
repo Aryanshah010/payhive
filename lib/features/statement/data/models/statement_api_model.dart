@@ -21,7 +21,11 @@ class StatementRecipientApiModel {
   }
 
   RecipientEntity toEntity() {
-    return RecipientEntity(id: id, fullName: fullName, phoneNumber: phoneNumber);
+    return RecipientEntity(
+      id: id,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+    );
   }
 }
 
@@ -33,6 +37,7 @@ class StatementReceiptApiModel {
   final StatementRecipientApiModel from;
   final StatementRecipientApiModel to;
   final DateTime createdAt;
+  final String? direction;
 
   StatementReceiptApiModel({
     required this.txId,
@@ -42,6 +47,7 @@ class StatementReceiptApiModel {
     required this.from,
     required this.to,
     required this.createdAt,
+    this.direction,
   });
 
   factory StatementReceiptApiModel.fromJson(Map<String, dynamic> json) {
@@ -57,6 +63,7 @@ class StatementReceiptApiModel {
         (json['to'] ?? {}) as Map<String, dynamic>,
       ),
       createdAt: _parseDate(json['createdAt']),
+      direction: json['direction']?.toString(),
     );
   }
 
@@ -69,6 +76,7 @@ class StatementReceiptApiModel {
       from: from.toEntity(),
       to: to.toEntity(),
       createdAt: createdAt,
+      direction: direction,
     );
   }
 }

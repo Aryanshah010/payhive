@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
 import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
-import 'package:payhive/features/dashboard/presentation/pages/statement_screen.dart';
+import 'package:payhive/features/statement/presentation/pages/statement_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
 import 'package:payhive/features/profile/presentation/pages/profile_page.dart';

@@ -11,11 +11,18 @@ import 'package:payhive/features/statement/domain/repositories/statement_reposit
 class HistoryParams extends Equatable {
   final int page;
   final int limit;
+  final String search;
+  final String direction;
 
-  const HistoryParams({required this.page, required this.limit});
+  const HistoryParams({
+    required this.page,
+    required this.limit,
+    this.search = '',
+    this.direction = 'all',
+  });
 
   @override
-  List<Object?> get props => [page, limit];
+  List<Object?> get props => [page, limit, search, direction];
 }
 
 class DetailParams extends Equatable {
@@ -27,21 +34,19 @@ class DetailParams extends Equatable {
   List<Object?> get props => [txId];
 }
 
-final getTransactionHistoryUsecaseProvider = Provider<GetTransactionHistoryUsecase>(
-  (ref) {
-    return GetTransactionHistoryUsecase(
-      repository: ref.read(statementRepositoryProvider),
-    );
-  },
-);
+final getTransactionHistoryUsecaseProvider =
+    Provider<GetTransactionHistoryUsecase>((ref) {
+      return GetTransactionHistoryUsecase(
+        repository: ref.read(statementRepositoryProvider),
+      );
+    });
 
-final getTransactionDetailUsecaseProvider = Provider<GetTransactionDetailUsecase>(
-  (ref) {
-    return GetTransactionDetailUsecase(
-      repository: ref.read(statementRepositoryProvider),
-    );
-  },
-);
+final getTransactionDetailUsecaseProvider =
+    Provider<GetTransactionDetailUsecase>((ref) {
+      return GetTransactionDetailUsecase(
+        repository: ref.read(statementRepositoryProvider),
+      );
+    });
 
 class GetTransactionHistoryUsecase
     implements UsecaseWithParams<TransactionHistoryEntity, HistoryParams> {
@@ -57,7 +62,19 @@ class GetTransactionHistoryUsecase
         const Left(ValidationFailure(message: 'Invalid page/limit values')),
       );
     }
-    return _repository.getHistory(page: params.page, limit: params.limit);
+    const allowedDirections = {'all', 'debit', 'credit'};
+    if (!allowedDirections.contains(params.direction)) {
+      return Future.value(
+        const Left(ValidationFailure(message: 'Invalid direction filter')),
+      );
+    }
+
+    return _repository.getHistory(
+      page: params.page,
+      limit: params.limit,
+      search: params.search,
+      direction: params.direction,
+    );
   }
 }
 
