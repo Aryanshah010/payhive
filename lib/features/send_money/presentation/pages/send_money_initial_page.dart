@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
+import 'package:payhive/core/utils/currency_formatter.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
+import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_amount_page.dart';
 import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
@@ -59,6 +61,8 @@ class _SendMoneyInitialPageState extends ConsumerState<SendMoneyInitialPage> {
 
     final state = ref.watch(sendMoneyViewModelProvider);
     final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+    final profileState = ref.watch(profileViewModelProvider);
+    final balanceText = formatNpr(profileState.balance ?? 0);
 
     ref.listen<SendMoneyState>(sendMoneyViewModelProvider, (prev, next) {
       if (prev?.status == next.status) return;
@@ -95,7 +99,7 @@ class _SendMoneyInitialPageState extends ConsumerState<SendMoneyInitialPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: sectionSpacing),
-                  const BalanceCardWidget(balance: "NPR 12,800.00"),
+                  BalanceCardWidget(balance: balanceText),
                   SizedBox(height: sectionSpacing),
                   Text(
                     "PayHive ID",

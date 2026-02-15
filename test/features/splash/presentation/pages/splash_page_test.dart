@@ -9,6 +9,27 @@ import 'package:payhive/features/auth/presentation/providers/biometric_login_pro
 import 'package:payhive/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:payhive/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
+import 'package:payhive/features/profile/presentation/state/profile_state.dart';
+import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+
+class FakeProfileViewModel extends ProfileViewModel {
+  @override
+  ProfileState build() {
+    return const ProfileState(
+      status: ProfileStatus.loaded,
+      fullName: 'Test User',
+      phoneNumber: '9800000000',
+      email: 'test@example.com',
+      balance: 1200,
+    );
+  }
+
+  @override
+  Future<void> loadProfile() async {}
+
+  @override
+  Future<void> refreshProfile() async {}
+}
 
 class FakeUserSessionService implements UserSessionService {
   FakeUserSessionService(this.loggedIn);
@@ -86,6 +107,7 @@ void main() {
             biometricStorageServiceProvider.overrideWithValue(
               FakeBiometricStorageService(false),
             ),
+            profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
           ],
           child: const MaterialApp(home: SplashPage()),
         ),
@@ -118,6 +140,7 @@ void main() {
             biometricStorageServiceProvider.overrideWithValue(
               FakeBiometricStorageService(true),
             ),
+            profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
           ],
           child: const MaterialApp(home: SplashPage()),
         ),
@@ -150,6 +173,7 @@ void main() {
             biometricStorageServiceProvider.overrideWithValue(
               FakeBiometricStorageService(false),
             ),
+            profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
           ],
           child: const MaterialApp(home: SplashPage()),
         ),

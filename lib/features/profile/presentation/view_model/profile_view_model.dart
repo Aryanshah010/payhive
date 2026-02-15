@@ -46,10 +46,15 @@ class ProfileViewModel extends Notifier<ProfileState> {
           phoneNumber: profile.phoneNumber,
           email: profile.email,
           imageUrl: profile.imageUrl,
+          balance: profile.balance,
           hasPin: profile.hasPin,
         );
       },
     );
+  }
+
+  Future<void> refreshProfile() async {
+    await loadProfile();
   }
 
   Future<void> uploadImage(File photo) async {

@@ -3,6 +3,7 @@ import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:payhive/core/constants/hive_table_constants.dart';
 import 'package:payhive/features/auth/data/models/auth_hive_model.dart';
+import 'package:payhive/features/profile/data/models/profile_hive_model.dart';
 
 final hiveServiceProvider = Provider<HiveService>((ref) {
   final hiveService = HiveService();
@@ -20,11 +21,15 @@ class HiveService {
 
   Future<void> _openBoxes() async {
     await Hive.openBox<AuthHiveModel>(HiveTableConstant.authTable);
+    await Hive.openBox<ProfileHiveModel>(HiveTableConstant.profileTable);
   }
 
   void _registerAdapter() {
     if (!Hive.isAdapterRegistered(HiveTableConstant.authTypeId)) {
       Hive.registerAdapter(AuthHiveModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(HiveTableConstant.profileTypeId)) {
+      Hive.registerAdapter(ProfileHiveModelAdapter());
     }
   }
 
@@ -67,5 +72,23 @@ class HiveService {
       (user) => user.phoneNumber == phoneNumber,
     );
     return users.isNotEmpty;
+  }
+
+  // ==================== Profile Cache Queries ====================
+  Box<ProfileHiveModel> get _profileBox =>
+      Hive.box<ProfileHiveModel>(HiveTableConstant.profileTable);
+
+  Future<void> saveProfile(ProfileHiveModel model) async {
+    await _profileBox.put(model.userId, model);
+  }
+
+  Future<ProfileHiveModel?> getProfileByUserId(String userId) async {
+    if (userId.trim().isEmpty) return null;
+    return _profileBox.get(userId);
+  }
+
+  Future<void> deleteProfileByUserId(String userId) async {
+    if (userId.trim().isEmpty) return;
+    await _profileBox.delete(userId);
   }
 }

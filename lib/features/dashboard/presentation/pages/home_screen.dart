@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/currency_formatter.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
+import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width >= 600;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final profileState = ref.watch(profileViewModelProvider);
+    final balanceText = formatNpr(profileState.balance ?? 0);
 
     final double horizontalPadding = isTablet ? 48 : 24;
     final double imageWidth = isTablet ? 220 : 120;
@@ -70,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  "NPR 12,800.00",
+                                  balanceText,
                                   style: textTheme.headlineMedium?.copyWith(
                                     fontSize: isTablet ? 42 : 32,
                                     fontWeight: FontWeight.w700,

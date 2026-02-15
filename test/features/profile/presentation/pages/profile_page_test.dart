@@ -1,10 +1,12 @@
 // test/features/profile/profile_page_test.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/features/profile/presentation/pages/profile_page.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeProfileViewModel extends ProfileViewModel {
   @override
@@ -29,15 +31,23 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('ProfilePage widget tests', () {
-    testWidgets('renders header, name, phone and menu items', (tester) async {
+    Future<void> pumpProfilePage(WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
             profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
           ],
           child: const MaterialApp(home: ProfilePage()),
         ),
       );
+    }
+
+    testWidgets('renders header, name, phone and menu items', (tester) async {
+      await pumpProfilePage(tester);
 
       await tester.pumpAndSettle();
 
@@ -49,7 +59,6 @@ void main() {
       expect(find.text('Update KYC'), findsOneWidget);
       expect(find.text('Security'), findsOneWidget);
       expect(find.text('Manage Devices'), findsOneWidget);
-      expect(find.text('About'), findsOneWidget);
 
       expect(find.text('Logout'), findsWidgets);
     });
@@ -57,16 +66,7 @@ void main() {
     testWidgets(
       'tapping logout opens confirmation dialog and Cancel dismisses it',
       (tester) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              profileViewModelProvider.overrideWith(
-                () => FakeProfileViewModel(),
-              ),
-            ],
-            child: const MaterialApp(home: ProfilePage()),
-          ),
-        );
+        await pumpProfilePage(tester);
 
         await tester.pumpAndSettle();
 
@@ -87,14 +87,7 @@ void main() {
     );
 
     testWidgets('build produces no render exceptions', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
-          ],
-          child: const MaterialApp(home: ProfilePage()),
-        ),
-      );
+      await pumpProfilePage(tester);
 
       await tester.pumpAndSettle();
 

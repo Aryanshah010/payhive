@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/utils/currency_formatter.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
+import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_success_page.dart';
 import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
@@ -124,8 +126,8 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            ),
                           ),
+                        ),
                         if (showError)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
@@ -206,6 +208,8 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
 
     final state = ref.watch(sendMoneyViewModelProvider);
     final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+    final profileState = ref.watch(profileViewModelProvider);
+    final balanceText = formatNpr(profileState.balance ?? 0);
     final isConfirmLocked = state.confirmLocked;
     final isConfirming =
         state.action == SendMoneyAction.confirm &&
@@ -231,6 +235,7 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
 
       if (next.status == SendMoneyStatus.confirmSuccess) {
         final receiptToPass = next.receipt;
+        ref.read(profileViewModelProvider.notifier).refreshProfile();
 
         if (_pinSheetOpen && Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
@@ -245,7 +250,6 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
           );
           viewModel.resetFlow();
         });
-
       }
     });
 
@@ -263,7 +267,7 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
       children: [
         SizedBox(height: sectionSpacing),
 
-        const BalanceCardWidget(balance: "NPR 12,800.00"),
+        BalanceCardWidget(balance: balanceText),
         SizedBox(height: sectionSpacing),
 
         Container(

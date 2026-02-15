@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
 import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
@@ -6,15 +7,17 @@ import 'package:payhive/features/statement/presentation/pages/statement_screen.d
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
 import 'package:payhive/features/profile/presentation/pages/profile_page.dart';
+import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   List<Widget> lstBottomScreen = [
@@ -23,6 +26,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const SupportScreen(),
     const ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    Future.microtask(() {
+      if (!mounted) return;
+      ref.read(profileViewModelProvider.notifier).refreshProfile();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed && mounted) {
+      ref.read(profileViewModelProvider.notifier).refreshProfile();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
