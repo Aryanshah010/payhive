@@ -7,6 +7,8 @@ import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
+import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
+import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -166,8 +168,20 @@ class HomeScreen extends ConsumerWidget {
                               label: "Recharge",
                             ),
                             ServiceTile(icon: Icons.wifi, label: "Internet"),
-                            ServiceTile(icon: Icons.flight, label: "Flights"),
-                            ServiceTile(icon: Icons.hotel, label: "Hotels"),
+                            ServiceTile(
+                              icon: Icons.flight,
+                              label: "Flights",
+                              onTap: () {
+                                AppRoutes.push(context, const FlightListPage());
+                              },
+                            ),
+                            ServiceTile(
+                              icon: Icons.hotel,
+                              label: "Hotels",
+                              onTap: () {
+                                AppRoutes.push(context, const HotelListPage());
+                              },
+                            ),
                           ],
                         ),
                       ],

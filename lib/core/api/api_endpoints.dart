@@ -26,7 +26,8 @@ class ApiEndpoints {
   static const String authLogin = '/auth/login';
   static const String authRegister = '/auth/register';
   static const String authRequestPasswordReset = '/auth/request-password-reset';
-  static String authResetPassword(String token) => '/auth/reset-password/$token';
+  static String authResetPassword(String token) =>
+      '/auth/reset-password/$token';
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
   static const String profilePin = '/profile/pin';
@@ -44,6 +45,14 @@ class ApiEndpoints {
   static const String transactionsBeneficiary = '/transactions/beneficiary';
   static const String transactionsHistory = '/transactions';
   static String transactionDetail(String txId) => '/transactions/$txId';
+
+  // Flights + Bookings
+  static const String flights = '/flights';
+  static String flightDetail(String flightId) => '/flights/$flightId';
+  static const String hotels = '/hotels';
+  static String hotelDetail(String hotelId) => '/hotels/$hotelId';
+  static const String bookings = '/bookings';
+  static String bookingPay(String bookingId) => '/bookings/$bookingId/pay';
 
   static String profileImage(String filename) =>
       '$mediaServerUrl/profilePicture/$filename';

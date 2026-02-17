@@ -6,6 +6,14 @@ import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:payhive/features/services/domain/entity/flight_entity.dart';
+import 'package:payhive/features/services/domain/entity/hotel_entity.dart';
+import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
+import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
+import 'package:payhive/features/services/presentation/state/flight_list_state.dart';
+import 'package:payhive/features/services/presentation/state/hotel_list_state.dart';
+import 'package:payhive/features/services/presentation/view_model/flight_list_view_model.dart';
+import 'package:payhive/features/services/presentation/view_model/hotel_list_view_model.dart';
 
 class FakeProfileViewModel extends ProfileViewModel {
   @override
@@ -20,12 +28,95 @@ class FakeProfileViewModel extends ProfileViewModel {
   }
 }
 
+class FakeFlightListViewModel extends FlightListViewModel {
+  @override
+  FlightListState build() {
+    return FlightListState(
+      status: FlightListViewStatus.loaded,
+      flights: [
+        FlightEntity(
+          id: 'flight-1',
+          airline: 'Buddha Air',
+          flightNumber: 'U4-201',
+          from: 'Kathmandu',
+          to: 'Pokhara',
+          departure: DateTime(2026, 3, 15, 8, 0),
+          arrival: DateTime(2026, 3, 15, 9, 0),
+          durationMinutes: 60,
+          flightClass: 'Economy',
+          price: 4500,
+          seatsTotal: 70,
+          seatsAvailable: 30,
+        ),
+      ],
+      from: '',
+      to: '',
+      date: '',
+      errorMessage: null,
+      page: 1,
+      totalPages: 1,
+      isLoadingMore: false,
+    );
+  }
+
+  @override
+  Future<void> loadInitial() async {}
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<void> loadMore() async {}
+}
+
+class FakeHotelListViewModel extends HotelListViewModel {
+  @override
+  HotelListState build() {
+    return const HotelListState(
+      status: HotelListViewStatus.loaded,
+      hotels: [
+        HotelEntity(
+          id: 'hotel-1',
+          name: 'Thamel Boutique Residency',
+          city: 'Kathmandu',
+          roomType: 'Deluxe',
+          roomsTotal: 45,
+          roomsAvailable: 12,
+          pricePerNight: 4800,
+          amenities: ['wifi'],
+          images: [],
+        ),
+      ],
+      city: '',
+      errorMessage: null,
+      page: 1,
+      totalPages: 1,
+      isLoadingMore: false,
+    );
+  }
+
+  @override
+  Future<void> loadInitial() async {}
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<void> loadMore() async {}
+}
+
 void main() {
   Future<void> pumpHomeScreen(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
+          flightListViewModelProvider.overrideWith(
+            () => FakeFlightListViewModel(),
+          ),
+          hotelListViewModelProvider.overrideWith(
+            () => FakeHotelListViewModel(),
+          ),
         ],
         child: const MaterialApp(home: HomeScreen()),
       ),
@@ -92,5 +183,37 @@ void main() {
     await pumpHomeScreen(tester);
 
     await tester.tap(find.text('Send\nMoney'));
+  });
+
+  testWidgets('Tapping Flights tile opens flight list page', (tester) async {
+    await pumpHomeScreen(tester);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -220),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ServiceTile, 'Flights'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FlightListPage), findsOneWidget);
+    expect(find.text('My Bookings'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Hotels tile opens hotel list page', (tester) async {
+    await pumpHomeScreen(tester);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -220),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ServiceTile, 'Hotels'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HotelListPage), findsOneWidget);
+    expect(find.text('My Bookings'), findsOneWidget);
   });
 }
