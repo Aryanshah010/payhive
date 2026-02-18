@@ -10,6 +10,7 @@ import 'package:payhive/features/send_money/presentation/pages/send_money_initia
 import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/internet_list_page.dart';
+import 'package:payhive/features/services/presentation/pages/recharge_list_page.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -167,6 +168,12 @@ class HomeScreen extends ConsumerWidget {
                             ServiceTile(
                               icon: Icons.network_cell,
                               label: "Recharge",
+                              onTap: () {
+                                AppRoutes.push(
+                                  context,
+                                  const RechargeListPage(),
+                                );
+                              },
                             ),
                             ServiceTile(
                               icon: Icons.wifi,

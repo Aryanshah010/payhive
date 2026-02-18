@@ -56,6 +56,11 @@ class ApiEndpoints {
       '/internet-services/$serviceId';
   static String internetServicePay(String serviceId) =>
       '/internet-services/$serviceId/pay';
+  static const String topupServices = '/topup-services';
+  static String topupServiceDetail(String serviceId) =>
+      '/topup-services/$serviceId';
+  static String topupServicePay(String serviceId) =>
+      '/topup-services/$serviceId/pay';
   static const String bookings = '/bookings';
   static String bookingPay(String bookingId) => '/bookings/$bookingId/pay';
 

@@ -8,15 +8,19 @@ import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/domain/entity/hotel_entity.dart';
+import 'package:payhive/features/services/domain/entity/recharge_entity.dart';
 import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/internet_list_page.dart';
+import 'package:payhive/features/services/presentation/pages/recharge_list_page.dart';
 import 'package:payhive/features/services/presentation/state/flight_list_state.dart';
 import 'package:payhive/features/services/presentation/state/hotel_list_state.dart';
+import 'package:payhive/features/services/presentation/state/internet_list_state.dart';
+import 'package:payhive/features/services/presentation/state/recharge_list_state.dart';
 import 'package:payhive/features/services/presentation/view_model/flight_list_view_model.dart';
 import 'package:payhive/features/services/presentation/view_model/hotel_list_view_model.dart';
-import 'package:payhive/features/services/presentation/state/internet_list_state.dart';
 import 'package:payhive/features/services/presentation/view_model/internet_list_view_model.dart';
+import 'package:payhive/features/services/presentation/view_model/recharge_list_view_model.dart';
 import 'package:payhive/features/services/domain/entity/internet_entity.dart';
 
 class FakeProfileViewModel extends ProfileViewModel {
@@ -146,6 +150,43 @@ class FakeInternetListViewModel extends InternetListViewModel {
   Future<void> loadMore() async {}
 }
 
+class FakeRechargeListViewModel extends RechargeListViewModel {
+  @override
+  RechargeListState build() {
+    return RechargeListState(
+      status: RechargeListViewStatus.loaded,
+      services: [
+        RechargeServiceEntity(
+          id: 'topup-1',
+          type: 'topup',
+          provider: 'NTC',
+          name: 'Data Pack',
+          packageLabel: '2GB Daily',
+          amount: 299,
+          validationRegex: r'^\d{10}$',
+          isActive: true,
+          meta: const {},
+        ),
+      ],
+      provider: '',
+      search: '',
+      errorMessage: null,
+      page: 1,
+      totalPages: 1,
+      isLoadingMore: false,
+    );
+  }
+
+  @override
+  Future<void> loadInitial() async {}
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<void> loadMore() async {}
+}
+
 void main() {
   Future<void> pumpHomeScreen(WidgetTester tester) async {
     await tester.pumpWidget(
@@ -160,6 +201,9 @@ void main() {
           ),
           internetListViewModelProvider.overrideWith(
             () => FakeInternetListViewModel(),
+          ),
+          rechargeListViewModelProvider.overrideWith(
+            () => FakeRechargeListViewModel(),
           ),
         ],
         child: const MaterialApp(home: HomeScreen()),
@@ -243,6 +287,22 @@ void main() {
 
     expect(find.byType(FlightListPage), findsOneWidget);
     expect(find.text('My Bookings'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Recharge tile opens recharge list page', (tester) async {
+    await pumpHomeScreen(tester);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -220),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ServiceTile, 'Recharge'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RechargeListPage), findsOneWidget);
+    expect(find.text('Recharge Services'), findsOneWidget);
   });
 
   testWidgets('Tapping Hotels tile opens hotel list page', (tester) async {
