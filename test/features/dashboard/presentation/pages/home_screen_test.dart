@@ -10,10 +10,14 @@ import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/domain/entity/hotel_entity.dart';
 import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
+import 'package:payhive/features/services/presentation/pages/internet_list_page.dart';
 import 'package:payhive/features/services/presentation/state/flight_list_state.dart';
 import 'package:payhive/features/services/presentation/state/hotel_list_state.dart';
 import 'package:payhive/features/services/presentation/view_model/flight_list_view_model.dart';
 import 'package:payhive/features/services/presentation/view_model/hotel_list_view_model.dart';
+import 'package:payhive/features/services/presentation/state/internet_list_state.dart';
+import 'package:payhive/features/services/presentation/view_model/internet_list_view_model.dart';
+import 'package:payhive/features/services/domain/entity/internet_entity.dart';
 
 class FakeProfileViewModel extends ProfileViewModel {
   @override
@@ -105,6 +109,43 @@ class FakeHotelListViewModel extends HotelListViewModel {
   Future<void> loadMore() async {}
 }
 
+class FakeInternetListViewModel extends InternetListViewModel {
+  @override
+  InternetListState build() {
+    return InternetListState(
+      status: InternetListViewStatus.loaded,
+      services: [
+        InternetServiceEntity(
+          id: 'service-1',
+          type: 'internet',
+          provider: 'Airtel Xstream',
+          name: 'Fiber 100 Mbps',
+          packageLabel: 'Monthly',
+          amount: 999,
+          validationRegex: r'^[A-Z0-9]{6,16}$',
+          isActive: true,
+          meta: const {},
+        ),
+      ],
+      provider: '',
+      search: '',
+      errorMessage: null,
+      page: 1,
+      totalPages: 1,
+      isLoadingMore: false,
+    );
+  }
+
+  @override
+  Future<void> loadInitial() async {}
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<void> loadMore() async {}
+}
+
 void main() {
   Future<void> pumpHomeScreen(WidgetTester tester) async {
     await tester.pumpWidget(
@@ -116,6 +157,9 @@ void main() {
           ),
           hotelListViewModelProvider.overrideWith(
             () => FakeHotelListViewModel(),
+          ),
+          internetListViewModelProvider.overrideWith(
+            () => FakeInternetListViewModel(),
           ),
         ],
         child: const MaterialApp(home: HomeScreen()),
@@ -215,5 +259,21 @@ void main() {
 
     expect(find.byType(HotelListPage), findsOneWidget);
     expect(find.text('My Bookings'), findsOneWidget);
+  });
+
+  testWidgets('Tapping Internet tile opens internet list page', (tester) async {
+    await pumpHomeScreen(tester);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView),
+      const Offset(0, -220),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ServiceTile, 'Internet'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(InternetListPage), findsOneWidget);
+    expect(find.text('Internet Services'), findsOneWidget);
   });
 }

@@ -46,11 +46,16 @@ class ApiEndpoints {
   static const String transactionsHistory = '/transactions';
   static String transactionDetail(String txId) => '/transactions/$txId';
 
-  // Flights + Bookings
+  // Flights + Hotels + Bookings + Utility Services
   static const String flights = '/flights';
   static String flightDetail(String flightId) => '/flights/$flightId';
   static const String hotels = '/hotels';
   static String hotelDetail(String hotelId) => '/hotels/$hotelId';
+  static const String internetServices = '/internet-services';
+  static String internetServiceDetail(String serviceId) =>
+      '/internet-services/$serviceId';
+  static String internetServicePay(String serviceId) =>
+      '/internet-services/$serviceId/pay';
   static const String bookings = '/bookings';
   static String bookingPay(String bookingId) => '/bookings/$bookingId/pay';
 
