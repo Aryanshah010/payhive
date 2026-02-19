@@ -40,6 +40,8 @@ class RechargePaymentViewModel extends Notifier<RechargePaymentState> {
   }
 
   void setPhoneNumber(String value) {
+    if (state.payLocked) return;
+
     final normalized = value.trim();
     if (normalized == state.phoneNumber) return;
 
@@ -118,7 +120,7 @@ class RechargePaymentViewModel extends Notifier<RechargePaymentState> {
           paymentResult: paymentResult,
           errorMessage: null,
           payIdempotencyKey: idempotencyKey,
-          payLocked: false,
+          payLocked: true,
         );
       },
     );

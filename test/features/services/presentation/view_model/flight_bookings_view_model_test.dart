@@ -44,6 +44,7 @@ void main() {
   FlightBookingItemEntity booking({
     required String id,
     required String status,
+    DateTime? departure,
   }) {
     return FlightBookingItemEntity(
       id: id,
@@ -54,6 +55,7 @@ void main() {
       flightNumber: 'U4-201',
       from: 'Kathmandu',
       to: 'Pokhara',
+      departure: departure,
       createdAt: DateTime(2026, 3, 10),
     );
   }
@@ -188,6 +190,126 @@ void main() {
       expect(state.bookings.first.paymentTxnId, 'txn-1');
       expect(state.lastPaidBookingId, 'booking-1');
       expect(state.isBookingPaying('booking-1'), isFalse);
+    });
+
+    test(
+      'initial load skips past-only first page and keeps upcoming bookings',
+      () async {
+        final now = DateTime.now();
+
+        when(() => mockGetBookingsUsecase(any())).thenAnswer((
+          invocation,
+        ) async {
+          final params =
+              invocation.positionalArguments.first as GetFlightBookingsParams;
+
+          if (params.page == 1) {
+            return Right(
+              paged(
+                items: [
+                  booking(
+                    id: 'past-booking',
+                    status: 'created',
+                    departure: now.subtract(const Duration(days: 2)),
+                  ),
+                ],
+                page: 1,
+                totalPages: 2,
+              ),
+            );
+          }
+
+          return Right(
+            paged(
+              items: [
+                booking(
+                  id: 'future-booking',
+                  status: 'created',
+                  departure: now.add(const Duration(days: 2)),
+                ),
+              ],
+              page: 2,
+              totalPages: 2,
+            ),
+          );
+        });
+
+        final vm = container.read(flightBookingsViewModelProvider.notifier);
+        await vm.loadInitial();
+
+        final state = container.read(flightBookingsViewModelProvider);
+        expect(state.bookings.map((item) => item.id).toList(), [
+          'future-booking',
+        ]);
+        expect(state.page, 2);
+        expect(state.hasMore, isFalse);
+        verify(() => mockGetBookingsUsecase(any())).called(2);
+      },
+    );
+
+    test('load more skips past-only page and keeps fetching', () async {
+      final now = DateTime.now();
+
+      when(() => mockGetBookingsUsecase(any())).thenAnswer((invocation) async {
+        final params =
+            invocation.positionalArguments.first as GetFlightBookingsParams;
+
+        if (params.page == 1) {
+          return Right(
+            paged(
+              items: [
+                booking(
+                  id: 'b1',
+                  status: 'created',
+                  departure: now.add(const Duration(days: 1)),
+                ),
+              ],
+              page: 1,
+              totalPages: 3,
+            ),
+          );
+        }
+
+        if (params.page == 2) {
+          return Right(
+            paged(
+              items: [
+                booking(
+                  id: 'past-booking',
+                  status: 'created',
+                  departure: now.subtract(const Duration(days: 1)),
+                ),
+              ],
+              page: 2,
+              totalPages: 3,
+            ),
+          );
+        }
+
+        return Right(
+          paged(
+            items: [
+              booking(
+                id: 'b3',
+                status: 'paid',
+                departure: now.add(const Duration(days: 4)),
+              ),
+            ],
+            page: 3,
+            totalPages: 3,
+          ),
+        );
+      });
+
+      final vm = container.read(flightBookingsViewModelProvider.notifier);
+      await vm.loadInitial();
+      await vm.loadMore();
+
+      final state = container.read(flightBookingsViewModelProvider);
+      expect(state.bookings.map((item) => item.id).toList(), ['b1', 'b3']);
+      expect(state.page, 3);
+      expect(state.hasMore, isFalse);
+      verify(() => mockGetBookingsUsecase(any())).called(3);
     });
   });
 }

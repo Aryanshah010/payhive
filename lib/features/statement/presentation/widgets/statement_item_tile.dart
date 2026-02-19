@@ -22,13 +22,17 @@ class StatementItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final direction = _resolveDirection();
     final isDebit = direction == StatementEntryDirection.debit;
+    final isServiceDebit = isDebit && _isServiceDebitTransaction();
+    final showUndoButton = isDebit && !isServiceDebit;
     final counterparty = isDebit ? transaction.to : transaction.from;
     final amountColor = isDebit ? Colors.red.shade600 : Colors.green.shade600;
     final arrowIcon = isDebit
         ? Icons.south_west_rounded
         : Icons.north_east_rounded;
     final title = isDebit
-        ? 'Fund transferred to ${counterparty.fullName}'
+        ? (isServiceDebit
+              ? 'Service Payment'
+              : 'Fund transferred to ${counterparty.fullName}')
         : 'Money received from ${counterparty.fullName}';
     final subtitle = DateFormat(
       'EEE, dd MMM yyyy hh:mm a',
@@ -101,29 +105,31 @@ class StatementItemTile extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        TextButton(
-                          onPressed: onUndoTap,
-                          style: TextButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            foregroundColor: Colors.white,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            minimumSize: const Size(68, 30),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 0,
+                        if (showUndoButton) ...[
+                          const SizedBox(height: 10),
+                          TextButton(
+                            onPressed: onUndoTap,
+                            style: TextButton.styleFrom(
+                              backgroundColor: Colors.green.shade600,
+                              foregroundColor: Colors.white,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              minimumSize: const Size(68, 30),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 0,
+                              ),
+                              shape: const StadiumBorder(),
                             ),
-                            shape: const StadiumBorder(),
-                          ),
-                          child: const Text(
-                            'UNDO',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
+                            child: const Text(
+                              'UNDO',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ],
                     )
                   : Row(
@@ -162,5 +168,54 @@ class StatementItemTile extends StatelessWidget {
     }
 
     return StatementEntryDirection.debit;
+  }
+
+  bool _isServiceDebitTransaction() {
+    if (_matchesServicePaymentType()) {
+      return true;
+    }
+    if (_matchesServiceRemark()) {
+      return true;
+    }
+    return _isLegacyServiceSelfTransfer();
+  }
+
+  bool _matchesServicePaymentType() {
+    final type = (transaction.paymentType ?? '').trim().toUpperCase();
+    return type == 'BOOKING_PAYMENT' || type == 'UTILITY_PAYMENT';
+  }
+
+  bool _matchesServiceRemark() {
+    final remark = (transaction.remark ?? '').trim().toLowerCase();
+    if (remark.isEmpty) return false;
+
+    const tokens = <String>[
+      'booking payment',
+      'internet payment',
+      'topup payment',
+      'recharge payment',
+      'utility payment',
+    ];
+
+    return tokens.any(remark.contains);
+  }
+
+  bool _isLegacyServiceSelfTransfer() {
+    final fromId = transaction.from.id.trim();
+    final toId = transaction.to.id.trim();
+
+    if (fromId.isNotEmpty && toId.isNotEmpty && fromId == toId) {
+      return true;
+    }
+
+    if (fromId.isEmpty && toId.isEmpty) {
+      final fromPhone = transaction.from.phoneNumber.trim();
+      final toPhone = transaction.to.phoneNumber.trim();
+      if (fromPhone.isNotEmpty && fromPhone == toPhone) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

@@ -103,6 +103,8 @@ void main() {
     await pumpScreen(tester);
 
     expect(find.text('City'), findsOneWidget);
+    expect(find.text('Search'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
     expect(find.text('Thamel Boutique Residency'), findsOneWidget);
     expect(find.text('Kathmandu • Deluxe'), findsOneWidget);
     expect(find.text('Book Hotel'), findsOneWidget);

@@ -24,7 +24,10 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
   void setHotel(HotelEntity hotel) {
     final currentHotel = state.hotel;
     if (currentHotel != null && currentHotel.id == hotel.id) {
-      state = state.copyWith(hotel: hotel);
+      state = state.copyWith(
+        hotel: hotel,
+        nights: _deriveNights(state.checkin, state.checkout),
+      );
       return;
     }
 
@@ -35,6 +38,7 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
       rooms: 1,
       nights: 1,
       checkin: '',
+      checkout: '',
       createdBooking: null,
       paymentResult: null,
       errorMessage: null,
@@ -67,12 +71,25 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
     setRooms(state.rooms - 1);
   }
 
-  void setNights(int value) {
-    final next = value < 1 ? 1 : value;
-    if (next == state.nights) return;
+  void setCheckin(String value) {
+    final next = value.trim();
+    var nextCheckout = state.checkout;
+    if (nextCheckout.isNotEmpty &&
+        !_isCheckoutAfterCheckin(next, nextCheckout)) {
+      nextCheckout = '';
+    }
+    final nextNights = _deriveNights(next, nextCheckout);
+
+    if (next == state.checkin &&
+        nextCheckout == state.checkout &&
+        nextNights == state.nights) {
+      return;
+    }
 
     state = state.copyWith(
-      nights: next,
+      checkin: next,
+      checkout: nextCheckout,
+      nights: nextNights,
       createdBooking: null,
       paymentResult: null,
       payIdempotencyKey: null,
@@ -83,20 +100,14 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
     );
   }
 
-  void incrementNights() {
-    setNights(state.nights + 1);
-  }
-
-  void decrementNights() {
-    setNights(state.nights - 1);
-  }
-
-  void setCheckin(String value) {
+  void setCheckout(String value) {
     final next = value.trim();
-    if (next == state.checkin) return;
+    final nextNights = _deriveNights(state.checkin, next);
+    if (next == state.checkout && nextNights == state.nights) return;
 
     state = state.copyWith(
-      checkin: next,
+      checkout: next,
+      nights: nextNights,
       createdBooking: null,
       paymentResult: null,
       payIdempotencyKey: null,
@@ -138,6 +149,24 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
       return;
     }
 
+    if (state.checkout.trim().isEmpty) {
+      state = state.copyWith(
+        status: HotelBookingViewStatus.error,
+        action: HotelBookingAction.none,
+        errorMessage: 'Please select checkout date.',
+      );
+      return;
+    }
+
+    if (!_isCheckoutAfterCheckin(state.checkin, state.checkout)) {
+      state = state.copyWith(
+        status: HotelBookingViewStatus.error,
+        action: HotelBookingAction.none,
+        errorMessage: 'Checkout date must be after checkin date.',
+      );
+      return;
+    }
+
     state = state.copyWith(
       status: HotelBookingViewStatus.loading,
       action: HotelBookingAction.createBooking,
@@ -148,7 +177,7 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
       CreateHotelBookingParams(
         hotelId: hotel.id,
         rooms: state.rooms,
-        nights: state.nights,
+        nights: _deriveNights(state.checkin, state.checkout),
         checkin: state.checkin,
       ),
     );
@@ -291,5 +320,34 @@ class HotelBookingViewModel extends Notifier<HotelBookingState> {
     if (value < min) return min;
     if (value > max) return max;
     return value;
+  }
+
+  int _deriveNights(String checkin, String checkout) {
+    final checkinDate = _parseDateOnly(checkin);
+    final checkoutDate = _parseDateOnly(checkout);
+    if (checkinDate == null || checkoutDate == null) {
+      return 1;
+    }
+
+    final diff = checkoutDate.difference(checkinDate).inDays;
+    if (diff < 1) return 1;
+    return diff;
+  }
+
+  bool _isCheckoutAfterCheckin(String checkin, String checkout) {
+    final checkinDate = _parseDateOnly(checkin);
+    final checkoutDate = _parseDateOnly(checkout);
+    if (checkinDate == null || checkoutDate == null) {
+      return false;
+    }
+    return checkoutDate.isAfter(checkinDate);
+  }
+
+  DateTime? _parseDateOnly(String input) {
+    final value = input.trim();
+    if (value.isEmpty) return null;
+    final parsed = DateTime.tryParse('${value}T00:00:00');
+    if (parsed == null) return null;
+    return DateTime(parsed.year, parsed.month, parsed.day);
   }
 }

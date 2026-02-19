@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/domain/usecases/flight_usecases.dart';
 import 'package:payhive/features/services/presentation/state/flight_bookings_state.dart';
 import 'package:uuid/uuid.dart';
@@ -138,20 +140,43 @@ class FlightBookingsViewModel extends Notifier<FlightBookingsState> {
       );
     }
 
-    final result = await _getFlightBookingsUsecase(
-      GetFlightBookingsParams(
-        page: page,
-        limit: pageSize,
-        status: state.filter.apiValue,
-      ),
-    );
+    var currentPage = page;
+    final filteredItems = <FlightBookingItemEntity>[];
+    var resolvedPage = append ? state.page : 0;
+    var resolvedTotalPages = append ? state.totalPages : 1;
+    Failure? failure;
 
-    result.fold(
-      (failure) {
+    while (true) {
+      final result = await _getFlightBookingsUsecase(
+        GetFlightBookingsParams(
+          page: currentPage,
+          limit: pageSize,
+          status: state.filter.apiValue,
+        ),
+      );
+
+      var shouldContinue = false;
+
+      result.fold(
+        (nextFailure) {
+          failure = nextFailure;
+        },
+        (pagedData) {
+          filteredItems.addAll(_retainUpcomingBookings(pagedData.items));
+          resolvedPage = pagedData.page;
+          resolvedTotalPages = pagedData.totalPages < 1
+              ? 1
+              : pagedData.totalPages;
+          shouldContinue =
+              filteredItems.isEmpty && resolvedPage < resolvedTotalPages;
+        },
+      );
+
+      if (failure != null) {
         if (append) {
           state = state.copyWith(
             isLoadingMore: false,
-            errorMessage: failure.message,
+            errorMessage: failure!.message,
           );
           return;
         }
@@ -163,27 +188,51 @@ class FlightBookingsViewModel extends Notifier<FlightBookingsState> {
         state = state.copyWith(
           status: nextStatus,
           isLoadingMore: false,
-          errorMessage: failure.message,
+          errorMessage: failure!.message,
         );
-      },
-      (pagedData) {
-        final mergedItems = append
-            ? [...state.bookings, ...pagedData.items]
-            : pagedData.items;
+        return;
+      }
 
-        state = state.copyWith(
-          status: FlightBookingsViewStatus.loaded,
-          bookings: mergedItems,
-          page: pagedData.page,
-          totalPages: pagedData.totalPages < 1 ? 1 : pagedData.totalPages,
-          isLoadingMore: false,
-          errorMessage: null,
-        );
-      },
+      if (!shouldContinue) {
+        break;
+      }
+
+      currentPage = resolvedPage + 1;
+    }
+
+    final mergedItems = append
+        ? [...state.bookings, ...filteredItems]
+        : filteredItems;
+
+    state = state.copyWith(
+      status: FlightBookingsViewStatus.loaded,
+      bookings: mergedItems,
+      page: resolvedPage,
+      totalPages: resolvedTotalPages,
+      isLoadingMore: false,
+      errorMessage: null,
     );
   }
 
   List<String> _removePayingId(String bookingId) {
     return state.payingBookingIds.where((id) => id != bookingId).toList();
+  }
+
+  List<FlightBookingItemEntity> _retainUpcomingBookings(
+    List<FlightBookingItemEntity> bookings,
+  ) {
+    final today = _asLocalDate(DateTime.now());
+    return bookings.where((booking) {
+      final departure = booking.departure;
+      if (departure == null) {
+        return true;
+      }
+      final departureDate = _asLocalDate(departure.toLocal());
+      return !departureDate.isBefore(today);
+    }).toList();
+  }
+
+  DateTime _asLocalDate(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
 }

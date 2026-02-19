@@ -32,14 +32,11 @@ class _FlightListPageState extends ConsumerState<FlightListPage> {
 
     Future.microtask(() {
       if (!mounted) return;
-
       final currentState = ref.read(flightListViewModelProvider);
       _fromController.text = currentState.from;
       _toController.text = currentState.to;
       _dateController.text = currentState.date;
-
       ref.read(flightListViewModelProvider.notifier).loadInitial();
-
       if (mounted) setState(() {});
     });
   }
@@ -253,7 +250,7 @@ class _FlightListPageState extends ConsumerState<FlightListPage> {
             SizedBox(height: 80),
             Icon(Icons.inbox_outlined, size: 52),
             SizedBox(height: 16),
-            Center(child: Text('No flights found for selected filters.')),
+            Center(child: Text('No upcoming flights found.')),
           ],
         ),
       );

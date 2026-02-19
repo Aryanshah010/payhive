@@ -71,6 +71,7 @@ class _RechargeDetailPageState extends ConsumerState<RechargeDetailPage> {
     final isPayLoading =
         state.status == RechargePaymentViewStatus.loading &&
         state.action == RechargePaymentAction.pay;
+    final isPaid = state.paymentResult != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recharge Payment')),
@@ -109,6 +110,7 @@ class _RechargeDetailPageState extends ConsumerState<RechargeDetailPage> {
             const SizedBox(height: 16),
             TextField(
               controller: _phoneController,
+              enabled: !isPaid && !isPayLoading,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
               maxLength: 10,
@@ -120,10 +122,16 @@ class _RechargeDetailPageState extends ConsumerState<RechargeDetailPage> {
               ),
             ),
             const SizedBox(height: 8),
-            PrimaryButtonWidget(
-              onPressed: viewModel.payService,
-              isLoading: isPayLoading,
-              text: 'Pay Recharge',
+            Opacity(
+              opacity: (isPaid && !isPayLoading) ? 0.6 : 1,
+              child: IgnorePointer(
+                ignoring: isPaid && !isPayLoading,
+                child: PrimaryButtonWidget(
+                  onPressed: viewModel.payService,
+                  isLoading: isPayLoading,
+                  text: isPaid ? 'Paid' : 'Pay Recharge',
+                ),
+              ),
             ),
             if (state.paymentResult != null) ...[
               const SizedBox(height: 16),

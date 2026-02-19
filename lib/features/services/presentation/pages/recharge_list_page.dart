@@ -29,12 +29,11 @@ class _RechargeListPageState extends ConsumerState<RechargeListPage> {
 
     Future.microtask(() {
       if (!mounted) return;
-
+      final viewModel = ref.read(rechargeListViewModelProvider.notifier);
       final currentState = ref.read(rechargeListViewModelProvider);
       _providerController.text = currentState.provider;
       _searchController.text = currentState.search;
-
-      ref.read(rechargeListViewModelProvider.notifier).loadInitial();
+      viewModel.loadInitial();
       if (mounted) setState(() {});
     });
   }

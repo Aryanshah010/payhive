@@ -40,6 +40,8 @@ class InternetPaymentViewModel extends Notifier<InternetPaymentState> {
   }
 
   void setCustomerId(String value) {
+    if (state.payLocked) return;
+
     final normalized = value.trim();
     if (normalized == state.customerId) return;
 
@@ -119,7 +121,7 @@ class InternetPaymentViewModel extends Notifier<InternetPaymentState> {
           paymentResult: paymentResult,
           errorMessage: null,
           payIdempotencyKey: idempotencyKey,
-          payLocked: false,
+          payLocked: true,
         );
       },
     );

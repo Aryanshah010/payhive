@@ -71,6 +71,7 @@ class _InternetDetailPageState extends ConsumerState<InternetDetailPage> {
     final isPayLoading =
         state.status == InternetPaymentViewStatus.loading &&
         state.action == InternetPaymentAction.pay;
+    final isPaid = state.paymentResult != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Internet Payment')),
@@ -109,6 +110,7 @@ class _InternetDetailPageState extends ConsumerState<InternetDetailPage> {
             const SizedBox(height: 16),
             TextField(
               controller: _customerIdController,
+              enabled: !isPaid && !isPayLoading,
               textInputAction: TextInputAction.done,
               onChanged: viewModel.setCustomerId,
               decoration: const InputDecoration(
@@ -118,10 +120,16 @@ class _InternetDetailPageState extends ConsumerState<InternetDetailPage> {
               ),
             ),
             const SizedBox(height: 16),
-            PrimaryButtonWidget(
-              onPressed: viewModel.payService,
-              isLoading: isPayLoading,
-              text: 'Pay Internet',
+            Opacity(
+              opacity: (isPaid && !isPayLoading) ? 0.6 : 1,
+              child: IgnorePointer(
+                ignoring: isPaid && !isPayLoading,
+                child: PrimaryButtonWidget(
+                  onPressed: viewModel.payService,
+                  isLoading: isPayLoading,
+                  text: isPaid ? 'Paid' : 'Pay Internet',
+                ),
+              ),
             ),
             if (state.paymentResult != null) ...[
               const SizedBox(height: 16),

@@ -47,45 +47,6 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
     }
   }
 
-  Future<void> _openFilterSheet(
-    BuildContext context,
-    FlightBookingFilter selected,
-  ) async {
-    final nextFilter = await showModalBottomSheet<FlightBookingFilter>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              ...FlightBookingFilter.values.map((filter) {
-                return RadioListTile<FlightBookingFilter>(
-                  value: filter,
-                  groupValue: selected,
-                  title: Text(filter.label),
-                  onChanged: (next) {
-                    if (next == null) return;
-                    Navigator.pop(context, next);
-                  },
-                );
-              }),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (nextFilter == null || nextFilter == selected) return;
-    await ref
-        .read(flightBookingsViewModelProvider.notifier)
-        .applyFilter(nextFilter);
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(flightBookingsViewModelProvider);
@@ -110,16 +71,7 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Flight Bookings'),
-        actions: [
-          IconButton(
-            onPressed: () => _openFilterSheet(context, state.filter),
-            tooltip: 'Filter status',
-            icon: const Icon(Icons.filter_alt_outlined),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('My Flight Bookings')),
       body: _buildBody(state),
     );
   }
@@ -168,7 +120,7 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
             const SizedBox(height: 80),
             const Icon(Icons.inbox_outlined, size: 52),
             const SizedBox(height: 16),
-            Center(child: Text('No bookings found for ${state.filter.label}.')),
+            const Center(child: Text('No flight bookings found.')),
           ],
         ),
       );

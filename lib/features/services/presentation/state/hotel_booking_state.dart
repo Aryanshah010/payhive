@@ -14,6 +14,7 @@ class HotelBookingState extends Equatable {
   final int rooms;
   final int nights;
   final String checkin;
+  final String checkout;
   final CreateHotelBookingResultEntity? createdBooking;
   final PayHotelBookingResultEntity? paymentResult;
   final String? errorMessage;
@@ -27,6 +28,7 @@ class HotelBookingState extends Equatable {
     required this.rooms,
     required this.nights,
     required this.checkin,
+    required this.checkout,
     this.createdBooking,
     this.paymentResult,
     this.errorMessage,
@@ -41,6 +43,7 @@ class HotelBookingState extends Equatable {
       rooms: 1,
       nights: 1,
       checkin: '',
+      checkout: '',
       payLocked: false,
     );
   }
@@ -52,6 +55,7 @@ class HotelBookingState extends Equatable {
     int? rooms,
     int? nights,
     String? checkin,
+    String? checkout,
     Object? createdBooking = _unset,
     Object? paymentResult = _unset,
     Object? errorMessage = _unset,
@@ -65,6 +69,7 @@ class HotelBookingState extends Equatable {
       rooms: rooms ?? this.rooms,
       nights: nights ?? this.nights,
       checkin: checkin ?? this.checkin,
+      checkout: checkout ?? this.checkout,
       createdBooking: createdBooking == _unset
           ? this.createdBooking
           : createdBooking as CreateHotelBookingResultEntity?,
@@ -89,6 +94,7 @@ class HotelBookingState extends Equatable {
     rooms,
     nights,
     checkin,
+    checkout,
     createdBooking,
     paymentResult,
     errorMessage,

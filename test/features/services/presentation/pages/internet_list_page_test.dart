@@ -108,6 +108,7 @@ void main() {
 
     expect(find.text('Provider'), findsOneWidget);
     expect(find.text('Search'), findsNWidgets(2));
+    expect(find.text('Clear'), findsOneWidget);
     expect(find.text('Fiber 100 Mbps'), findsNWidgets(2));
     expect(find.text('Airtel Xstream'), findsNWidgets(2));
     expect(find.text('Package: Monthly'), findsOneWidget);

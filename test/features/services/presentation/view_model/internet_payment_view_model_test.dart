@@ -86,7 +86,7 @@ void main() {
       final state = container.read(internetPaymentViewModelProvider);
       expect(state.status, InternetPaymentViewStatus.loaded);
       expect(state.paymentResult?.transactionId, 'txn-1');
-      expect(state.payLocked, isFalse);
+      expect(state.payLocked, isTrue);
     });
 
     test('invalid customer id fails local regex validation', () async {
@@ -133,6 +133,24 @@ void main() {
 
       completer.complete(Right(makePayResult()));
       await Future<void>.delayed(const Duration(milliseconds: 10));
+    });
+
+    test('repeat pay is ignored after successful payment lock', () async {
+      when(
+        () => mockPayUsecase(any()),
+      ).thenAnswer((_) async => Right(makePayResult()));
+
+      final vm = container.read(internetPaymentViewModelProvider.notifier);
+      vm.setService(makeService());
+      vm.setCustomerId('ABCD1234');
+
+      await vm.payService();
+      await vm.payService();
+
+      final state = container.read(internetPaymentViewModelProvider);
+      expect(state.status, InternetPaymentViewStatus.loaded);
+      expect(state.payLocked, isTrue);
+      verify(() => mockPayUsecase(any())).called(1);
     });
 
     test('pay failure retries with same idempotency key', () async {

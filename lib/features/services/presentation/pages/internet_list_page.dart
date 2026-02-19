@@ -29,12 +29,11 @@ class _InternetListPageState extends ConsumerState<InternetListPage> {
 
     Future.microtask(() {
       if (!mounted) return;
-
+      final viewModel = ref.read(internetListViewModelProvider.notifier);
       final currentState = ref.read(internetListViewModelProvider);
       _providerController.text = currentState.provider;
       _searchController.text = currentState.search;
-
-      ref.read(internetListViewModelProvider.notifier).loadInitial();
+      viewModel.loadInitial();
       if (mounted) setState(() {});
     });
   }

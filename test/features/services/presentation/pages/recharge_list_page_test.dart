@@ -108,6 +108,7 @@ void main() {
 
     expect(find.text('Provider'), findsOneWidget);
     expect(find.text('Search'), findsNWidgets(2));
+    expect(find.text('Clear'), findsOneWidget);
     expect(find.text('Data Pack'), findsNWidgets(2));
     expect(find.text('NTC'), findsNWidgets(2));
     expect(find.text('Package: 2GB Daily'), findsOneWidget);

@@ -93,6 +93,7 @@ void main() {
     final vm = container.read(hotelBookingViewModelProvider.notifier);
     vm.setHotel(makeHotel());
     vm.setCheckin('2030-01-01');
+    vm.setCheckout('2030-01-03');
     await vm.createBooking();
   }
 
@@ -105,6 +106,7 @@ void main() {
       final vm = container.read(hotelBookingViewModelProvider.notifier);
       vm.setHotel(makeHotel());
       vm.setCheckin('2030-01-01');
+      vm.setCheckout('2030-01-03');
       await vm.createBooking();
 
       final state = container.read(hotelBookingViewModelProvider);
@@ -113,6 +115,55 @@ void main() {
       expect(state.createdBooking?.bookingId, 'booking-1');
       expect(state.payLocked, isFalse);
     });
+
+    test('derived nights are sent to create booking request', () async {
+      late CreateHotelBookingParams capturedParams;
+      when(() => mockCreateUsecase(any())).thenAnswer((invocation) async {
+        capturedParams =
+            invocation.positionalArguments.first as CreateHotelBookingParams;
+        return Right(makeCreateResult());
+      });
+
+      final vm = container.read(hotelBookingViewModelProvider.notifier);
+      vm.setHotel(makeHotel());
+      vm.setRooms(2);
+      vm.setCheckin('2030-01-01');
+      vm.setCheckout('2030-01-04');
+      await vm.createBooking();
+
+      final state = container.read(hotelBookingViewModelProvider);
+      expect(state.nights, 3);
+      expect(capturedParams.nights, 3);
+      expect(capturedParams.rooms, 2);
+    });
+
+    test('create booking fails when checkout is missing', () async {
+      final vm = container.read(hotelBookingViewModelProvider.notifier);
+      vm.setHotel(makeHotel());
+      vm.setCheckin('2030-01-01');
+      await vm.createBooking();
+
+      final state = container.read(hotelBookingViewModelProvider);
+      expect(state.status, HotelBookingViewStatus.error);
+      expect(state.errorMessage, 'Please select checkout date.');
+      verifyNever(() => mockCreateUsecase(any()));
+    });
+
+    test(
+      'create booking fails when checkout is before or equal to checkin',
+      () async {
+        final vm = container.read(hotelBookingViewModelProvider.notifier);
+        vm.setHotel(makeHotel());
+        vm.setCheckin('2030-01-05');
+        vm.setCheckout('2030-01-04');
+        await vm.createBooking();
+
+        final state = container.read(hotelBookingViewModelProvider);
+        expect(state.status, HotelBookingViewStatus.error);
+        expect(state.errorMessage, 'Checkout date must be after checkin date.');
+        verifyNever(() => mockCreateUsecase(any()));
+      },
+    );
 
     test('pay booking success updates payment result and locks flow', () async {
       await prepareCreatedBooking();

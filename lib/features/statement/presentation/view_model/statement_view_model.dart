@@ -165,6 +165,8 @@ class StatementViewModel extends Notifier<StatementState> {
       status: item.status,
       amount: item.amount,
       remark: item.remark,
+      paymentType: item.paymentType,
+      meta: item.meta,
       from: item.from,
       to: item.to,
       createdAt: item.createdAt,

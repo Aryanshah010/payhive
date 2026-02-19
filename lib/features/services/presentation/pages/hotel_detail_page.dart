@@ -20,6 +20,7 @@ class HotelDetailPage extends ConsumerStatefulWidget {
 
 class _HotelDetailPageState extends ConsumerState<HotelDetailPage> {
   final TextEditingController _checkinController = TextEditingController();
+  final TextEditingController _checkoutController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _HotelDetailPageState extends ConsumerState<HotelDetailPage> {
   @override
   void dispose() {
     _checkinController.dispose();
+    _checkoutController.dispose();
     super.dispose();
   }
 
@@ -67,6 +69,41 @@ class _HotelDetailPageState extends ConsumerState<HotelDetailPage> {
     if (mounted) setState(() {});
   }
 
+  Future<void> _pickCheckoutDate() async {
+    final tomorrow = DateUtils.dateOnly(
+      DateTime.now().add(const Duration(days: 1)),
+    );
+    final parsedCheckin = DateTime.tryParse(_checkinController.text.trim());
+    final minDate = parsedCheckin == null
+        ? tomorrow.add(const Duration(days: 1))
+        : DateUtils.dateOnly(parsedCheckin).add(const Duration(days: 1));
+    final maxDate = tomorrow.add(const Duration(days: 730));
+    DateTime initialDate = minDate;
+
+    final existing = DateTime.tryParse(_checkoutController.text.trim());
+    if (existing != null) {
+      final existingDate = DateUtils.dateOnly(existing);
+      if (!existingDate.isBefore(minDate) && !existingDate.isAfter(maxDate)) {
+        initialDate = existingDate;
+      }
+    }
+
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: minDate,
+      lastDate: maxDate,
+    );
+
+    if (selected == null) return;
+
+    final formatted = DateFormat('yyyy-MM-dd').format(selected);
+    _checkoutController.text = formatted;
+    ref.read(hotelBookingViewModelProvider.notifier).setCheckout(formatted);
+
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(hotelBookingViewModelProvider);
@@ -74,6 +111,9 @@ class _HotelDetailPageState extends ConsumerState<HotelDetailPage> {
 
     if (_checkinController.text != state.checkin) {
       _checkinController.text = state.checkin;
+    }
+    if (_checkoutController.text != state.checkout) {
+      _checkoutController.text = state.checkout;
     }
 
     ref.listen<HotelBookingState>(hotelBookingViewModelProvider, (prev, next) {
@@ -166,6 +206,28 @@ class _HotelDetailPageState extends ConsumerState<HotelDetailPage> {
                                 onPressed: () {
                                   _checkinController.clear();
                                   viewModel.setCheckin('');
+                                  _checkoutController.clear();
+                                  setState(() {});
+                                },
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _checkoutController,
+                      readOnly: true,
+                      onTap: _pickCheckoutDate,
+                      decoration: InputDecoration(
+                        labelText: 'Checkout (YYYY-MM-DD)',
+                        hintText: 'Select checkout date',
+                        prefixIcon: const Icon(Icons.calendar_today_outlined),
+                        suffixIcon: _checkoutController.text.isEmpty
+                            ? null
+                            : IconButton(
+                                onPressed: () {
+                                  _checkoutController.clear();
+                                  viewModel.setCheckout('');
                                   setState(() {});
                                 },
                                 icon: const Icon(Icons.close_rounded),
@@ -193,29 +255,6 @@ class _HotelDetailPageState extends ConsumerState<HotelDetailPage> {
                           onPressed: state.rooms < hotel.roomsAvailable
                               ? viewModel.incrementRooms
                               : null,
-                          icon: const Icon(Icons.add_circle_outline),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Nights',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: state.nights > 1
-                              ? viewModel.decrementNights
-                              : null,
-                          icon: const Icon(Icons.remove_circle_outline),
-                        ),
-                        Text(
-                          '${state.nights}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        IconButton(
-                          onPressed: viewModel.incrementNights,
                           icon: const Icon(Icons.add_circle_outline),
                         ),
                       ],

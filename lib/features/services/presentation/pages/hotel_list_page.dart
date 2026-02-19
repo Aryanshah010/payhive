@@ -29,12 +29,9 @@ class _HotelListPageState extends ConsumerState<HotelListPage> {
 
     Future.microtask(() {
       if (!mounted) return;
-
       final currentState = ref.read(hotelListViewModelProvider);
       _cityController.text = currentState.city;
-
       ref.read(hotelListViewModelProvider.notifier).loadInitial();
-
       if (mounted) setState(() {});
     });
   }
@@ -183,7 +180,7 @@ class _HotelListPageState extends ConsumerState<HotelListPage> {
             SizedBox(height: 80),
             Icon(Icons.inbox_outlined, size: 52),
             SizedBox(height: 16),
-            Center(child: Text('No hotels found for selected city.')),
+            Center(child: Text('No hotels found.')),
           ],
         ),
       );

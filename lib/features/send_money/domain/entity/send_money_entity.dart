@@ -30,6 +30,8 @@ class ReceiptEntity extends Equatable {
   final String status;
   final double amount;
   final String? remark;
+  final String? paymentType;
+  final Map<String, dynamic>? meta;
   final RecipientEntity from;
   final RecipientEntity to;
   final DateTime createdAt;
@@ -40,6 +42,8 @@ class ReceiptEntity extends Equatable {
     required this.status,
     required this.amount,
     this.remark,
+    this.paymentType,
+    this.meta,
     required this.from,
     required this.to,
     required this.createdAt,
@@ -52,6 +56,8 @@ class ReceiptEntity extends Equatable {
     status,
     amount,
     remark,
+    paymentType,
+    meta,
     from,
     to,
     createdAt,
