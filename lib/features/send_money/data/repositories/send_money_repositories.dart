@@ -51,6 +51,31 @@ class SendMoneyRepository implements ISendMoneyRepository {
   }
 
   @override
+  Future<Either<Failure, PreviewEntity>> previewBankTransfer({
+    required String bankName,
+    required String accountNumber,
+    required double amount,
+    String? remark,
+  }) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final model = await _remoteDatasource.previewBankTransfer(
+          bankName: bankName,
+          accountNumber: accountNumber,
+          amount: amount,
+          remark: remark,
+        );
+        return Right(model.toEntity());
+      } on DioException catch (e) {
+        return Left(_mapDioFailure(e));
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    }
+    return const Left(ApiFalilure(message: 'No Internet connection'));
+  }
+
+  @override
   Future<Either<Failure, ReceiptEntity>> confirmTransfer({
     required String toPhoneNumber,
     required double amount,
@@ -62,6 +87,35 @@ class SendMoneyRepository implements ISendMoneyRepository {
       try {
         final model = await _remoteDatasource.confirmTransfer(
           toPhoneNumber: toPhoneNumber,
+          amount: amount,
+          pin: pin,
+          remark: remark,
+          idempotencyKey: idempotencyKey,
+        );
+        return Right(model.toEntity());
+      } on DioException catch (e) {
+        return Left(_mapDioFailure(e));
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    }
+    return const Left(ApiFalilure(message: 'No Internet connection'));
+  }
+
+  @override
+  Future<Either<Failure, ReceiptEntity>> confirmBankTransfer({
+    required String bankName,
+    required String accountNumber,
+    required double amount,
+    required String pin,
+    String? remark,
+    String? idempotencyKey,
+  }) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final model = await _remoteDatasource.confirmBankTransfer(
+          bankName: bankName,
+          accountNumber: accountNumber,
           amount: amount,
           pin: pin,
           remark: remark,

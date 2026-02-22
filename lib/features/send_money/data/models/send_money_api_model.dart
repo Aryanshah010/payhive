@@ -69,6 +69,8 @@ class ReceiptApiModel {
   final String status;
   final double amount;
   final String? remark;
+  final String? paymentType;
+  final Map<String, dynamic>? meta;
   final RecipientApiModel from;
   final RecipientApiModel to;
   final DateTime createdAt;
@@ -79,6 +81,8 @@ class ReceiptApiModel {
     required this.status,
     required this.amount,
     this.remark,
+    this.paymentType,
+    this.meta,
     required this.from,
     required this.to,
     required this.createdAt,
@@ -105,6 +109,8 @@ class ReceiptApiModel {
       status: (payload['status'] ?? '').toString(),
       amount: _parseAmount(payload['amount']),
       remark: payload['remark']?.toString(),
+      paymentType: payload['paymentType']?.toString(),
+      meta: _asNullableMap(payload['meta']),
       from: RecipientApiModel.fromJson(fromMap),
       to: RecipientApiModel.fromJson(toMap),
       createdAt: _parseDate(payload['createdAt']),
@@ -118,6 +124,8 @@ class ReceiptApiModel {
       status: status,
       amount: amount,
       remark: remark,
+      paymentType: paymentType,
+      meta: meta,
       from: from.toEntity(),
       to: to.toEntity(),
       createdAt: createdAt,
@@ -144,4 +152,10 @@ double _parseAmount(dynamic value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value) ?? 0;
   return 0;
+}
+
+Map<String, dynamic>? _asNullableMap(dynamic value) {
+  if (value is Map<String, dynamic>) return value;
+  if (value is Map) return Map<String, dynamic>.from(value);
+  return null;
 }

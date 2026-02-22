@@ -9,8 +9,24 @@ abstract interface class ISendMoneyRepository {
     String? remark,
   });
 
+  Future<Either<Failure, PreviewEntity>> previewBankTransfer({
+    required String bankName,
+    required String accountNumber,
+    required double amount,
+    String? remark,
+  });
+
   Future<Either<Failure, ReceiptEntity>> confirmTransfer({
     required String toPhoneNumber,
+    required double amount,
+    required String pin,
+    String? remark,
+    String? idempotencyKey,
+  });
+
+  Future<Either<Failure, ReceiptEntity>> confirmBankTransfer({
+    required String bankName,
+    required String accountNumber,
     required double amount,
     required String pin,
     String? remark,
@@ -20,5 +36,4 @@ abstract interface class ISendMoneyRepository {
   Future<Either<Failure, RecipientEntity>> lookupBeneficiary({
     required String phoneNumber,
   });
-
 }

@@ -6,6 +6,11 @@ import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:payhive/features/send_money/domain/entity/bank_entity.dart';
+import 'package:payhive/features/send_money/presentation/pages/bank_transfer_page.dart';
+import 'package:payhive/features/send_money/presentation/providers/bank_list_provider.dart';
+import 'package:payhive/features/send_money/presentation/state/bank_transfer_state.dart';
+import 'package:payhive/features/send_money/presentation/view_model/bank_transfer_view_model.dart';
 import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/domain/entity/hotel_entity.dart';
 import 'package:payhive/features/services/domain/entity/recharge_entity.dart';
@@ -33,6 +38,13 @@ class FakeProfileViewModel extends ProfileViewModel {
       email: 'test@payhive.com',
       balance: 12800,
     );
+  }
+}
+
+class FakeBankTransferViewModel extends BankTransferViewModel {
+  @override
+  BankTransferState build() {
+    return BankTransferState.initial();
   }
 }
 
@@ -193,6 +205,21 @@ void main() {
       ProviderScope(
         overrides: [
           profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
+          bankListProvider.overrideWith(
+            (ref) async => const [
+              BankEntity(
+                id: 'bank-1',
+                name: 'Nabil Bank',
+                code: 'NABIL',
+                minTransfer: 10,
+                maxTransfer: 50000,
+                fee: 10,
+              ),
+            ],
+          ),
+          bankTransferViewModelProvider.overrideWith(
+            () => FakeBankTransferViewModel(),
+          ),
           flightListViewModelProvider.overrideWith(
             () => FakeFlightListViewModel(),
           ),
@@ -271,6 +298,18 @@ void main() {
     await pumpHomeScreen(tester);
 
     await tester.tap(find.text('Send\nMoney'));
+  });
+
+  testWidgets('Tapping Bank Transfer button opens bank transfer page', (
+    tester,
+  ) async {
+    await pumpHomeScreen(tester);
+
+    await tester.tap(find.text('Bank\nTransfer'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BankTransferPage), findsOneWidget);
+    expect(find.text('Bank Transfer'), findsOneWidget);
   });
 
   testWidgets('Tapping Flights tile opens flight list page', (tester) async {

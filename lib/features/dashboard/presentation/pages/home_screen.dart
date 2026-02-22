@@ -6,6 +6,7 @@ import 'package:payhive/core/utils/currency_formatter.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:payhive/features/send_money/presentation/pages/bank_transfer_page.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
@@ -118,6 +119,12 @@ class HomeScreen extends ConsumerWidget {
                               QuickActionBtn(
                                 icon: Icons.account_balance,
                                 label: 'Bank\nTransfer',
+                                onTap: () {
+                                  AppRoutes.push(
+                                    context,
+                                    const BankTransferPage(),
+                                  );
+                                },
                               ),
                             ],
                           ),
