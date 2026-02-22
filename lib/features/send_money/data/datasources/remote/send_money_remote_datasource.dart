@@ -55,29 +55,6 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
   }
 
   @override
-  Future<PreviewApiModel> previewBankTransfer({
-    required String bankName,
-    required String accountNumber,
-    required double amount,
-    String? remark,
-  }) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.transactionsPreview,
-      data: {
-        'paymentType': 'BANK_TRANSFER',
-        'bankName': bankName,
-        'accountNumber': accountNumber,
-        'amount': amount,
-        if (remark != null && remark.trim().isNotEmpty) 'remark': remark.trim(),
-      },
-      options: _authOptions(),
-    );
-
-    final data = response.data['data'] as Map<String, dynamic>;
-    return PreviewApiModel.fromJson(data);
-  }
-
-  @override
   Future<ReceiptApiModel> confirmTransfer({
     required String toPhoneNumber,
     required double amount,
@@ -100,33 +77,6 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
     return ReceiptApiModel.fromJson(data);
   }
 
-  @override
-  Future<ReceiptApiModel> confirmBankTransfer({
-    required String bankName,
-    required String accountNumber,
-    required double amount,
-    required String pin,
-    String? remark,
-    String? idempotencyKey,
-  }) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.transactionsConfirm,
-      data: {
-        'paymentType': 'BANK_TRANSFER',
-        'bankName': bankName,
-        'accountNumber': accountNumber,
-        'amount': amount,
-        if (remark != null && remark.trim().isNotEmpty) 'remark': remark.trim(),
-        'pin': pin,
-      },
-      options: _authOptions(idempotencyKey: idempotencyKey),
-    );
-
-    final data = response.data['data'] as Map<String, dynamic>;
-    return ReceiptApiModel.fromJson(data);
-  }
-
-  @override
   Future<RecipientApiModel> lookupBeneficiary({
     required String phoneNumber,
   }) async {

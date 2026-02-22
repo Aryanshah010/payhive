@@ -6,12 +6,11 @@ import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
+import 'package:payhive/features/bank_transfer/domain/entity/bank_entity.dart';
+import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_success_page.dart';
+import 'package:payhive/features/bank_transfer/presentation/state/bank_transfer_state.dart';
+import 'package:payhive/features/bank_transfer/presentation/view_model/bank_transfer_view_model.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:payhive/features/send_money/domain/entity/bank_entity.dart';
-import 'package:payhive/features/send_money/presentation/pages/send_money_success_page.dart';
-import 'package:payhive/features/send_money/presentation/providers/bank_list_provider.dart';
-import 'package:payhive/features/send_money/presentation/state/bank_transfer_state.dart';
-import 'package:payhive/features/send_money/presentation/view_model/bank_transfer_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/amount_keypad_widget.dart';
 import 'package:payhive/features/send_money/presentation/widgets/balance_card_widget.dart';
 
@@ -40,6 +39,10 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
     super.initState();
     final state = ref.read(bankTransferViewModelProvider);
     _accountNumberController.text = state.accountNumber;
+    Future.microtask(() {
+      if (!mounted) return;
+      ref.read(bankTransferViewModelProvider.notifier).loadBanks();
+    });
   }
 
   @override
@@ -213,7 +216,6 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
 
     final state = ref.watch(bankTransferViewModelProvider);
     final viewModel = ref.read(bankTransferViewModelProvider.notifier);
-    final banksAsync = ref.watch(bankListProvider);
     final profileState = ref.watch(profileViewModelProvider);
     final balanceText = formatNpr(profileState.balance ?? 0);
     final isConfirmLocked = state.confirmLocked;
@@ -250,9 +252,10 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
+          if (receiptToPass == null) return;
           AppRoutes.push(
             context,
-            SendMoneySuccessPage(receiptArg: receiptToPass),
+            BankTransferSuccessPage(receipt: receiptToPass),
           );
           viewModel.resetFlow();
         });
@@ -260,7 +263,7 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
     });
 
     final amountDisplay = state.amountInput.isEmpty ? '0' : state.amountInput;
-    final banks = banksAsync.asData?.value ?? const <BankEntity>[];
+    final banks = state.banks;
     final selectedBank = _resolveSelectedBank(state.bankName, banks);
     final hasBank = selectedBank != null;
     final canContinue = hasBank && !isConfirmLocked;
@@ -291,8 +294,9 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
                 ),
               ),
               const SizedBox(height: 8),
-              banksAsync.when(
-                loading: () => Row(
+              if (state.bankListStatus == BankListStatus.loading ||
+                  state.bankListStatus == BankListStatus.idle)
+                Row(
                   children: [
                     const SizedBox(
                       width: 18,
@@ -308,12 +312,15 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
                       ),
                     ),
                   ],
-                ),
-                error: (_, __) => Row(
+                )
+              else if (state.bankListStatus == BankListStatus.error)
+                Row(
                   children: [
                     Expanded(
                       child: Text(
-                        "Failed to load banks.",
+                        state.bankListError?.trim().isNotEmpty == true
+                            ? state.bankListError!
+                            : "Failed to load banks.",
                         style: TextStyle(
                           fontSize: 13 * scale,
                           color: colorScheme.error,
@@ -322,12 +329,13 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
                       ),
                     ),
                     TextButton(
-                      onPressed: () => ref.refresh(bankListProvider),
+                      onPressed: () => viewModel.loadBanks(force: true),
                       child: const Text("Retry"),
                     ),
                   ],
-                ),
-                data: (banks) => DropdownButtonFormField<String>(
+                )
+              else
+                DropdownButtonFormField<String>(
                   value: selectedBank?.code,
                   isExpanded: true,
                   decoration: InputDecoration(
@@ -355,7 +363,6 @@ class _BankTransferPageState extends ConsumerState<BankTransferPage> {
                           viewModel.setBankName(value);
                         },
                 ),
-              ),
               if (selectedBank != null) ...[
                 const SizedBox(height: 8),
                 Text(

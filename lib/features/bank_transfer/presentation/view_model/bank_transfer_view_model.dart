@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
-import 'package:payhive/features/send_money/domain/usecases/send_money_usecase.dart';
-import 'package:payhive/features/send_money/presentation/state/bank_transfer_state.dart';
+import 'package:payhive/features/bank_transfer/domain/usecases/bank_transfer_usecase.dart';
+import 'package:payhive/features/bank_transfer/presentation/state/bank_transfer_state.dart';
 import 'package:uuid/uuid.dart';
 
 final bankTransferViewModelProvider =
@@ -12,6 +12,7 @@ final bankTransferViewModelProvider =
     );
 
 class BankTransferViewModel extends Notifier<BankTransferState> {
+  late final GetBanksUsecase _getBanksUsecase;
   late final PreviewBankTransferUsecase _previewBankTransferUsecase;
   late final ConfirmBankTransferUsecase _confirmBankTransferUsecase;
   final Uuid _uuid = const Uuid();
@@ -22,6 +23,7 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
 
   @override
   BankTransferState build() {
+    _getBanksUsecase = ref.read(getBanksUsecaseProvider);
     _previewBankTransferUsecase = ref.read(previewBankTransferUsecaseProvider);
     _confirmBankTransferUsecase = ref.read(confirmBankTransferUsecaseProvider);
 
@@ -32,9 +34,40 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
     return BankTransferState.initial();
   }
 
+  Future<void> loadBanks({bool force = false}) async {
+    if (state.bankListStatus == BankListStatus.loading) return;
+    if (!force && state.bankListStatus == BankListStatus.loaded) return;
+
+    state = state.copyWith(
+      bankListStatus: BankListStatus.loading,
+      bankListError: null,
+    );
+
+    final result = await _getBanksUsecase();
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          bankListStatus: BankListStatus.error,
+          bankListError: failure.message,
+        );
+      },
+      (banks) {
+        state = state.copyWith(
+          bankListStatus: BankListStatus.loaded,
+          banks: banks,
+          bankListError: null,
+        );
+      },
+    );
+  }
+
   void resetFlow() {
     _lockoutTimer?.cancel();
-    state = BankTransferState.initial();
+    state = BankTransferState.initial().copyWith(
+      banks: state.banks,
+      bankListStatus: state.bankListStatus,
+      bankListError: state.bankListError,
+    );
   }
 
   void clearStatus() {
@@ -73,14 +106,6 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
     if (normalized == state.accountNumber) return;
     _invalidateConfirmLifecycle();
     state = state.copyWith(accountNumber: normalized);
-  }
-
-  void setRemark(String? value) {
-    final trimmed = value?.trim();
-    final normalized = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
-    if (normalized == state.remark) return;
-    _invalidateConfirmLifecycle();
-    state = state.copyWith(remark: normalized);
   }
 
   void appendAmountKey(String key) {
@@ -140,7 +165,6 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
         bankName: state.bankName,
         accountNumber: state.accountNumber,
         amount: amount,
-        remark: state.remark,
       ),
     );
 
@@ -188,7 +212,6 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
         accountNumber: state.accountNumber,
         amount: amount,
         pin: pin,
-        remark: state.remark,
         idempotencyKey: idempotencyKey,
       ),
     );
@@ -219,7 +242,7 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
         errorMessage: failure.message,
         lockoutRemainingMs: failure.remainingMs,
       );
-      _startLockoutCountdown(failure.remainingMs);
+      _startLockoutTimer();
       return;
     }
 
@@ -230,26 +253,28 @@ class BankTransferViewModel extends Notifier<BankTransferState> {
     );
   }
 
-  void _startLockoutCountdown(int remainingMs) {
+  void _startLockoutTimer() {
     _lockoutTimer?.cancel();
-
-    if (remainingMs <= 0) {
-      state = state.copyWith(lockoutRemainingMs: 0);
+    if (state.lockoutRemainingMs <= 0) {
+      state = state.copyWith(
+        status: BankTransferStatus.idle,
+        errorMessage: null,
+        lockoutRemainingMs: 0,
+      );
       return;
     }
 
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final updated = state.lockoutRemainingMs - 1000;
-      if (updated <= 0) {
+      final nextRemaining = state.lockoutRemainingMs - 1000;
+      if (nextRemaining <= 0) {
         timer.cancel();
         state = state.copyWith(
-          lockoutRemainingMs: 0,
           status: BankTransferStatus.idle,
-          action: BankTransferAction.none,
           errorMessage: null,
+          lockoutRemainingMs: 0,
         );
       } else {
-        state = state.copyWith(lockoutRemainingMs: updated);
+        state = state.copyWith(lockoutRemainingMs: nextRemaining);
       }
     });
   }

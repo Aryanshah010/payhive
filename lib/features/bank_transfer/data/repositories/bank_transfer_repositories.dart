@@ -1,44 +1,60 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/core/entities/transaction_entity.dart';
 import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/core/services/connectivity/network_info.dart';
-import 'package:payhive/features/send_money/data/datasources/remote/send_money_remote_datasource.dart';
-import 'package:payhive/features/send_money/data/datasources/send_money_datasource.dart';
-import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
-import 'package:payhive/features/send_money/domain/repositories/send_money_repositories.dart';
+import 'package:payhive/features/bank_transfer/data/datasources/bank_transfer_datasource.dart';
+import 'package:payhive/features/bank_transfer/data/datasources/remote/bank_transfer_remote_datasource.dart';
+import 'package:payhive/features/bank_transfer/domain/entity/bank_entity.dart';
+import 'package:payhive/features/bank_transfer/domain/repositories/bank_transfer_repositories.dart';
 
-final sendMoneyRepositoryProvider = Provider<ISendMoneyRepository>((ref) {
+final bankTransferRepositoryProvider = Provider<IBankTransferRepository>((ref) {
   final networkInfo = ref.read(networkInfoProvider);
-  final remoteDatasource = ref.read(sendMoneyRemoteDatasourceProvider);
-  return SendMoneyRepository(
+  final remoteDatasource = ref.read(bankTransferRemoteDatasourceProvider);
+  return BankTransferRepository(
     networkInfo: networkInfo,
     remoteDatasource: remoteDatasource,
   );
 });
 
-class SendMoneyRepository implements ISendMoneyRepository {
+class BankTransferRepository implements IBankTransferRepository {
   final NetworkInfo _networkInfo;
-  final ISendMoneyRemoteDatasource _remoteDatasource;
+  final IBankTransferRemoteDatasource _remoteDatasource;
 
-  SendMoneyRepository({
+  BankTransferRepository({
     required NetworkInfo networkInfo,
-    required ISendMoneyRemoteDatasource remoteDatasource,
+    required IBankTransferRemoteDatasource remoteDatasource,
   }) : _networkInfo = networkInfo,
        _remoteDatasource = remoteDatasource;
 
   @override
-  Future<Either<Failure, PreviewEntity>> previewTransfer({
-    required String toPhoneNumber,
+  Future<Either<Failure, List<BankEntity>>> getBanks() async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final models = await _remoteDatasource.getBanks();
+        return Right(models.map((model) => model.toEntity()).toList());
+      } on DioException catch (e) {
+        return Left(_mapDioFailure(e));
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    }
+    return const Left(ApiFalilure(message: 'No Internet connection'));
+  }
+
+  @override
+  Future<Either<Failure, PreviewEntity>> previewBankTransfer({
+    required String bankName,
+    required String accountNumber,
     required double amount,
-    String? remark,
   }) async {
     if (await _networkInfo.isConnected) {
       try {
-        final model = await _remoteDatasource.previewTransfer(
-          toPhoneNumber: toPhoneNumber,
+        final model = await _remoteDatasource.previewBankTransfer(
+          bankName: bankName,
+          accountNumber: accountNumber,
           amount: amount,
-          remark: remark,
         );
         return Right(model.toEntity());
       } on DioException catch (e) {
@@ -51,39 +67,21 @@ class SendMoneyRepository implements ISendMoneyRepository {
   }
 
   @override
-  Future<Either<Failure, ReceiptEntity>> confirmTransfer({
-    required String toPhoneNumber,
+  Future<Either<Failure, ReceiptEntity>> confirmBankTransfer({
+    required String bankName,
+    required String accountNumber,
     required double amount,
     required String pin,
-    String? remark,
     String? idempotencyKey,
   }) async {
     if (await _networkInfo.isConnected) {
       try {
-        final model = await _remoteDatasource.confirmTransfer(
-          toPhoneNumber: toPhoneNumber,
+        final model = await _remoteDatasource.confirmBankTransfer(
+          bankName: bankName,
+          accountNumber: accountNumber,
           amount: amount,
           pin: pin,
-          remark: remark,
           idempotencyKey: idempotencyKey,
-        );
-        return Right(model.toEntity());
-      } on DioException catch (e) {
-        return Left(_mapDioFailure(e));
-      } catch (e) {
-        return Left(ApiFalilure(message: e.toString()));
-      }
-    }
-    return const Left(ApiFalilure(message: 'No Internet connection'));
-  }
-
-  Future<Either<Failure, RecipientEntity>> lookupBeneficiary({
-    required String phoneNumber,
-  }) async {
-    if (await _networkInfo.isConnected) {
-      try {
-        final model = await _remoteDatasource.lookupBeneficiary(
-          phoneNumber: phoneNumber,
         );
         return Right(model.toEntity());
       } on DioException catch (e) {

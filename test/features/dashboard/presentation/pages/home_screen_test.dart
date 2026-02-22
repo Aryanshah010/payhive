@@ -6,11 +6,9 @@ import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:payhive/features/send_money/domain/entity/bank_entity.dart';
-import 'package:payhive/features/send_money/presentation/pages/bank_transfer_page.dart';
-import 'package:payhive/features/send_money/presentation/providers/bank_list_provider.dart';
-import 'package:payhive/features/send_money/presentation/state/bank_transfer_state.dart';
-import 'package:payhive/features/send_money/presentation/view_model/bank_transfer_view_model.dart';
+import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_page.dart';
+import 'package:payhive/features/bank_transfer/presentation/state/bank_transfer_state.dart';
+import 'package:payhive/features/bank_transfer/presentation/view_model/bank_transfer_view_model.dart';
 import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/domain/entity/hotel_entity.dart';
 import 'package:payhive/features/services/domain/entity/recharge_entity.dart';
@@ -44,8 +42,14 @@ class FakeProfileViewModel extends ProfileViewModel {
 class FakeBankTransferViewModel extends BankTransferViewModel {
   @override
   BankTransferState build() {
-    return BankTransferState.initial();
+    return BankTransferState.initial().copyWith(
+      bankListStatus: BankListStatus.loaded,
+      banks: const [],
+    );
   }
+
+  @override
+  Future<void> loadBanks({bool force = false}) async {}
 }
 
 class FakeFlightListViewModel extends FlightListViewModel {
@@ -205,18 +209,6 @@ void main() {
       ProviderScope(
         overrides: [
           profileViewModelProvider.overrideWith(() => FakeProfileViewModel()),
-          bankListProvider.overrideWith(
-            (ref) async => const [
-              BankEntity(
-                id: 'bank-1',
-                name: 'Nabil Bank',
-                code: 'NABIL',
-                minTransfer: 10,
-                maxTransfer: 50000,
-                fee: 10,
-              ),
-            ],
-          ),
           bankTransferViewModelProvider.overrideWith(
             () => FakeBankTransferViewModel(),
           ),

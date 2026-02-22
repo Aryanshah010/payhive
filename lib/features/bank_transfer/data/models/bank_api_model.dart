@@ -1,4 +1,4 @@
-import 'package:payhive/features/send_money/domain/entity/bank_entity.dart';
+import 'package:payhive/features/bank_transfer/domain/entity/bank_entity.dart';
 
 class BankApiModel {
   final String id;
@@ -8,7 +8,7 @@ class BankApiModel {
   final double maxTransfer;
   final double fee;
 
-  const BankApiModel({
+  BankApiModel({
     required this.id,
     required this.name,
     required this.code,
@@ -21,10 +21,10 @@ class BankApiModel {
     return BankApiModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
-      code: (json['code'] ?? '').toString(),
-      minTransfer: _asDouble(json['minTransfer']),
-      maxTransfer: _asDouble(json['maxTransfer']),
-      fee: _asDouble(json['fee']),
+      code: (json['code'] ?? json['bankCode'] ?? '').toString(),
+      minTransfer: _parseDouble(json['minTransfer']),
+      maxTransfer: _parseDouble(json['maxTransfer']),
+      fee: _parseDouble(json['fee']),
     );
   }
 
@@ -40,10 +40,9 @@ class BankApiModel {
   }
 }
 
-double _asDouble(dynamic value, {double fallback = 0}) {
-  if (value == null) return fallback;
-  if (value is double) return value;
+double _parseDouble(dynamic value) {
+  if (value == null) return 0;
   if (value is num) return value.toDouble();
-  if (value is String) return double.tryParse(value) ?? fallback;
-  return fallback;
+  if (value is String) return double.tryParse(value) ?? 0;
+  return 0;
 }

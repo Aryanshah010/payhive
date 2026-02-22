@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
+import 'package:payhive/core/entities/transaction_entity.dart';
+import 'package:payhive/features/bank_transfer/domain/entity/bank_entity.dart';
 
 enum BankTransferStatus {
   idle,
@@ -12,6 +13,8 @@ enum BankTransferStatus {
 
 enum BankTransferAction { none, preview, confirm }
 
+enum BankListStatus { idle, loading, loaded, error }
+
 class BankTransferState extends Equatable {
   static const Object _unset = Object();
 
@@ -20,13 +23,15 @@ class BankTransferState extends Equatable {
   final String bankName;
   final String accountNumber;
   final String amountInput;
-  final String? remark;
   final String? warning;
   final ReceiptEntity? receipt;
   final String? errorMessage;
   final int lockoutRemainingMs;
   final String? confirmIdempotencyKey;
   final bool confirmLocked;
+  final List<BankEntity> banks;
+  final BankListStatus bankListStatus;
+  final String? bankListError;
 
   const BankTransferState({
     required this.status,
@@ -34,13 +39,15 @@ class BankTransferState extends Equatable {
     required this.bankName,
     required this.accountNumber,
     required this.amountInput,
-    this.remark,
     this.warning,
     this.receipt,
     this.errorMessage,
     required this.lockoutRemainingMs,
     this.confirmIdempotencyKey,
     required this.confirmLocked,
+    required this.banks,
+    required this.bankListStatus,
+    this.bankListError,
   });
 
   factory BankTransferState.initial() {
@@ -52,6 +59,8 @@ class BankTransferState extends Equatable {
       amountInput: '',
       lockoutRemainingMs: 0,
       confirmLocked: false,
+      banks: [],
+      bankListStatus: BankListStatus.idle,
     );
   }
 
@@ -61,13 +70,15 @@ class BankTransferState extends Equatable {
     String? bankName,
     String? accountNumber,
     String? amountInput,
-    Object? remark = _unset,
     Object? warning = _unset,
     Object? receipt = _unset,
     Object? errorMessage = _unset,
     int? lockoutRemainingMs,
     Object? confirmIdempotencyKey = _unset,
     bool? confirmLocked,
+    List<BankEntity>? banks,
+    BankListStatus? bankListStatus,
+    Object? bankListError = _unset,
   }) {
     return BankTransferState(
       status: status ?? this.status,
@@ -75,7 +86,6 @@ class BankTransferState extends Equatable {
       bankName: bankName ?? this.bankName,
       accountNumber: accountNumber ?? this.accountNumber,
       amountInput: amountInput ?? this.amountInput,
-      remark: remark == _unset ? this.remark : remark as String?,
       warning: warning == _unset ? this.warning : warning as String?,
       receipt: receipt == _unset ? this.receipt : receipt as ReceiptEntity?,
       errorMessage: errorMessage == _unset
@@ -86,6 +96,11 @@ class BankTransferState extends Equatable {
           ? this.confirmIdempotencyKey
           : confirmIdempotencyKey as String?,
       confirmLocked: confirmLocked ?? this.confirmLocked,
+      banks: banks ?? this.banks,
+      bankListStatus: bankListStatus ?? this.bankListStatus,
+      bankListError: bankListError == _unset
+          ? this.bankListError
+          : bankListError as String?,
     );
   }
 
@@ -96,12 +111,14 @@ class BankTransferState extends Equatable {
     bankName,
     accountNumber,
     amountInput,
-    remark,
     warning,
     receipt,
     errorMessage,
     lockoutRemainingMs,
     confirmIdempotencyKey,
     confirmLocked,
+    banks,
+    bankListStatus,
+    bankListError,
   ];
 }

@@ -3,23 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:payhive/core/entities/transaction_entity.dart';
 import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/features/bank_transfer/domain/entity/bank_entity.dart';
+import 'package:payhive/features/bank_transfer/domain/usecases/bank_transfer_usecase.dart';
+import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_page.dart';
+import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_success_page.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
-import 'package:payhive/features/send_money/domain/entity/bank_entity.dart';
-import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
-import 'package:payhive/features/send_money/domain/usecases/send_money_usecase.dart';
-import 'package:payhive/features/send_money/presentation/pages/bank_transfer_page.dart';
-import 'package:payhive/features/send_money/presentation/pages/send_money_success_page.dart';
-import 'package:payhive/features/send_money/presentation/providers/bank_list_provider.dart';
-import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
-import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 
 class MockPreviewBankTransferUsecase extends Mock
     implements PreviewBankTransferUsecase {}
 
 class MockConfirmBankTransferUsecase extends Mock
     implements ConfirmBankTransferUsecase {}
+
+class MockGetBanksUsecase extends Mock implements GetBanksUsecase {}
 
 class FakeProfileViewModel extends ProfileViewModel {
   @override
@@ -37,16 +36,21 @@ class FakeProfileViewModel extends ProfileViewModel {
   Future<void> refreshProfile() async {}
 }
 
-class FakeSendMoneyViewModel extends SendMoneyViewModel {
-  @override
-  SendMoneyState build() {
-    return SendMoneyState.initial();
-  }
-}
+const List<BankEntity> sampleBanks = [
+  BankEntity(
+    id: 'bank-1',
+    name: 'Nabil Bank',
+    code: 'NABIL',
+    minTransfer: 10,
+    maxTransfer: 50000,
+    fee: 10,
+  ),
+];
 
 void main() {
   late MockPreviewBankTransferUsecase mockPreviewUsecase;
   late MockConfirmBankTransferUsecase mockConfirmUsecase;
+  late MockGetBanksUsecase mockGetBanksUsecase;
 
   setUpAll(() {
     registerFallbackValue(
@@ -69,20 +73,11 @@ void main() {
   setUp(() {
     mockPreviewUsecase = MockPreviewBankTransferUsecase();
     mockConfirmUsecase = MockConfirmBankTransferUsecase();
+    mockGetBanksUsecase = MockGetBanksUsecase();
+    when(
+      () => mockGetBanksUsecase(),
+    ).thenAnswer((_) async => const Right(sampleBanks));
   });
-
-  List<BankEntity> sampleBanks() {
-    return const [
-      BankEntity(
-        id: 'bank-1',
-        name: 'Nabil Bank',
-        code: 'NABIL',
-        minTransfer: 10,
-        maxTransfer: 50000,
-        fee: 10,
-      ),
-    ];
-  }
 
   Future<void> pumpPage(WidgetTester tester) async {
     tester.view.physicalSize = const Size(900, 1800);
@@ -102,10 +97,7 @@ void main() {
           confirmBankTransferUsecaseProvider.overrideWithValue(
             mockConfirmUsecase,
           ),
-          bankListProvider.overrideWith((ref) async => sampleBanks()),
-          sendMoneyViewModelProvider.overrideWith(
-            () => FakeSendMoneyViewModel(),
-          ),
+          getBanksUsecaseProvider.overrideWithValue(mockGetBanksUsecase),
         ],
         child: const MaterialApp(home: BankTransferPage()),
       ),
@@ -208,7 +200,7 @@ void main() {
     await tester.tap(find.text('CONFIRM'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(SendMoneySuccessPage), findsOneWidget);
+    expect(find.byType(BankTransferSuccessPage), findsOneWidget);
     expect(find.text('Bank Transfer Success!'), findsOneWidget);
     verify(() => mockPreviewUsecase(any())).called(1);
     verify(() => mockConfirmUsecase(any())).called(1);

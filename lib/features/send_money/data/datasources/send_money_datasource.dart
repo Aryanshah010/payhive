@@ -7,24 +7,8 @@ abstract interface class ISendMoneyRemoteDatasource {
     String? remark,
   });
 
-  Future<PreviewApiModel> previewBankTransfer({
-    required String bankName,
-    required String accountNumber,
-    required double amount,
-    String? remark,
-  });
-
   Future<ReceiptApiModel> confirmTransfer({
     required String toPhoneNumber,
-    required double amount,
-    required String pin,
-    String? remark,
-    String? idempotencyKey,
-  });
-
-  Future<ReceiptApiModel> confirmBankTransfer({
-    required String bankName,
-    required String accountNumber,
     required double amount,
     required String pin,
     String? remark,

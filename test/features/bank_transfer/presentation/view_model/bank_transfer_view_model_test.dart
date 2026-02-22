@@ -2,24 +2,28 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:payhive/core/entities/transaction_entity.dart';
 import 'package:payhive/core/error/failures.dart';
-import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
-import 'package:payhive/features/send_money/domain/repositories/send_money_repositories.dart';
-import 'package:payhive/features/send_money/domain/usecases/send_money_usecase.dart';
-import 'package:payhive/features/send_money/presentation/state/bank_transfer_state.dart';
-import 'package:payhive/features/send_money/presentation/view_model/bank_transfer_view_model.dart';
+import 'package:payhive/features/bank_transfer/domain/repositories/bank_transfer_repositories.dart';
+import 'package:payhive/features/bank_transfer/domain/usecases/bank_transfer_usecase.dart';
+import 'package:payhive/features/bank_transfer/presentation/state/bank_transfer_state.dart';
+import 'package:payhive/features/bank_transfer/presentation/view_model/bank_transfer_view_model.dart';
 
-class MockSendMoneyRepository extends Mock implements ISendMoneyRepository {}
+class MockBankTransferRepository extends Mock
+    implements IBankTransferRepository {}
 
 void main() {
-  late MockSendMoneyRepository mockRepository;
+  late MockBankTransferRepository mockRepository;
   late ProviderContainer container;
 
   setUp(() {
-    mockRepository = MockSendMoneyRepository();
+    mockRepository = MockBankTransferRepository();
 
     container = ProviderContainer(
       overrides: [
+        getBanksUsecaseProvider.overrideWith(
+          (ref) => GetBanksUsecase(repository: mockRepository),
+        ),
         previewBankTransferUsecaseProvider.overrideWith(
           (ref) => PreviewBankTransferUsecase(repository: mockRepository),
         ),
@@ -96,7 +100,6 @@ void main() {
             bankName: any(named: 'bankName'),
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
-            remark: any(named: 'remark'),
           ),
         );
       },
@@ -121,7 +124,6 @@ void main() {
             bankName: any(named: 'bankName'),
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
-            remark: any(named: 'remark'),
           ),
         );
 
@@ -138,7 +140,6 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
             pin: any(named: 'pin'),
-            remark: any(named: 'remark'),
             idempotencyKey: any(named: 'idempotencyKey'),
           ),
         );
@@ -151,7 +152,6 @@ void main() {
           bankName: any(named: 'bankName'),
           accountNumber: any(named: 'accountNumber'),
           amount: any(named: 'amount'),
-          remark: any(named: 'remark'),
         ),
       ).thenAnswer((_) async => Right(makePreview(warning: 'Large amount')));
 
@@ -170,7 +170,6 @@ void main() {
           bankName: any(named: 'bankName'),
           accountNumber: any(named: 'accountNumber'),
           amount: any(named: 'amount'),
-          remark: any(named: 'remark'),
         ),
       ).called(1);
     });
@@ -183,7 +182,6 @@ void main() {
             bankName: any(named: 'bankName'),
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
-            remark: any(named: 'remark'),
           ),
         ).thenAnswer((_) async => Right(makePreview()));
 
@@ -194,7 +192,6 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
             pin: any(named: 'pin'),
-            remark: any(named: 'remark'),
             idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenAnswer((invocation) async {
@@ -222,7 +219,6 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
             pin: any(named: 'pin'),
-            remark: any(named: 'remark'),
             idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).called(1);
@@ -238,7 +234,6 @@ void main() {
             accountNumber: any(named: 'accountNumber'),
             amount: any(named: 'amount'),
             pin: any(named: 'pin'),
-            remark: any(named: 'remark'),
             idempotencyKey: any(named: 'idempotencyKey'),
           ),
         ).thenAnswer(

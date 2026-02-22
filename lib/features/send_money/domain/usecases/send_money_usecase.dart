@@ -48,51 +48,6 @@ class ConfirmTransferParams extends Equatable {
   ];
 }
 
-class PreviewBankTransferParams extends Equatable {
-  final String bankName;
-  final String accountNumber;
-  final double amount;
-  final String? remark;
-
-  const PreviewBankTransferParams({
-    required this.bankName,
-    required this.accountNumber,
-    required this.amount,
-    this.remark,
-  });
-
-  @override
-  List<Object?> get props => [bankName, accountNumber, amount, remark];
-}
-
-class ConfirmBankTransferParams extends Equatable {
-  final String bankName;
-  final String accountNumber;
-  final double amount;
-  final String pin;
-  final String? remark;
-  final String? idempotencyKey;
-
-  const ConfirmBankTransferParams({
-    required this.bankName,
-    required this.accountNumber,
-    required this.amount,
-    required this.pin,
-    this.remark,
-    this.idempotencyKey,
-  });
-
-  @override
-  List<Object?> get props => [
-    bankName,
-    accountNumber,
-    amount,
-    pin,
-    remark,
-    idempotencyKey,
-  ];
-}
-
 class LookupBeneficiaryParams extends Equatable {
   final String phoneNumber;
 
@@ -113,22 +68,6 @@ final confirmTransferUsecaseProvider = Provider<ConfirmTransferUsecase>((ref) {
     repository: ref.read(sendMoneyRepositoryProvider),
   );
 });
-
-final previewBankTransferUsecaseProvider = Provider<PreviewBankTransferUsecase>(
-  (ref) {
-    return PreviewBankTransferUsecase(
-      repository: ref.read(sendMoneyRepositoryProvider),
-    );
-  },
-);
-
-final confirmBankTransferUsecaseProvider = Provider<ConfirmBankTransferUsecase>(
-  (ref) {
-    return ConfirmBankTransferUsecase(
-      repository: ref.read(sendMoneyRepositoryProvider),
-    );
-  },
-);
 
 final lookupBeneficiaryUsecaseProvider = Provider<LookupBeneficiaryUsecase>((
   ref,
@@ -208,92 +147,6 @@ class ConfirmTransferUsecase
   }
 }
 
-class PreviewBankTransferUsecase
-    implements UsecaseWithParams<PreviewEntity, PreviewBankTransferParams> {
-  final ISendMoneyRepository _repository;
-
-  PreviewBankTransferUsecase({required ISendMoneyRepository repository})
-    : _repository = repository;
-
-  @override
-  Future<Either<Failure, PreviewEntity>> call(
-    PreviewBankTransferParams params,
-  ) {
-    final bankNameError = _validateBankName(params.bankName);
-    if (bankNameError != null) {
-      return Future.value(Left(ValidationFailure(message: bankNameError)));
-    }
-
-    final accountNumberError = _validateAccountNumber(params.accountNumber);
-    if (accountNumberError != null) {
-      return Future.value(Left(ValidationFailure(message: accountNumberError)));
-    }
-
-    final amountError = _validateAmount(params.amount);
-    if (amountError != null) {
-      return Future.value(Left(ValidationFailure(message: amountError)));
-    }
-
-    final normalizedAmount = _normalizeAmount(params.amount);
-
-    return _repository.previewBankTransfer(
-      bankName: params.bankName.trim(),
-      accountNumber: params.accountNumber.trim(),
-      amount: normalizedAmount,
-      remark: params.remark,
-    );
-  }
-}
-
-class ConfirmBankTransferUsecase
-    implements UsecaseWithParams<ReceiptEntity, ConfirmBankTransferParams> {
-  final ISendMoneyRepository _repository;
-  final Uuid _uuid = const Uuid();
-
-  ConfirmBankTransferUsecase({required ISendMoneyRepository repository})
-    : _repository = repository;
-
-  @override
-  Future<Either<Failure, ReceiptEntity>> call(
-    ConfirmBankTransferParams params,
-  ) {
-    final bankNameError = _validateBankName(params.bankName);
-    if (bankNameError != null) {
-      return Future.value(Left(ValidationFailure(message: bankNameError)));
-    }
-
-    final accountNumberError = _validateAccountNumber(params.accountNumber);
-    if (accountNumberError != null) {
-      return Future.value(Left(ValidationFailure(message: accountNumberError)));
-    }
-
-    final pinError = _validatePin(params.pin);
-    if (pinError != null) {
-      return Future.value(Left(ValidationFailure(message: pinError)));
-    }
-
-    final amountError = _validateAmount(params.amount);
-    if (amountError != null) {
-      return Future.value(Left(ValidationFailure(message: amountError)));
-    }
-
-    final normalizedAmount = _normalizeAmount(params.amount);
-    final idempotencyKey =
-        (params.idempotencyKey == null || params.idempotencyKey!.isEmpty)
-        ? _uuid.v4()
-        : params.idempotencyKey;
-
-    return _repository.confirmBankTransfer(
-      bankName: params.bankName.trim(),
-      accountNumber: params.accountNumber.trim(),
-      amount: normalizedAmount,
-      pin: params.pin,
-      remark: params.remark,
-      idempotencyKey: idempotencyKey,
-    );
-  }
-}
-
 class LookupBeneficiaryUsecase
     implements UsecaseWithParams<RecipientEntity, LookupBeneficiaryParams> {
   final ISendMoneyRepository _repository;
@@ -326,22 +179,6 @@ String? _validatePin(String value) {
   final cleaned = value.trim();
   if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
     return 'PIN must be exactly 4 digits.';
-  }
-  return null;
-}
-
-String? _validateBankName(String value) {
-  final cleaned = value.trim();
-  if (cleaned.length < 2) {
-    return 'Bank name must be at least 2 characters.';
-  }
-  return null;
-}
-
-String? _validateAccountNumber(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{8,20}$').hasMatch(cleaned)) {
-    return 'Account number must be 8 to 20 digits.';
   }
   return null;
 }
