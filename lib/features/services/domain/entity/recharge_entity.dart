@@ -45,6 +45,8 @@ class RechargePaymentReceiptEntity extends Equatable {
   final String packageLabel;
   final String phoneMasked;
   final double amount;
+  final double? fee;
+  final double? totalDebited;
   final DateTime? createdAt;
 
   const RechargePaymentReceiptEntity({
@@ -55,6 +57,8 @@ class RechargePaymentReceiptEntity extends Equatable {
     required this.packageLabel,
     required this.phoneMasked,
     required this.amount,
+    this.fee,
+    this.totalDebited,
     this.createdAt,
   });
 
@@ -67,6 +71,8 @@ class RechargePaymentReceiptEntity extends Equatable {
     packageLabel,
     phoneMasked,
     amount,
+    fee,
+    totalDebited,
     createdAt,
   ];
 }

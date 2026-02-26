@@ -232,11 +232,17 @@ class PayBookingResultApiModel {
   final FlightBookingItemApiModel booking;
   final String transactionId;
   final bool idempotentReplay;
+  final double? amount;
+  final double? fee;
+  final double? totalDebited;
 
   const PayBookingResultApiModel({
     required this.booking,
     required this.transactionId,
     required this.idempotentReplay,
+    this.amount,
+    this.fee,
+    this.totalDebited,
   });
 
   factory PayBookingResultApiModel.fromJson(Map<String, dynamic> json) {
@@ -244,6 +250,9 @@ class PayBookingResultApiModel {
       booking: FlightBookingItemApiModel.fromJson(_asMap(json['booking'])),
       transactionId: _asString(json['transactionId']),
       idempotentReplay: _asBool(json['idempotentReplay']),
+      amount: _asNullableDouble(json['amount']),
+      fee: _asNullableDouble(json['fee']),
+      totalDebited: _asNullableDouble(json['totalDebited']),
     );
   }
 
@@ -252,6 +261,9 @@ class PayBookingResultApiModel {
       booking: booking.toEntity(),
       transactionId: transactionId,
       idempotentReplay: idempotentReplay,
+      amount: amount,
+      fee: fee,
+      totalDebited: totalDebited,
     );
   }
 }

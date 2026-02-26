@@ -45,6 +45,8 @@ class InternetPaymentReceiptEntity extends Equatable {
   final String planName;
   final String customerIdMasked;
   final double amount;
+  final double? fee;
+  final double? totalDebited;
   final DateTime? createdAt;
 
   const InternetPaymentReceiptEntity({
@@ -55,6 +57,8 @@ class InternetPaymentReceiptEntity extends Equatable {
     required this.planName,
     required this.customerIdMasked,
     required this.amount,
+    this.fee,
+    this.totalDebited,
     this.createdAt,
   });
 
@@ -67,6 +71,8 @@ class InternetPaymentReceiptEntity extends Equatable {
     planName,
     customerIdMasked,
     amount,
+    fee,
+    totalDebited,
     createdAt,
   ];
 }

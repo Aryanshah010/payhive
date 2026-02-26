@@ -5,6 +5,11 @@ import 'package:payhive/features/profile/data/models/profile_api_model.dart';
 abstract interface class IProfileRemoteDataSource{
   Future<String> uploadProfileImage(File image);
   Future<ProfileApiModel> getProfile();
+  Future<void> updateProfile({
+    String? fullName,
+    String? email,
+    String? password,
+  });
   Future<void> setPin({required String newPin, String? oldPin});
   Future<void> verifyPin(String pin);
 }

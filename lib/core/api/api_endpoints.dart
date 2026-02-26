@@ -30,6 +30,7 @@ class ApiEndpoints {
       '/auth/reset-password/$token';
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
+  static const String profileUpdate = '/profile/updateProfile';
   static const String profilePin = '/profile/pin';
   static const String profileVerifyPin = '/profile/verify-pin';
 

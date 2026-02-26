@@ -90,6 +90,40 @@ class ProfileRepository implements IProfileRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> updateProfile({
+    String? fullName,
+    String? email,
+    String? password,
+  }) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        await _profileRemoteDatasource.updateProfile(
+          fullName: fullName,
+          email: email,
+          password: password,
+        );
+
+        final refreshed = await getProfile();
+        return refreshed.fold((failure) => Left(failure), (_) {
+          return const Right(true);
+        });
+      } on DioException catch (e) {
+        final data = e.response?.data;
+        final message = data is Map && data['message'] != null
+            ? data['message'].toString()
+            : 'Profile update failed';
+        return Left(
+          ApiFalilure(message: message, statusCode: e.response?.statusCode),
+        );
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    } else {
+      return Left(ApiFalilure(message: "No Internet connection"));
+    }
+  }
+
+  @override
   Future<Either<Failure, bool>> setPin({
     required String newPin,
     String? oldPin,

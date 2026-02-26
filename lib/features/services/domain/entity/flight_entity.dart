@@ -176,13 +176,26 @@ class PayBookingResultEntity extends Equatable {
   final FlightBookingItemEntity booking;
   final String transactionId;
   final bool idempotentReplay;
+  final double? amount;
+  final double? fee;
+  final double? totalDebited;
 
   const PayBookingResultEntity({
     required this.booking,
     required this.transactionId,
     required this.idempotentReplay,
+    this.amount,
+    this.fee,
+    this.totalDebited,
   });
 
   @override
-  List<Object?> get props => [booking, transactionId, idempotentReplay];
+  List<Object?> get props => [
+    booking,
+    transactionId,
+    idempotentReplay,
+    amount,
+    fee,
+    totalDebited,
+  ];
 }

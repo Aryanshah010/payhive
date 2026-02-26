@@ -14,6 +14,7 @@ import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widget
 import 'package:payhive/features/profile/presentation/pages/fingerprint_setup_sheet.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/pages/pin_management_page.dart';
+import 'package:payhive/features/profile/presentation/pages/update_profile_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/devices/presentation/pages/manage_devices_page.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -284,8 +285,10 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                     children: [
                       MenuItem(
                         icon: Icons.person_outline_rounded,
-                        title: 'Update KYC',
-                        onTap: () {},
+                        title: 'Update Profile',
+                        onTap: () {
+                          AppRoutes.push(context, const UpdateProfilePage());
+                        },
                       ),
                       _divider(context),
                       Container(

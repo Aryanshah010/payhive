@@ -216,6 +216,35 @@ class _FlightDetailPageState extends ConsumerState<FlightDetailPage> {
                         ),
                       ),
                     ),
+                  if (state.paymentResult != null) ...[
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Payment Breakdown',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Amount: ${formatNpr(state.paymentResult?.amount ?? state.createdBooking!.price)}',
+                            ),
+                            if (state.paymentResult?.fee != null)
+                              Text(
+                                'Fee: ${formatNpr(state.paymentResult!.fee!)}',
+                              ),
+                            if (state.paymentResult?.totalDebited != null)
+                              Text(
+                                'Total Debited: ${formatNpr(state.paymentResult!.totalDebited!)}',
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
           ],

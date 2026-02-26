@@ -103,6 +103,8 @@ class InternetPaymentReceiptApiModel {
   final String planName;
   final String customerIdMasked;
   final double amount;
+  final double? fee;
+  final double? totalDebited;
   final DateTime? createdAt;
 
   const InternetPaymentReceiptApiModel({
@@ -113,6 +115,8 @@ class InternetPaymentReceiptApiModel {
     required this.planName,
     required this.customerIdMasked,
     required this.amount,
+    this.fee,
+    this.totalDebited,
     this.createdAt,
   });
 
@@ -125,6 +129,8 @@ class InternetPaymentReceiptApiModel {
       planName: _asString(json['planName']),
       customerIdMasked: _asString(json['customerIdMasked']),
       amount: _asDouble(json['amount']),
+      fee: _asNullableDouble(json['fee']),
+      totalDebited: _asNullableDouble(json['totalDebited']),
       createdAt: _asDateTime(json['createdAt']),
     );
   }
@@ -138,6 +144,8 @@ class InternetPaymentReceiptApiModel {
       planName: planName,
       customerIdMasked: customerIdMasked,
       amount: amount,
+      fee: fee,
+      totalDebited: totalDebited,
       createdAt: createdAt,
     );
   }
@@ -205,6 +213,14 @@ double _asDouble(dynamic value, {double fallback = 0}) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value) ?? fallback;
   return fallback;
+}
+
+double? _asNullableDouble(dynamic value) {
+  if (value == null) return null;
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value);
+  return null;
 }
 
 DateTime? _asDateTime(dynamic value) {

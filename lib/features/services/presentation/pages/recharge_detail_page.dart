@@ -177,6 +177,9 @@ class _ReceiptCard extends StatelessWidget {
             if (receipt.packageLabel.trim().isNotEmpty)
               Text('Package: ${receipt.packageLabel}'),
             Text('Amount: ${formatNpr(receipt.amount)}'),
+            if (receipt.fee != null) Text('Fee: ${formatNpr(receipt.fee!)}'),
+            if (receipt.totalDebited != null)
+              Text('Total Debited: ${formatNpr(receipt.totalDebited!)}'),
             if (createdAtText != null) Text('Paid At: $createdAtText'),
             if (result.idempotentReplay)
               const Padding(

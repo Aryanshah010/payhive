@@ -22,8 +22,9 @@ class StatementItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final direction = _resolveDirection();
     final isDebit = direction == StatementEntryDirection.debit;
+    final isBankTransfer = _isBankTransferTransaction();
     final isServiceDebit = isDebit && _isServiceDebitTransaction();
-    final showUndoButton = isDebit && !isServiceDebit;
+    final showUndoButton = isDebit && !isServiceDebit && !isBankTransfer;
     final counterparty = isDebit ? transaction.to : transaction.from;
     final amountColor = isDebit ? Colors.red.shade600 : Colors.green.shade600;
     final arrowIcon = isDebit
@@ -182,6 +183,9 @@ class StatementItemTile extends StatelessWidget {
 
   bool _matchesServicePaymentType() {
     final type = (transaction.paymentType ?? '').trim().toUpperCase();
+    if (type.startsWith('BOOKING_') || type.startsWith('UTILITY_')) {
+      return true;
+    }
     return type == 'BOOKING_PAYMENT' || type == 'UTILITY_PAYMENT';
   }
 
@@ -214,6 +218,41 @@ class StatementItemTile extends StatelessWidget {
       if (fromPhone.isNotEmpty && fromPhone == toPhone) {
         return true;
       }
+    }
+
+    return false;
+  }
+
+  bool _isBankTransferTransaction() {
+    final type = (transaction.paymentType ?? '').trim().toUpperCase();
+    if (type == 'BANK_TRANSFER') return true;
+    return _matchesBankTransferMeta();
+  }
+
+  bool _matchesBankTransferMeta() {
+    final meta = transaction.meta;
+    if (meta == null || meta.isEmpty) return false;
+
+    final rawType = meta['type'];
+    final typeValue = rawType?.toString().trim().toLowerCase();
+    if (typeValue != null && typeValue.contains('bank_transfer')) {
+      return true;
+    }
+
+    const keys = <String>[
+      'bankId',
+      'bankCode',
+      'bankName',
+      'accountNumber',
+      'accountNumberMasked',
+      'receiverId',
+    ];
+
+    for (final key in keys) {
+      final raw = meta[key];
+      if (raw == null) continue;
+      final value = raw.toString().trim();
+      if (value.isNotEmpty) return true;
     }
 
     return false;

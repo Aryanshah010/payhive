@@ -112,8 +112,22 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
     final dateText = DateFormat(
       'dd MMMM yyyy hh:mm a',
     ).format(receipt.createdAt.toLocal());
-    final amountText = receipt.amount.toStringAsFixed(2);
     final remarks = (receipt.remark ?? '').trim();
+    final meta = receipt.meta;
+    final baseAmount = _readMetaDouble(meta, const ['amount', 'baseAmount']);
+    final feeAmount = _readMetaDouble(meta, const ['fee']);
+    final totalDebited = _readMetaDouble(meta, const ['totalDebited']);
+    final hasFeeBreakdown =
+        baseAmount != null || feeAmount != null || totalDebited != null;
+    final displayAmount = baseAmount ?? receipt.amount;
+    final displayTotal = totalDebited ??
+        (feeAmount != null
+            ? receipt.amount
+            : (baseAmount != null &&
+                      (receipt.amount - baseAmount).abs() > 0.009)
+                  ? receipt.amount
+                  : null);
+    final amountText = _formatAmount(displayAmount);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Transaction Detail')),
@@ -151,6 +165,16 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
                         InfoRow(label: 'Transaction ID', value: receipt.txId),
                         InfoRow(label: 'Date&Time', value: dateText),
                         InfoRow(label: 'Amount(NPR)', value: amountText),
+                        if (hasFeeBreakdown && feeAmount != null)
+                          InfoRow(
+                            label: 'Fee(NPR)',
+                            value: _formatAmount(feeAmount),
+                          ),
+                        if (hasFeeBreakdown && displayTotal != null)
+                          InfoRow(
+                            label: 'Total Debited(NPR)',
+                            value: _formatAmount(displayTotal),
+                          ),
                         InfoRow(
                           label: 'Remarks',
                           value: remarks.isNotEmpty ? remarks : '--',
@@ -326,5 +350,41 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
         ),
       ],
     );
+  }
+
+  double? _readMetaDouble(Map<String, dynamic>? meta, List<String> keys) {
+    if (meta == null || meta.isEmpty) return null;
+
+    for (final key in keys) {
+      final raw = meta[key];
+      final parsed = _toNullableDouble(raw);
+      if (parsed != null) return parsed;
+    }
+
+    final normalizedKeys = keys.map(_normalizeMetaKey).toSet();
+    for (final entry in meta.entries) {
+      if (!normalizedKeys.contains(_normalizeMetaKey(entry.key))) {
+        continue;
+      }
+      final parsed = _toNullableDouble(entry.value);
+      if (parsed != null) return parsed;
+    }
+
+    return null;
+  }
+
+  double? _toNullableDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  String _normalizeMetaKey(String value) {
+    return value.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+  }
+
+  String _formatAmount(double value) {
+    return NumberFormat('#,##0.00').format(value);
   }
 }
