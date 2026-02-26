@@ -6,6 +6,8 @@ import 'package:payhive/core/utils/currency_formatter.dart';
 import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_page.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
+import 'package:payhive/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:payhive/features/notifications/presentation/view_model/notification_view_model.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
@@ -23,7 +25,9 @@ class HomeScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final profileState = ref.watch(profileViewModelProvider);
+    final notificationState = ref.watch(notificationViewModelProvider);
     final balanceText = formatNpr(profileState.balance ?? 0);
+    final unreadCount = notificationState.unreadCount;
 
     final double horizontalPadding = isTablet ? 48 : 24;
     final double imageWidth = isTablet ? 220 : 120;
@@ -43,9 +47,52 @@ class HomeScreen extends ConsumerWidget {
                       width: imageWidth,
                       errorBuilder: (_, __, ___) => const SizedBox(),
                     ),
-                    Icon(
-                      Icons.notifications_none_outlined,
-                      size: isTablet ? 36 : 24,
+                    InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () {
+                        AppRoutes.push(context, const NotificationsPage());
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Icon(
+                              Icons.notifications_none_outlined,
+                              size: isTablet ? 36 : 24,
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                right: -6,
+                                top: -4,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade600,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                  ),
+                                  child: Text(
+                                    unreadCount > 99
+                                        ? '99+'
+                                        : unreadCount.toString(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: isTablet ? 12 : 10,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),

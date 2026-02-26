@@ -4,9 +4,19 @@ import 'package:flutter/material.dart';
 class AppRoutes {
   AppRoutes._();
 
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
   /// Push a new route onto the stack
   static void push(BuildContext context, Widget page) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+  }
+
+  /// Push using global navigator key (for push/deeplink events)
+  static void pushGlobal(Widget page) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    push(context, page);
   }
 
   /// Replace current route with a new one

@@ -39,6 +39,13 @@ class ApiEndpoints {
   static const String devicesPending = '/devices/pending';
   static String deviceAllow(String deviceId) => '/devices/$deviceId/allow';
   static String deviceBlock(String deviceId) => '/devices/$deviceId/block';
+  static String deviceFcmToken(String deviceId) =>
+      '/devices/$deviceId/fcm-token';
+
+  // Notifications
+  static const String notifications = '/notifications';
+  static const String notificationsReadAll = '/notifications/read-all';
+  static String notificationRead(String id) => '/notifications/$id/read';
 
   // Transactions
   static const String transactionsPreview = '/transactions/preview';

@@ -6,6 +6,7 @@ import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/app/theme/theme_notifier.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
+import 'package:payhive/core/services/notifications/notification_push_service.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
@@ -463,6 +464,9 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
+              await ref
+                  .read(notificationPushServiceProvider)
+                  .clearServerFcmTokenOnLogout();
               await ref.read(authViewModelProvider.notifier).logout();
               if (context.mounted) {
                 AppRoutes.pushAndRemoveUntil(context, const LoginPage());

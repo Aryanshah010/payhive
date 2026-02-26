@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/services/hive/hive_service.dart';
+import 'package:payhive/core/services/storage/token_service.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/features/auth/data/datasources/auth_datasource.dart';
 import 'package:payhive/features/auth/data/models/auth_hive_model.dart';
@@ -10,18 +11,22 @@ final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
   return AuthLocalDatasource(
     hiveService: hiveService,
     userSessionService: userSessionService,
+    tokenService: ref.read(tokenServiceProvider),
   );
 });
 
 class AuthLocalDatasource implements IAuthLocalDatasource {
   final HiveService _hiveService;
   final UserSessionService _userSessionService;
+  final TokenService _tokenService;
 
   AuthLocalDatasource({
     required HiveService hiveService,
     required UserSessionService userSessionService,
+    required TokenService tokenService,
   }) : _hiveService = hiveService,
-       _userSessionService = userSessionService;
+       _userSessionService = userSessionService,
+       _tokenService = tokenService;
 
   @override
   Future<AuthHiveModel?> login(String phoneNumber, String password) async {
@@ -69,6 +74,7 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
   @override
   Future<bool> logout() async {
     try {
+      await _tokenService.removeToken();
       await _userSessionService.clearUserSession();
       return true;
     } catch (e) {

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/core/services/notifications/notification_deeplink_handler.dart';
+import 'package:payhive/core/services/notifications/notification_push_service.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
 import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
 import 'package:payhive/features/statement/presentation/pages/statement_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
+import 'package:payhive/features/notifications/presentation/view_model/notification_view_model.dart';
 import 'package:payhive/features/profile/presentation/pages/profile_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 
@@ -31,9 +34,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    Future.microtask(() {
+    Future.microtask(() async {
       if (!mounted) return;
       ref.read(profileViewModelProvider.notifier).refreshProfile();
+      await ref.read(notificationPushServiceProvider).init();
+      if (!mounted) return;
+      ref.read(notificationViewModelProvider.notifier).refreshUnreadCount();
+      ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
     });
   }
 
@@ -42,6 +49,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed && mounted) {
       ref.read(profileViewModelProvider.notifier).refreshProfile();
+      ref.read(notificationPushServiceProvider).init();
+      ref.read(notificationViewModelProvider.notifier).refreshUnreadCount();
+      ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
     }
   }
 

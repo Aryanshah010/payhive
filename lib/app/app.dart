@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/app_theme.dart';
 import 'package:payhive/app/theme/theme_notifier.dart';
 import 'package:payhive/features/splash/presentation/pages/splash_page.dart';
@@ -13,6 +14,7 @@ class App extends ConsumerWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: AppRoutes.navigatorKey,
       themeMode: themeMode,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

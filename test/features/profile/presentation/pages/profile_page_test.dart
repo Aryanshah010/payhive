@@ -56,7 +56,7 @@ void main() {
       expect(find.text('Test User'), findsOneWidget);
       expect(find.text('9800000000'), findsOneWidget);
 
-      expect(find.text('Update KYC'), findsOneWidget);
+      expect(find.text('Update Profile'), findsOneWidget);
       expect(find.text('Security'), findsOneWidget);
       expect(find.text('Manage Devices'), findsOneWidget);
 
