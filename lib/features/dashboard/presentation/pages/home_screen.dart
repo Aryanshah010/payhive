@@ -9,6 +9,7 @@ import 'package:payhive/features/dashboard/presentation/widgets/service_tile_wid
 import 'package:payhive/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:payhive/features/notifications/presentation/view_model/notification_view_model.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:payhive/features/request_money/presentation/pages/request_money_page.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 import 'package:payhive/features/services/presentation/pages/flight_list_page.dart';
 import 'package:payhive/features/services/presentation/pages/hotel_list_page.dart';
@@ -162,6 +163,12 @@ class HomeScreen extends ConsumerWidget {
                               QuickActionBtn(
                                 icon: Icons.arrow_downward,
                                 label: 'Request\nMoney',
+                                onTap: () {
+                                  AppRoutes.push(
+                                    context,
+                                    const RequestMoneyPage(),
+                                  );
+                                },
                               ),
                               QuickActionBtn(
                                 icon: Icons.account_balance,

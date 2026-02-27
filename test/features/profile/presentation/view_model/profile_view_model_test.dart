@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,6 +37,62 @@ void main() {
   });
 
   group('ProfileViewModel', () {
+    test('build does not auto-hit getProfile usecase', () {
+      container.read(profileViewModelProvider);
+      verifyNever(() => mockGetProfileUsecase());
+    });
+
+    test('ensureLoaded fetches profile only once', () async {
+      const profile = ProfileEntity(
+        id: 'user-1',
+        fullName: 'Aryan Shah',
+        phoneNumber: '9800000000',
+        email: 'aryan@payhive.com',
+        imageUrl: '/uploads/me.jpg',
+        hasPin: true,
+        balance: 3200.50,
+      );
+
+      when(
+        () => mockGetProfileUsecase(),
+      ).thenAnswer((_) async => const Right(profile));
+
+      final notifier = container.read(profileViewModelProvider.notifier);
+      await notifier.ensureLoaded();
+      await notifier.ensureLoaded();
+
+      verify(() => mockGetProfileUsecase()).called(1);
+    });
+
+    test(
+      'concurrent ensureLoaded and refreshProfile collapse into one call',
+      () async {
+        final completer = Completer<Either<Failure, ProfileEntity>>();
+        when(() => mockGetProfileUsecase()).thenAnswer((_) => completer.future);
+
+        final notifier = container.read(profileViewModelProvider.notifier);
+        final first = notifier.ensureLoaded();
+        final second = notifier.refreshProfile();
+
+        verify(() => mockGetProfileUsecase()).called(1);
+
+        completer.complete(
+          const Right(
+            ProfileEntity(
+              id: 'user-1',
+              fullName: 'Aryan Shah',
+              phoneNumber: '9800000000',
+              email: 'aryan@payhive.com',
+              imageUrl: '/uploads/me.jpg',
+              hasPin: true,
+              balance: 3200.50,
+            ),
+          ),
+        );
+        await Future.wait([first, second]);
+      },
+    );
+
     test('loadProfile sets loaded state with balance', () async {
       const profile = ProfileEntity(
         id: 'user-1',

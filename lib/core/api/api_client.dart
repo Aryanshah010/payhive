@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 // Provider for ApiClient
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -50,20 +49,6 @@ class ApiClient {
         },
       ),
     );
-
-    // Only add logger in debug mode
-    if (kDebugMode) {
-      _dio.interceptors.add(
-        PrettyDioLogger(
-          requestHeader: false,
-          requestBody: false,
-          responseBody: true,
-          responseHeader: false,
-          error: true,
-          compact: true,
-        ),
-      );
-    }
   }
 
   Dio get dio => _dio;
@@ -194,6 +179,9 @@ class _AuthInterceptor extends Interceptor {
 
 class _RedactingLoggerInterceptor extends Interceptor {
   static const Set<String> _sensitiveKeys = {
+    'authorization',
+    'token',
+    'fcmtoken',
     'password',
     'pin',
     'oldPin',
@@ -204,20 +192,18 @@ class _RedactingLoggerInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (kDebugMode) {
-      final sanitized = _sanitizeData(options.data);
-      final sanitizedHeaders = Map<String, dynamic>.from(options.headers);
-      if (sanitizedHeaders.containsKey('Authorization')) {
-        sanitizedHeaders['Authorization'] = '***';
-      }
+      final sanitizedHeaders = _sanitizeData(options.headers);
+      final sanitizedBody = _sanitizeData(options.data);
+      final sanitizedQuery = _sanitizeData(options.queryParameters);
 
       debugPrint('╔══ Request ║ ${options.method}');
       debugPrint('║ ${options.uri}');
-      if (options.queryParameters.isNotEmpty) {
-        debugPrint('║ Query: ${options.queryParameters}');
+      if (sanitizedQuery is Map && sanitizedQuery.isNotEmpty) {
+        debugPrint('║ Query: $sanitizedQuery');
       }
       debugPrint('║ Headers: $sanitizedHeaders');
-      if (sanitized != null) {
-        debugPrint('║ Body: $sanitized');
+      if (sanitizedBody != null) {
+        debugPrint('║ Body: $sanitizedBody');
       }
       debugPrint('╚══════════════════════════════════════════════');
     }
@@ -225,18 +211,57 @@ class _RedactingLoggerInterceptor extends Interceptor {
     handler.next(options);
   }
 
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (kDebugMode) {
+      final request = response.requestOptions;
+      debugPrint(
+        '╔══ Response ║ ${request.method} ║ ${response.statusCode} ${response.statusMessage ?? ''}',
+      );
+      debugPrint('║ ${request.uri}');
+      debugPrint('╚══════════════════════════════════════════════');
+    }
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (kDebugMode) {
+      final request = err.requestOptions;
+      final sanitizedResponse = _sanitizeData(err.response?.data);
+      debugPrint(
+        '╔══ Error ║ ${request.method} ║ ${err.response?.statusCode ?? '-'} ${err.response?.statusMessage ?? ''}',
+      );
+      debugPrint('║ ${request.uri}');
+      if (sanitizedResponse != null) {
+        debugPrint('║ Response: $sanitizedResponse');
+      }
+      if (err.message != null && err.message!.trim().isNotEmpty) {
+        debugPrint('║ Message: ${err.message}');
+      }
+      debugPrint('╚══════════════════════════════════════════════');
+    }
+    handler.next(err);
+  }
+
   dynamic _sanitizeData(dynamic data) {
-    if (data is Map<String, dynamic>) {
+    if (data is Map) {
       final sanitized = <String, dynamic>{};
       data.forEach((key, value) {
-        if (_sensitiveKeys.contains(key)) {
+        final normalizedKey = key.toString().toLowerCase();
+        if (_sensitiveKeys.contains(normalizedKey)) {
           sanitized[key] = '***';
         } else {
-          sanitized[key] = value;
+          sanitized[key] = _sanitizeData(value);
         }
       });
       return sanitized;
     }
+
+    if (data is List) {
+      return data.map(_sanitizeData).toList();
+    }
+
     return data;
   }
 }

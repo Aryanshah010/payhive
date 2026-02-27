@@ -33,22 +33,38 @@ final notificationPushServiceProvider = Provider<NotificationPushService>((
 });
 
 class NotificationPushService {
-  NotificationPushService(this._ref);
+  NotificationPushService(
+    this._ref, {
+    DateTime Function()? nowProvider,
+    Future<String?> Function()? fcmTokenReader,
+  }) : _now = nowProvider ?? DateTime.now,
+       _fcmTokenReader =
+           fcmTokenReader ?? (() => FirebaseMessaging.instance.getToken());
+
+  static const Duration _sessionSyncThrottle = Duration(seconds: 10);
 
   final Ref _ref;
+  final DateTime Function() _now;
+  final Future<String?> Function() _fcmTokenReader;
 
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
   bool _localNotificationsReady = false;
+  bool _firebaseUnavailable = false;
+  DateTime? _lastSessionSyncAt;
+  Future<void>? _sessionSyncFuture;
 
   StreamSubscription<RemoteMessage>? _foregroundSub;
   StreamSubscription<RemoteMessage>? _openFromTapSub;
   StreamSubscription<String>? _tokenRefreshSub;
 
   Future<void> init() async {
+    if (_firebaseUnavailable) return;
+
     if (_initialized) {
+      await syncSessionState(force: false);
       _ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
       return;
     }
@@ -57,23 +73,30 @@ class NotificationPushService {
     try {
       await _initLocalNotifications();
       await _requestPermission();
-      await _syncCurrentToken();
       _bindListeners();
       await _processInitialMessage();
-      await _ref
-          .read(notificationViewModelProvider.notifier)
-          .refreshUnreadCount();
+      await syncSessionState(force: true);
+      _ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
     } catch (e) {
+      if (_isFirebaseNotInitializedError(e)) {
+        _firebaseUnavailable = true;
+      }
       _initialized = false;
       debugPrint('Notification push init skipped: $e');
     }
   }
 
-  Future<void> clearServerFcmTokenOnLogout() async {
-    final deviceId = _ref.read(deviceStorageServiceProvider).getDeviceId();
-    if (deviceId == null || deviceId.trim().isEmpty) return;
+  Future<void> onAppResumed() async {
+    await syncSessionState(force: false);
+    _ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
+  }
 
-    await _syncTokenWithBackend(deviceId: deviceId.trim(), fcmToken: null);
+  Future<void> clearServerFcmTokenOnLogout() async {
+    final deviceId = _readDeviceId();
+    if (deviceId == null) return;
+
+    _lastSessionSyncAt = null;
+    await syncTokenWithBackend(deviceId: deviceId, fcmToken: null);
   }
 
   void _bindListeners() {
@@ -88,19 +111,24 @@ class NotificationPushService {
 
     _openFromTapSub ??= FirebaseMessaging.onMessageOpenedApp.listen((message) {
       _handleRemoteMessageTap(message);
-      unawaited(
-        _ref.read(notificationViewModelProvider.notifier).refreshUnreadCount(),
-      );
+      unawaited(syncSessionState(force: true));
     });
 
     _tokenRefreshSub ??= FirebaseMessaging.instance.onTokenRefresh.listen((
       token,
     ) {
-      final deviceId = _ref.read(deviceStorageServiceProvider).getDeviceId();
-      if (deviceId == null || deviceId.trim().isEmpty) return;
+      final deviceId = _readDeviceId();
+      if (deviceId == null) return;
+      final normalizedToken = token.trim();
+      if (normalizedToken.isEmpty) {
+        debugPrint(
+          'FCM token refresh received an empty token; skipping backend sync.',
+        );
+        return;
+      }
 
       unawaited(
-        _syncTokenWithBackend(deviceId: deviceId.trim(), fcmToken: token),
+        syncTokenWithBackend(deviceId: deviceId, fcmToken: normalizedToken),
       );
     });
   }
@@ -114,17 +142,20 @@ class NotificationPushService {
 
   void _handleRemoteMessageTap(RemoteMessage message) {
     final payload = _buildPayloadFromRemoteMessage(message);
-    _markPayloadAsRead(payload);
+    markPayloadAsRead(payload);
     _ref.read(notificationDeepLinkHandlerProvider).handlePayload(payload);
   }
 
   Future<void> _requestPermission() async {
-    await FirebaseMessaging.instance.requestPermission(
+    final settings = await FirebaseMessaging.instance.requestPermission(
       alert: true,
       badge: true,
       sound: true,
       provisional: false,
     );
+    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      debugPrint('Notification permission denied; push may not arrive.');
+    }
 
     if (Platform.isIOS) {
       await FirebaseMessaging.instance
@@ -133,6 +164,13 @@ class NotificationPushService {
             badge: true,
             sound: true,
           );
+      final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+      final hasApnsToken = apnsToken != null && apnsToken.trim().isNotEmpty;
+      if (!hasApnsToken) {
+        debugPrint(
+          'APNs token unavailable. Ensure iOS Push Notifications + APNs key are configured.',
+        );
+      }
     }
 
     final androidImplementation = _localNotifications
@@ -142,15 +180,36 @@ class NotificationPushService {
     await androidImplementation?.requestNotificationsPermission();
   }
 
-  Future<void> _syncCurrentToken() async {
-    final deviceId = _ref.read(deviceStorageServiceProvider).getDeviceId();
-    if (deviceId == null || deviceId.trim().isEmpty) return;
+  @visibleForTesting
+  Future<void> syncCurrentToken() async {
+    if (_firebaseUnavailable) return;
 
-    final token = await FirebaseMessaging.instance.getToken();
-    await _syncTokenWithBackend(deviceId: deviceId.trim(), fcmToken: token);
+    final deviceId = _readDeviceId();
+    if (deviceId == null) return;
+
+    String? token;
+    try {
+      token = await _fcmTokenReader();
+    } catch (e) {
+      if (_isFirebaseNotInitializedError(e)) {
+        _firebaseUnavailable = true;
+        debugPrint('FCM token sync skipped: Firebase is not initialized.');
+        return;
+      }
+      rethrow;
+    }
+
+    final normalizedToken = token?.trim();
+    if (normalizedToken == null || normalizedToken.isEmpty) {
+      debugPrint('FCM token unavailable; skipping backend sync.');
+      return;
+    }
+
+    await syncTokenWithBackend(deviceId: deviceId, fcmToken: normalizedToken);
   }
 
-  Future<void> _syncTokenWithBackend({
+  @visibleForTesting
+  Future<void> syncTokenWithBackend({
     required String deviceId,
     String? fcmToken,
   }) async {
@@ -231,11 +290,11 @@ class NotificationPushService {
     try {
       final decoded = jsonDecode(payload);
       if (decoded is Map<String, dynamic>) {
-        _markPayloadAsRead(decoded);
+        markPayloadAsRead(decoded);
         _ref.read(notificationDeepLinkHandlerProvider).handlePayload(decoded);
       } else if (decoded is Map) {
         final map = Map<String, dynamic>.from(decoded);
-        _markPayloadAsRead(map);
+        markPayloadAsRead(map);
         _ref.read(notificationDeepLinkHandlerProvider).handlePayload(map);
       } else {
         _ref
@@ -246,9 +305,7 @@ class NotificationPushService {
       _ref.read(notificationDeepLinkHandlerProvider).handlePayloadJson(payload);
     }
 
-    unawaited(
-      _ref.read(notificationViewModelProvider.notifier).refreshUnreadCount(),
-    );
+    unawaited(syncSessionState(force: true));
   }
 
   Map<String, dynamic> _buildPayloadFromRemoteMessage(RemoteMessage message) {
@@ -272,8 +329,11 @@ class NotificationPushService {
     return value.isEmpty ? null : value;
   }
 
-  void _markPayloadAsRead(Map<String, dynamic> payload) {
-    final notificationId = _readAsString(payload, 'notificationId');
+  @visibleForTesting
+  void markPayloadAsRead(Map<String, dynamic> payload) {
+    final notificationId =
+        _readAsString(payload, 'notificationId') ??
+        _readAsString(payload, 'id');
     if (notificationId == null) return;
 
     unawaited(
@@ -281,5 +341,53 @@ class NotificationPushService {
         MarkNotificationReadParams(notificationId: notificationId),
       ),
     );
+  }
+
+  @visibleForTesting
+  Future<void> syncSessionState({required bool force}) async {
+    final now = _now();
+    final lastSyncAt = _lastSessionSyncAt;
+    if (!force &&
+        lastSyncAt != null &&
+        now.difference(lastSyncAt) < _sessionSyncThrottle) {
+      return;
+    }
+
+    final inFlight = _sessionSyncFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final nextSync = performSessionSync();
+    _sessionSyncFuture = nextSync;
+    try {
+      await nextSync;
+      _lastSessionSyncAt = _now();
+    } finally {
+      if (identical(_sessionSyncFuture, nextSync)) {
+        _sessionSyncFuture = null;
+      }
+    }
+  }
+
+  @visibleForTesting
+  Future<void> performSessionSync() async {
+    await syncCurrentToken();
+    await _ref
+        .read(notificationViewModelProvider.notifier)
+        .refreshUnreadCount();
+  }
+
+  String? _readDeviceId() {
+    final deviceId = _ref.read(deviceStorageServiceProvider).getDeviceId();
+    if (deviceId == null) return null;
+    final normalized = deviceId.trim();
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  bool _isFirebaseNotInitializedError(Object error) {
+    final message = error.toString();
+    return message.contains('[core/no-app]') ||
+        message.contains('[core/not-initialized]');
   }
 }

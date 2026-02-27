@@ -1,14 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/theme/colors.dart';
-import 'package:payhive/core/services/notifications/notification_deeplink_handler.dart';
 import 'package:payhive/core/services/notifications/notification_push_service.dart';
 import 'package:payhive/features/dashboard/presentation/pages/home_screen.dart';
 import 'package:payhive/features/qr/presentation/pages/qr_scan_page.dart';
 import 'package:payhive/features/statement/presentation/pages/statement_screen.dart';
 import 'package:payhive/features/dashboard/presentation/pages/support_screen.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/nav_item_widgets.dart';
-import 'package:payhive/features/notifications/presentation/view_model/notification_view_model.dart';
 import 'package:payhive/features/profile/presentation/pages/profile_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 
@@ -21,7 +21,10 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with WidgetsBindingObserver {
+  static const Duration _resumeRefreshThrottle = Duration(seconds: 3);
+
   int _selectedIndex = 0;
+  DateTime? _lastResumeRefreshAt;
 
   List<Widget> lstBottomScreen = [
     const HomeScreen(),
@@ -36,23 +39,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     Future.microtask(() async {
       if (!mounted) return;
-      ref.read(profileViewModelProvider.notifier).refreshProfile();
-      await ref.read(notificationPushServiceProvider).init();
+      await ref.read(profileViewModelProvider.notifier).ensureLoaded();
       if (!mounted) return;
-      ref.read(notificationViewModelProvider.notifier).refreshUnreadCount();
-      ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
+      await ref.read(notificationPushServiceProvider).init();
     });
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    if (state == AppLifecycleState.resumed && mounted) {
-      ref.read(profileViewModelProvider.notifier).refreshProfile();
-      ref.read(notificationPushServiceProvider).init();
-      ref.read(notificationViewModelProvider.notifier).refreshUnreadCount();
-      ref.read(notificationDeepLinkHandlerProvider).processPendingIfAny();
+    if (state != AppLifecycleState.resumed || !mounted) return;
+
+    final now = DateTime.now();
+    final lastRefreshAt = _lastResumeRefreshAt;
+    if (lastRefreshAt != null &&
+        now.difference(lastRefreshAt) < _resumeRefreshThrottle) {
+      return;
     }
+    _lastResumeRefreshAt = now;
+
+    unawaited(ref.read(profileViewModelProvider.notifier).refreshProfile());
+    unawaited(ref.read(notificationPushServiceProvider).onAppResumed());
   }
 
   @override

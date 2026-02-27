@@ -12,22 +12,48 @@ class ProfileViewModel extends Notifier<ProfileState> {
   late final GetProfileUsecase _getProfileUsecase;
   late final UploadPhotoUsecase _uploadPhotoUsecase;
 
-  bool _hasLoaded = false;
+  bool _hasLoadedSuccessfully = false;
+  Future<void>? _loadingFuture;
 
   @override
   ProfileState build() {
     _getProfileUsecase = ref.read(getProfileUsecaseProvider);
     _uploadPhotoUsecase = ref.read(uploadPhotoUsecaseProvider);
-
-    if (!_hasLoaded) {
-      _hasLoaded = true;
-      Future.microtask(loadProfile);
-    }
-
     return ProfileState.initial();
   }
 
+  Future<void> ensureLoaded() async {
+    await _loadProfile(force: false);
+  }
+
   Future<void> loadProfile() async {
+    await _loadProfile(force: true);
+  }
+
+  Future<void> refreshProfile() async {
+    await _loadProfile(force: true);
+  }
+
+  Future<void> _loadProfile({required bool force}) async {
+    if (!force && _hasLoadedSuccessfully) return;
+
+    final inFlight = _loadingFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final nextLoad = _performLoadProfile();
+    _loadingFuture = nextLoad;
+    try {
+      await nextLoad;
+    } finally {
+      if (identical(_loadingFuture, nextLoad)) {
+        _loadingFuture = null;
+      }
+    }
+  }
+
+  Future<void> _performLoadProfile() async {
     state = state.copyWith(status: ProfileStatus.loading, errorMessage: null);
 
     final result = await _getProfileUsecase();
@@ -40,6 +66,7 @@ class ProfileViewModel extends Notifier<ProfileState> {
         );
       },
       (profile) {
+        _hasLoadedSuccessfully = true;
         state = state.copyWith(
           status: ProfileStatus.loaded,
           fullName: profile.fullName,
@@ -51,10 +78,6 @@ class ProfileViewModel extends Notifier<ProfileState> {
         );
       },
     );
-  }
-
-  Future<void> refreshProfile() async {
-    await loadProfile();
   }
 
   Future<void> uploadImage(File photo) async {
@@ -75,7 +98,7 @@ class ProfileViewModel extends Notifier<ProfileState> {
           imageUrl: imageUrl,
         );
 
-        await loadProfile();
+        await refreshProfile();
       },
     );
   }

@@ -9,6 +9,9 @@ import 'package:payhive/features/profile/presentation/view_model/profile_view_mo
 import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_page.dart';
 import 'package:payhive/features/bank_transfer/presentation/state/bank_transfer_state.dart';
 import 'package:payhive/features/bank_transfer/presentation/view_model/bank_transfer_view_model.dart';
+import 'package:payhive/features/request_money/presentation/pages/request_money_page.dart';
+import 'package:payhive/features/request_money/presentation/state/request_money_state.dart';
+import 'package:payhive/features/request_money/presentation/view_model/request_money_view_model.dart';
 import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/domain/entity/hotel_entity.dart';
 import 'package:payhive/features/services/domain/entity/recharge_entity.dart';
@@ -203,6 +206,28 @@ class FakeRechargeListViewModel extends RechargeListViewModel {
   Future<void> loadMore() async {}
 }
 
+class FakeRequestMoneyViewModel extends RequestMoneyViewModel {
+  @override
+  RequestMoneyState build() {
+    return RequestMoneyState.initial();
+  }
+
+  @override
+  Future<void> loadInitialPending() async {}
+
+  @override
+  Future<void> refreshPending() async {}
+
+  @override
+  Future<void> loadMorePending() async {}
+
+  @override
+  Future<void> submitRequest() async {}
+
+  @override
+  Future<void> cancelRequest(String requestId) async {}
+}
+
 void main() {
   Future<void> pumpHomeScreen(WidgetTester tester) async {
     await tester.pumpWidget(
@@ -223,6 +248,9 @@ void main() {
           ),
           rechargeListViewModelProvider.overrideWith(
             () => FakeRechargeListViewModel(),
+          ),
+          requestMoneyViewModelProvider.overrideWith(
+            () => FakeRequestMoneyViewModel(),
           ),
         ],
         child: const MaterialApp(home: HomeScreen()),
@@ -290,6 +318,18 @@ void main() {
     await pumpHomeScreen(tester);
 
     await tester.tap(find.text('Send\nMoney'));
+  });
+
+  testWidgets('Tapping Request Money button opens request money page', (
+    tester,
+  ) async {
+    await pumpHomeScreen(tester);
+
+    await tester.tap(find.text('Request\nMoney'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RequestMoneyPage), findsOneWidget);
+    expect(find.text('Request Money'), findsOneWidget);
   });
 
   testWidgets('Tapping Bank Transfer button opens bank transfer page', (

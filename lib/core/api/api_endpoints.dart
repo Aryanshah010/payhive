@@ -53,6 +53,10 @@ class ApiEndpoints {
   static const String transactionsBeneficiary = '/transactions/beneficiary';
   static const String transactionsHistory = '/transactions';
   static String transactionDetail(String txId) => '/transactions/$txId';
+  static const String moneyRequests = '/money-requests';
+  static const String moneyRequestsOutgoing = '/money-requests/outgoing';
+  static String moneyRequestCancel(String requestId) =>
+      '/money-requests/$requestId/cancel';
   static const String banks = '/banks';
 
   // Flights + Hotels + Bookings + Utility Services
