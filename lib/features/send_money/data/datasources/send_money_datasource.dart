@@ -5,6 +5,7 @@ abstract interface class ISendMoneyRemoteDatasource {
     required String toPhoneNumber,
     required double amount,
     String? remark,
+    String? moneyRequestId,
   });
 
   Future<ReceiptApiModel> confirmTransfer({
@@ -13,6 +14,7 @@ abstract interface class ISendMoneyRemoteDatasource {
     required String pin,
     String? remark,
     String? idempotencyKey,
+    String? moneyRequestId,
   });
 
   Future<RecipientApiModel> lookupBeneficiary({required String phoneNumber});

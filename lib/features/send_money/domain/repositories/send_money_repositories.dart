@@ -7,6 +7,7 @@ abstract interface class ISendMoneyRepository {
     required String toPhoneNumber,
     required double amount,
     String? remark,
+    String? moneyRequestId,
   });
 
   Future<Either<Failure, ReceiptEntity>> confirmTransfer({
@@ -15,6 +16,7 @@ abstract interface class ISendMoneyRepository {
     required String pin,
     String? remark,
     String? idempotencyKey,
+    String? moneyRequestId,
   });
 
   Future<Either<Failure, RecipientEntity>> lookupBeneficiary({

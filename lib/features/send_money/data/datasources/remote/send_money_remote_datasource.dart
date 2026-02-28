@@ -39,6 +39,7 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
     required String toPhoneNumber,
     required double amount,
     String? remark,
+    String? moneyRequestId,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.transactionsPreview,
@@ -46,6 +47,8 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
         'toPhoneNumber': toPhoneNumber,
         'amount': amount,
         if (remark != null && remark.trim().isNotEmpty) 'remark': remark.trim(),
+        if (moneyRequestId != null && moneyRequestId.trim().isNotEmpty)
+          'moneyRequestId': moneyRequestId.trim(),
       },
       options: _authOptions(),
     );
@@ -61,6 +64,7 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
     required String pin,
     String? remark,
     String? idempotencyKey,
+    String? moneyRequestId,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.transactionsConfirm,
@@ -68,6 +72,8 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
         'toPhoneNumber': toPhoneNumber,
         'amount': amount,
         if (remark != null && remark.trim().isNotEmpty) 'remark': remark.trim(),
+        if (moneyRequestId != null && moneyRequestId.trim().isNotEmpty)
+          'moneyRequestId': moneyRequestId.trim(),
         'pin': pin,
       },
       options: _authOptions(idempotencyKey: idempotencyKey),

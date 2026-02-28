@@ -28,6 +28,7 @@ class SendMoneyState extends Equatable {
   final int lockoutRemainingMs;
   final String? confirmIdempotencyKey;
   final bool confirmLocked;
+  final String? sourceMoneyRequestId;
 
   const SendMoneyState({
     required this.status,
@@ -42,6 +43,7 @@ class SendMoneyState extends Equatable {
     required this.lockoutRemainingMs,
     this.confirmIdempotencyKey,
     required this.confirmLocked,
+    this.sourceMoneyRequestId,
   });
 
   factory SendMoneyState.initial() {
@@ -52,6 +54,7 @@ class SendMoneyState extends Equatable {
       amountInput: '',
       lockoutRemainingMs: 0,
       confirmLocked: false,
+      sourceMoneyRequestId: null,
     );
   }
 
@@ -68,27 +71,30 @@ class SendMoneyState extends Equatable {
     int? lockoutRemainingMs,
     Object? confirmIdempotencyKey = _unset,
     bool? confirmLocked,
+    Object? sourceMoneyRequestId = _unset,
   }) {
     return SendMoneyState(
       status: status ?? this.status,
       action: action ?? this.action,
       phoneNumber: phoneNumber ?? this.phoneNumber,
-      recipient:
-          recipient == _unset ? this.recipient : recipient as RecipientEntity?,
+      recipient: recipient == _unset
+          ? this.recipient
+          : recipient as RecipientEntity?,
       amountInput: amountInput ?? this.amountInput,
       remark: remark == _unset ? this.remark : remark as String?,
       warning: warning == _unset ? this.warning : warning as String?,
       receipt: receipt == _unset ? this.receipt : receipt as ReceiptEntity?,
-      errorMessage:
-          errorMessage == _unset
-              ? this.errorMessage
-              : errorMessage as String?,
+      errorMessage: errorMessage == _unset
+          ? this.errorMessage
+          : errorMessage as String?,
       lockoutRemainingMs: lockoutRemainingMs ?? this.lockoutRemainingMs,
-      confirmIdempotencyKey:
-          confirmIdempotencyKey == _unset
-              ? this.confirmIdempotencyKey
-              : confirmIdempotencyKey as String?,
+      confirmIdempotencyKey: confirmIdempotencyKey == _unset
+          ? this.confirmIdempotencyKey
+          : confirmIdempotencyKey as String?,
       confirmLocked: confirmLocked ?? this.confirmLocked,
+      sourceMoneyRequestId: sourceMoneyRequestId == _unset
+          ? this.sourceMoneyRequestId
+          : sourceMoneyRequestId as String?,
     );
   }
 
@@ -106,5 +112,6 @@ class SendMoneyState extends Equatable {
     lockoutRemainingMs,
     confirmIdempotencyKey,
     confirmLocked,
+    sourceMoneyRequestId,
   ];
 }

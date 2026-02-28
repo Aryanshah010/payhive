@@ -75,12 +75,12 @@ class RequestMoneyRepository implements IRequestMoneyRepository {
   }
 
   @override
-  Future<Either<Failure, MoneyRequestEntity>> cancelRequest({
+  Future<Either<Failure, MoneyRequestEntity>> getRequestDetail({
     required String requestId,
   }) async {
     if (await _networkInfo.isConnected) {
       try {
-        final model = await _remoteDatasource.cancelRequest(
+        final model = await _remoteDatasource.getRequestDetail(
           requestId: requestId,
         );
         return Right(model.toEntity());
@@ -92,6 +92,38 @@ class RequestMoneyRepository implements IRequestMoneyRepository {
     }
 
     return const Left(ApiFalilure(message: 'No Internet connection'));
+  }
+
+  @override
+  Future<Either<Failure, MoneyRequestEntity>> respondToRequest({
+    required String requestId,
+    required String action,
+  }) async {
+    if (await _networkInfo.isConnected) {
+      try {
+        final model = await _remoteDatasource.respondToRequest(
+          requestId: requestId,
+          action: action,
+        );
+        return Right(model.toEntity());
+      } on DioException catch (e) {
+        return Left(_mapDioFailure(e));
+      } catch (e) {
+        return Left(ApiFalilure(message: e.toString()));
+      }
+    }
+
+    return const Left(ApiFalilure(message: 'No Internet connection'));
+  }
+
+  @override
+  Future<Either<Failure, MoneyRequestEntity>> cancelRequest({
+    required String requestId,
+  }) async {
+    return respondToRequest(
+      requestId: requestId,
+      action: IRequestMoneyRemoteDatasource.actionCancel,
+    );
   }
 
   Failure _mapDioFailure(DioException e) {

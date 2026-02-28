@@ -89,7 +89,6 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
     final isSubmitting =
         state.status == RequestMoneyStatus.loading &&
         state.action == RequestMoneyAction.submit;
-    final canSubmit = state.isSubmitEnabled;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Request Money')),
@@ -106,7 +105,6 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
                   context,
                   state,
                   isSubmitting: isSubmitting,
-                  canSubmit: canSubmit,
                   onSubmit: () {
                     FocusManager.instance.primaryFocus?.unfocus();
                     viewModel.submitRequest();
@@ -134,7 +132,6 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
     BuildContext context,
     RequestMoneyState state, {
     required bool isSubmitting,
-    required bool canSubmit,
     required VoidCallback onSubmit,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -158,11 +155,12 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
             onChanged: ref
                 .read(requestMoneyViewModelProvider.notifier)
                 .setPhoneNumber,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'PayHive ID',
               hintText: 'Enter recipient mobile number',
               counterText: '',
-              prefixIcon: Icon(Icons.phone_outlined),
+              prefixIcon: const Icon(Icons.phone_outlined),
+              errorText: state.showValidationErrors ? state.phoneError : null,
             ),
           ),
           const SizedBox(height: 14),
@@ -172,10 +170,11 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
             onChanged: ref
                 .read(requestMoneyViewModelProvider.notifier)
                 .setAmountInput,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Amount',
               hintText: '0.00',
-              prefixIcon: Icon(Icons.currency_rupee_rounded),
+              prefixIcon: const Icon(Icons.currency_rupee_rounded),
+              errorText: state.showValidationErrors ? state.amountError : null,
             ),
           ),
           const SizedBox(height: 14),
@@ -185,17 +184,18 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
             onChanged: ref
                 .read(requestMoneyViewModelProvider.notifier)
                 .setRemark,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Request Message (optional)',
               hintText: 'Add note for the recipient',
               alignLabelWithHint: true,
+              errorText: state.showValidationErrors ? state.remarkError : null,
             ),
             minLines: 2,
             maxLines: 3,
           ),
           const SizedBox(height: 12),
           PrimaryButtonWidget(
-            onPressed: canSubmit ? onSubmit : null,
+            onPressed: isSubmitting ? null : onSubmit,
             text: 'REQUEST MONEY',
             isLoading: isSubmitting,
           ),
@@ -218,21 +218,18 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
       ];
     }
 
-    if (state.status == RequestMoneyStatus.error &&
-        state.pendingRequests.isEmpty) {
+    if (state.pendingRequests.isEmpty && state.pendingErrorMessage != null) {
       return [
-        SliverFillRemaining(
-          hasScrollBody: false,
+        SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.receipt_long_outlined, size: 44),
-                const SizedBox(height: 12),
                 const Text('Could not load pending requests.'),
-                const SizedBox(height: 12),
-                ElevatedButton(
+                const SizedBox(height: 8),
+                TextButton(
+                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
                   onPressed: () {
                     ref
                         .read(requestMoneyViewModelProvider.notifier)

@@ -55,10 +55,7 @@ class AppTheme {
 
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: _lightScheme.outline,
-          width: 1,
-        ),
+        borderSide: BorderSide(color: _lightScheme.outline, width: 1),
       ),
 
       focusedBorder: OutlineInputBorder(
@@ -81,6 +78,8 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        disabledBackgroundColor: AppColors.borderGrey,
+        disabledForegroundColor: AppColors.greyText,
         minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -149,6 +148,8 @@ class AppTheme {
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        disabledBackgroundColor: Colors.white.withOpacity(0.12),
+        disabledForegroundColor: Colors.white.withOpacity(0.5),
         minimumSize: const Size(double.infinity, 52),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

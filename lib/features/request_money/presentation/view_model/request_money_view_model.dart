@@ -9,10 +9,12 @@ final requestMoneyViewModelProvider =
 
 class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
   static const int pageSize = 10;
+  static final RegExp _phonePattern = RegExp(r'^\d{10}$');
+  static final RegExp _amountPattern = RegExp(r'^\d+(\.\d{0,2})?$');
 
   late final CreateMoneyRequestUsecase _createMoneyRequestUsecase;
   late final GetOutgoingMoneyRequestsUsecase _getOutgoingMoneyRequestsUsecase;
-  late final CancelMoneyRequestUsecase _cancelMoneyRequestUsecase;
+  late final RespondMoneyRequestUsecase _respondMoneyRequestUsecase;
   Future<void>? _topLevelLoadFuture;
 
   @override
@@ -21,7 +23,7 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     _getOutgoingMoneyRequestsUsecase = ref.read(
       getOutgoingMoneyRequestsUsecaseProvider,
     );
-    _cancelMoneyRequestUsecase = ref.read(cancelMoneyRequestUsecaseProvider);
+    _respondMoneyRequestUsecase = ref.read(respondMoneyRequestUsecaseProvider);
 
     return RequestMoneyState.initial();
   }
@@ -29,20 +31,35 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
   void setPhoneNumber(String value) {
     final normalized = value.replaceAll(RegExp(r'\D'), '').trim();
     if (normalized == state.phoneNumber) return;
-    state = state.copyWith(phoneNumber: normalized);
+    state = state.copyWith(
+      phoneNumber: normalized,
+      phoneError: state.showValidationErrors
+          ? _validatePhone(normalized)
+          : null,
+    );
   }
 
   void setAmountInput(String value) {
     final normalized = _normalizeAmountInput(value);
     if (normalized == state.amountInput) return;
-    state = state.copyWith(amountInput: normalized);
+    state = state.copyWith(
+      amountInput: normalized,
+      amountError: state.showValidationErrors
+          ? _validateAmountInput(normalized)
+          : null,
+    );
   }
 
   void setRemark(String value) {
     final trimmed = value.trim();
     final normalized = trimmed.isEmpty ? null : trimmed;
     if (normalized == state.remark) return;
-    state = state.copyWith(remark: normalized);
+    state = state.copyWith(
+      remark: normalized,
+      remarkError: state.showValidationErrors
+          ? _validateRemark(normalized)
+          : null,
+    );
   }
 
   Future<void> loadInitialPending() async {
@@ -103,7 +120,11 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
   }
 
   Future<void> submitRequest() async {
-    if (!state.isSubmitEnabled || state.status == RequestMoneyStatus.loading) {
+    if (state.status == RequestMoneyStatus.loading) {
+      return;
+    }
+
+    if (!_validateForm()) {
       return;
     }
 
@@ -112,6 +133,10 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     state = state.copyWith(
       status: RequestMoneyStatus.loading,
       action: RequestMoneyAction.submit,
+      phoneError: null,
+      amountError: null,
+      remarkError: null,
+      showValidationErrors: false,
       errorMessage: null,
     );
 
@@ -126,7 +151,7 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     await result.fold(
       (failure) async {
         state = state.copyWith(
-          status: RequestMoneyStatus.error,
+          status: _resolveNonLoadingStatus(),
           action: RequestMoneyAction.none,
           errorMessage: failure.message,
         );
@@ -137,6 +162,10 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
           action: RequestMoneyAction.submit,
           amountInput: '',
           remark: null,
+          phoneError: null,
+          amountError: null,
+          remarkError: null,
+          showValidationErrors: false,
           errorMessage: null,
         );
 
@@ -157,14 +186,17 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
       errorMessage: null,
     );
 
-    final result = await _cancelMoneyRequestUsecase(
-      CancelMoneyRequestParams(requestId: normalized),
+    final result = await _respondMoneyRequestUsecase(
+      RespondMoneyRequestParams(
+        requestId: normalized,
+        action: MoneyRequestAction.cancel,
+      ),
     );
 
     await result.fold(
       (failure) async {
         state = state.copyWith(
-          status: RequestMoneyStatus.error,
+          status: _resolveNonLoadingStatus(),
           action: RequestMoneyAction.none,
           activeCancelRequestId: null,
           errorMessage: failure.message,
@@ -212,17 +244,17 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
       state = state.copyWith(
         action: action,
         isLoadingMore: true,
-        errorMessage: null,
+        pendingErrorMessage: null,
       );
     } else if (showPrimaryLoader) {
       state = state.copyWith(
         status: RequestMoneyStatus.loading,
         action: action,
         isLoadingMore: false,
-        errorMessage: null,
+        pendingErrorMessage: null,
       );
     } else {
-      state = state.copyWith(action: action, errorMessage: null);
+      state = state.copyWith(action: action, pendingErrorMessage: null);
     }
 
     final result = await _getOutgoingMoneyRequestsUsecase(
@@ -231,11 +263,14 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
 
     result.fold(
       (failure) {
+        final hasPending = state.pendingRequests.isNotEmpty;
         state = state.copyWith(
-          status: RequestMoneyStatus.error,
+          status: hasPending
+              ? RequestMoneyStatus.loaded
+              : RequestMoneyStatus.error,
           action: RequestMoneyAction.none,
           isLoadingMore: false,
-          errorMessage: failure.message,
+          pendingErrorMessage: failure.message,
           activeCancelRequestId: null,
         );
       },
@@ -251,11 +286,65 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
           page: response.page,
           totalPages: response.totalPages,
           isLoadingMore: false,
-          errorMessage: null,
+          pendingErrorMessage: null,
           activeCancelRequestId: null,
         );
       },
     );
+  }
+
+  bool _validateForm() {
+    final phoneError = _validatePhone(state.phoneNumber);
+    final amountError = _validateAmountInput(state.amountInput);
+    final remarkError = _validateRemark(state.remark);
+
+    state = state.copyWith(
+      phoneError: phoneError,
+      amountError: amountError,
+      remarkError: remarkError,
+      showValidationErrors: true,
+    );
+
+    return phoneError == null && amountError == null && remarkError == null;
+  }
+
+  String? _validatePhone(String input) {
+    final cleaned = input.trim();
+    if (!_phonePattern.hasMatch(cleaned)) {
+      return 'Enter a valid 10-digit mobile number.';
+    }
+    return null;
+  }
+
+  String? _validateAmountInput(String input) {
+    final cleaned = input.trim();
+    if (cleaned.isEmpty) {
+      return 'Amount is required.';
+    }
+    if (!_amountPattern.hasMatch(cleaned)) {
+      return 'Use up to 2 decimal places.';
+    }
+
+    final amount = double.tryParse(cleaned);
+    if (amount == null || amount <= 0) {
+      return 'Amount must be greater than 0.';
+    }
+
+    return null;
+  }
+
+  String? _validateRemark(String? remark) {
+    final value = remark?.trim();
+    if (value != null && value.length > 140) {
+      return 'Remark must be 140 characters or less.';
+    }
+    return null;
+  }
+
+  RequestMoneyStatus _resolveNonLoadingStatus() {
+    return state.pendingRequests.isEmpty
+        ? RequestMoneyStatus.initial
+        : RequestMoneyStatus.loaded;
   }
 
   String _normalizeAmountInput(String value) {

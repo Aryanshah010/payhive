@@ -52,10 +52,7 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
     if (state.confirmIdempotencyKey == null && !state.confirmLocked) {
       return;
     }
-    state = state.copyWith(
-      confirmIdempotencyKey: null,
-      confirmLocked: false,
-    );
+    state = state.copyWith(confirmIdempotencyKey: null, confirmLocked: false);
   }
 
   void _emitConfirmLockedError() {
@@ -79,6 +76,21 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
     if (normalized == state.remark) return;
     _invalidateConfirmLifecycle();
     state = state.copyWith(remark: normalized);
+  }
+
+  void setAmountInput(String value) {
+    final normalized = _normalizeAmountInput(value);
+    if (normalized == state.amountInput) return;
+    _invalidateConfirmLifecycle();
+    state = state.copyWith(amountInput: normalized);
+  }
+
+  void setSourceMoneyRequestId(String? value) {
+    final normalized = value?.trim();
+    final next = (normalized == null || normalized.isEmpty) ? null : normalized;
+    if (next == state.sourceMoneyRequestId) return;
+    _invalidateConfirmLifecycle();
+    state = state.copyWith(sourceMoneyRequestId: next);
   }
 
   void appendAmountKey(String key) {
@@ -131,17 +143,14 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
       LookupBeneficiaryParams(phoneNumber: state.phoneNumber),
     );
 
-    result.fold(
-      (failure) => _handleFailure(failure),
-      (recipient) {
-        state = state.copyWith(
-          status: SendMoneyStatus.lookupSuccess,
-          action: SendMoneyAction.none,
-          recipient: recipient,
-          errorMessage: null,
-        );
-      },
-    );
+    result.fold((failure) => _handleFailure(failure), (recipient) {
+      state = state.copyWith(
+        status: SendMoneyStatus.lookupSuccess,
+        action: SendMoneyAction.none,
+        recipient: recipient,
+        errorMessage: null,
+      );
+    });
   }
 
   Future<void> previewTransfer() async {
@@ -164,29 +173,26 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
         toPhoneNumber: state.phoneNumber,
         amount: amount,
         remark: state.remark,
+        moneyRequestId: state.sourceMoneyRequestId,
       ),
     );
 
-    result.fold(
-      (failure) => _handleFailure(failure),
-      (preview) {
-        final existingKey = state.confirmIdempotencyKey;
-        final idempotencyKey =
-            (existingKey == null || existingKey.isEmpty)
-                ? _uuid.v4()
-                : existingKey;
+    result.fold((failure) => _handleFailure(failure), (preview) {
+      final existingKey = state.confirmIdempotencyKey;
+      final idempotencyKey = (existingKey == null || existingKey.isEmpty)
+          ? _uuid.v4()
+          : existingKey;
 
-        state = state.copyWith(
-          status: SendMoneyStatus.previewSuccess,
-          action: SendMoneyAction.none,
-          recipient: preview.recipient,
-          warning: preview.warning,
-          errorMessage: null,
-          confirmIdempotencyKey: idempotencyKey,
-          confirmLocked: false,
-        );
-      },
-    );
+      state = state.copyWith(
+        status: SendMoneyStatus.previewSuccess,
+        action: SendMoneyAction.none,
+        recipient: preview.recipient,
+        warning: preview.warning,
+        errorMessage: null,
+        confirmIdempotencyKey: idempotencyKey,
+        confirmLocked: false,
+      );
+    });
   }
 
   Future<void> confirmTransfer(String pin) async {
@@ -198,8 +204,9 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
 
     final amount = double.tryParse(state.amountInput) ?? 0;
     final existingKey = state.confirmIdempotencyKey;
-    final idempotencyKey =
-        (existingKey == null || existingKey.isEmpty) ? _uuid.v4() : existingKey;
+    final idempotencyKey = (existingKey == null || existingKey.isEmpty)
+        ? _uuid.v4()
+        : existingKey;
 
     state = state.copyWith(
       status: SendMoneyStatus.loading,
@@ -216,6 +223,7 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
         pin: pin,
         remark: state.remark,
         idempotencyKey: idempotencyKey,
+        moneyRequestId: state.sourceMoneyRequestId,
       ),
     );
 
@@ -278,5 +286,31 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
         state = state.copyWith(lockoutRemainingMs: updated);
       }
     });
+  }
+
+  String _normalizeAmountInput(String value) {
+    var sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    if (sanitized.isEmpty) {
+      return '';
+    }
+
+    final firstDot = sanitized.indexOf('.');
+    if (firstDot >= 0) {
+      final integerPart = sanitized.substring(0, firstDot);
+      var decimalPart = sanitized.substring(firstDot + 1).replaceAll('.', '');
+      if (decimalPart.length > 2) {
+        decimalPart = decimalPart.substring(0, 2);
+      }
+      sanitized = decimalPart.isEmpty
+          ? '$integerPart.'
+          : '$integerPart.$decimalPart';
+    }
+
+    if (sanitized.startsWith('.')) {
+      sanitized = '0$sanitized';
+    }
+
+    return sanitized;
   }
 }

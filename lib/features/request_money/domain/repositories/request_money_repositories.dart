@@ -14,6 +14,15 @@ abstract interface class IRequestMoneyRepository {
     required int limit,
   });
 
+  Future<Either<Failure, MoneyRequestEntity>> getRequestDetail({
+    required String requestId,
+  });
+
+  Future<Either<Failure, MoneyRequestEntity>> respondToRequest({
+    required String requestId,
+    required String action,
+  });
+
   Future<Either<Failure, MoneyRequestEntity>> cancelRequest({
     required String requestId,
   });

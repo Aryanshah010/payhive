@@ -12,15 +12,17 @@ class PreviewTransferParams extends Equatable {
   final String toPhoneNumber;
   final double amount;
   final String? remark;
+  final String? moneyRequestId;
 
   const PreviewTransferParams({
     required this.toPhoneNumber,
     required this.amount,
     this.remark,
+    this.moneyRequestId,
   });
 
   @override
-  List<Object?> get props => [toPhoneNumber, amount, remark];
+  List<Object?> get props => [toPhoneNumber, amount, remark, moneyRequestId];
 }
 
 class ConfirmTransferParams extends Equatable {
@@ -29,6 +31,7 @@ class ConfirmTransferParams extends Equatable {
   final String pin;
   final String? remark;
   final String? idempotencyKey;
+  final String? moneyRequestId;
 
   const ConfirmTransferParams({
     required this.toPhoneNumber,
@@ -36,6 +39,7 @@ class ConfirmTransferParams extends Equatable {
     required this.pin,
     this.remark,
     this.idempotencyKey,
+    this.moneyRequestId,
   });
 
   @override
@@ -45,6 +49,7 @@ class ConfirmTransferParams extends Equatable {
     pin,
     remark,
     idempotencyKey,
+    moneyRequestId,
   ];
 }
 
@@ -102,6 +107,7 @@ class PreviewTransferUsecase
       toPhoneNumber: params.toPhoneNumber,
       amount: normalizedAmount,
       remark: params.remark,
+      moneyRequestId: params.moneyRequestId,
     );
   }
 }
@@ -143,6 +149,7 @@ class ConfirmTransferUsecase
       pin: params.pin,
       remark: params.remark,
       idempotencyKey: idempotencyKey,
+      moneyRequestId: params.moneyRequestId,
     );
   }
 }

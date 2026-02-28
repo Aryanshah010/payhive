@@ -65,16 +65,40 @@ class RequestMoneyRemoteDatasource implements IRequestMoneyRemoteDatasource {
   }
 
   @override
-  Future<MoneyRequestApiModel> cancelRequest({
+  Future<MoneyRequestApiModel> getRequestDetail({
     required String requestId,
   }) async {
-    final response = await _apiClient.post(
-      ApiEndpoints.moneyRequestCancel(requestId),
-      data: const <String, dynamic>{},
+    final response = await _apiClient.get(
+      ApiEndpoints.moneyRequestDetail(requestId),
       options: _authOptions(),
     );
 
     final data = response.data['data'] as Map<String, dynamic>;
     return MoneyRequestApiModel.fromJson(data);
+  }
+
+  @override
+  Future<MoneyRequestApiModel> respondToRequest({
+    required String requestId,
+    required String action,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.moneyRequestRespond(requestId),
+      data: {'action': action},
+      options: _authOptions(),
+    );
+
+    final data = response.data['data'] as Map<String, dynamic>;
+    return MoneyRequestApiModel.fromJson(data);
+  }
+
+  @override
+  Future<MoneyRequestApiModel> cancelRequest({
+    required String requestId,
+  }) async {
+    return respondToRequest(
+      requestId: requestId,
+      action: IRequestMoneyRemoteDatasource.actionCancel,
+    );
   }
 }

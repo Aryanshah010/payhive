@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/core/services/notifications/app_badge_service.dart';
 import 'package:payhive/features/notifications/domain/usecases/notification_usecases.dart';
 import 'package:payhive/features/notifications/presentation/state/notification_state.dart';
 
@@ -16,6 +19,17 @@ class NotificationViewModel extends Notifier<NotificationState> {
       ref.read(markNotificationReadUsecaseProvider);
   MarkAllNotificationsReadUsecase get _markAllReadUsecase =>
       ref.read(markAllNotificationsReadUsecaseProvider);
+  Future<void> _syncBadge(int unreadCount) async {
+    await ref.read(appBadgeServiceProvider).setBadgeCount(unreadCount);
+  }
+
+  void _setStateWithBadge(NotificationState nextState) {
+    final previousUnread = state.unreadCount;
+    state = nextState;
+    if (nextState.unreadCount != previousUnread) {
+      unawaited(_syncBadge(nextState.unreadCount));
+    }
+  }
 
   @override
   NotificationState build() {
@@ -44,7 +58,7 @@ class NotificationViewModel extends Notifier<NotificationState> {
     );
 
     result.fold((_) {}, (response) {
-      state = state.copyWith(unreadCount: response.unreadCount);
+      _setStateWithBadge(state.copyWith(unreadCount: response.unreadCount));
     });
   }
 
@@ -86,10 +100,12 @@ class NotificationViewModel extends Notifier<NotificationState> {
         final resolvedUnread = state.unreadCount > nextUnread
             ? state.unreadCount - 1
             : nextUnread;
-        state = state.copyWith(
-          notifications: nextItems,
-          unreadCount: resolvedUnread < 0 ? 0 : resolvedUnread,
-          errorMessage: null,
+        _setStateWithBadge(
+          state.copyWith(
+            notifications: nextItems,
+            unreadCount: resolvedUnread < 0 ? 0 : resolvedUnread,
+            errorMessage: null,
+          ),
         );
         return true;
       },
@@ -113,11 +129,13 @@ class NotificationViewModel extends Notifier<NotificationState> {
         final nextItems = state.notifications
             .map((item) => item.copyWith(isRead: true, readAt: DateTime.now()))
             .toList();
-        state = state.copyWith(
-          notifications: nextItems,
-          unreadCount: 0,
-          isMarkingAllRead: false,
-          errorMessage: null,
+        _setStateWithBadge(
+          state.copyWith(
+            notifications: nextItems,
+            unreadCount: 0,
+            isMarkingAllRead: false,
+            errorMessage: null,
+          ),
         );
       },
     );
@@ -175,14 +193,16 @@ class NotificationViewModel extends Notifier<NotificationState> {
             ? [...state.notifications, ...response.items]
             : response.items;
 
-        state = state.copyWith(
-          status: NotificationViewStatus.loaded,
-          notifications: merged,
-          unreadCount: response.unreadCount,
-          page: response.page,
-          totalPages: response.totalPages,
-          isLoadingMore: false,
-          errorMessage: null,
+        _setStateWithBadge(
+          state.copyWith(
+            status: NotificationViewStatus.loaded,
+            notifications: merged,
+            unreadCount: response.unreadCount,
+            page: response.page,
+            totalPages: response.totalPages,
+            isLoadingMore: false,
+            errorMessage: null,
+          ),
         );
       },
     );

@@ -17,13 +17,13 @@ class MockCreateMoneyRequestUsecase extends Mock
 class MockGetOutgoingMoneyRequestsUsecase extends Mock
     implements GetOutgoingMoneyRequestsUsecase {}
 
-class MockCancelMoneyRequestUsecase extends Mock
-    implements CancelMoneyRequestUsecase {}
+class MockRespondMoneyRequestUsecase extends Mock
+    implements RespondMoneyRequestUsecase {}
 
 void main() {
   late MockCreateMoneyRequestUsecase mockCreateUsecase;
   late MockGetOutgoingMoneyRequestsUsecase mockGetOutgoingUsecase;
-  late MockCancelMoneyRequestUsecase mockCancelUsecase;
+  late MockRespondMoneyRequestUsecase mockRespondUsecase;
   late ProviderContainer container;
 
   setUpAll(() {
@@ -33,13 +33,18 @@ void main() {
     registerFallbackValue(
       const GetOutgoingMoneyRequestsParams(page: 1, limit: 10),
     );
-    registerFallbackValue(const CancelMoneyRequestParams(requestId: 'req-1'));
+    registerFallbackValue(
+      const RespondMoneyRequestParams(
+        requestId: 'req-1',
+        action: MoneyRequestAction.cancel,
+      ),
+    );
   });
 
   setUp(() {
     mockCreateUsecase = MockCreateMoneyRequestUsecase();
     mockGetOutgoingUsecase = MockGetOutgoingMoneyRequestsUsecase();
-    mockCancelUsecase = MockCancelMoneyRequestUsecase();
+    mockRespondUsecase = MockRespondMoneyRequestUsecase();
 
     container = ProviderContainer(
       overrides: [
@@ -47,7 +52,9 @@ void main() {
         getOutgoingMoneyRequestsUsecaseProvider.overrideWithValue(
           mockGetOutgoingUsecase,
         ),
-        cancelMoneyRequestUsecaseProvider.overrideWithValue(mockCancelUsecase),
+        respondMoneyRequestUsecaseProvider.overrideWithValue(
+          mockRespondUsecase,
+        ),
       ],
     );
   });
@@ -123,7 +130,7 @@ void main() {
 
       final state = container.read(requestMoneyViewModelProvider);
       expect(state.status, RequestMoneyStatus.error);
-      expect(state.errorMessage, 'Failed to load');
+      expect(state.pendingErrorMessage, 'Failed to load');
     });
 
     test(
@@ -178,21 +185,48 @@ void main() {
       await vm.submitRequest();
 
       final state = container.read(requestMoneyViewModelProvider);
-      expect(state.status, RequestMoneyStatus.error);
+      expect(state.status, RequestMoneyStatus.initial);
       expect(state.errorMessage, 'Unable to create request');
       expect(state.phoneNumber, '9800000001');
       expect(state.amountInput, '500');
       expect(state.remark, 'Dinner split');
     });
 
-    test('submitRequest is ignored when submit inputs are invalid', () async {
+    test(
+      'invalid submit sets inline errors and skips create usecase',
+      () async {
+        final vm = container.read(requestMoneyViewModelProvider.notifier);
+
+        vm.setPhoneNumber('123');
+        vm.setAmountInput('0');
+        await vm.submitRequest();
+
+        final state = container.read(requestMoneyViewModelProvider);
+        expect(state.showValidationErrors, isTrue);
+        expect(state.phoneError, isNotNull);
+        expect(state.amountError, isNotNull);
+        verifyNever(() => mockCreateUsecase(any()));
+      },
+    );
+
+    test('pending load error does not alter form validation state', () async {
+      when(() => mockGetOutgoingUsecase(any())).thenAnswer(
+        (_) async => const Left(ApiFalilure(message: 'Pending list failed')),
+      );
+
       final vm = container.read(requestMoneyViewModelProvider.notifier);
+      vm.setPhoneNumber('9800000001');
+      vm.setAmountInput('120');
+      vm.setRemark('hello');
 
-      vm.setPhoneNumber('123');
-      vm.setAmountInput('0');
-      await vm.submitRequest();
+      await vm.loadInitialPending();
 
-      verifyNever(() => mockCreateUsecase(any()));
+      final state = container.read(requestMoneyViewModelProvider);
+      expect(state.pendingErrorMessage, 'Pending list failed');
+      expect(state.phoneError, isNull);
+      expect(state.amountError, isNull);
+      expect(state.remarkError, isNull);
+      expect(state.showValidationErrors, isFalse);
     });
 
     test('cancel success refreshes pending list', () async {
@@ -207,7 +241,7 @@ void main() {
         return Right(page(items: const [], page: 1, totalPages: 1));
       });
       when(
-        () => mockCancelUsecase(any()),
+        () => mockRespondUsecase(any()),
       ).thenAnswer((_) async => Right(request(id: 'req-1')));
 
       final vm = container.read(requestMoneyViewModelProvider.notifier);
@@ -217,7 +251,14 @@ void main() {
       final state = container.read(requestMoneyViewModelProvider);
       expect(state.pendingRequests, isEmpty);
       expect(state.activeCancelRequestId, isNull);
-      verify(() => mockCancelUsecase(any())).called(1);
+      verify(
+        () => mockRespondUsecase(
+          const RespondMoneyRequestParams(
+            requestId: 'req-1',
+            action: MoneyRequestAction.cancel,
+          ),
+        ),
+      ).called(1);
     });
 
     test('pagination appends next page and stops at last page', () async {

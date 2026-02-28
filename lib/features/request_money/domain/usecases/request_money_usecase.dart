@@ -7,6 +7,13 @@ import 'package:payhive/features/request_money/data/repositories/request_money_r
 import 'package:payhive/features/request_money/domain/entity/request_money_entity.dart';
 import 'package:payhive/features/request_money/domain/repositories/request_money_repositories.dart';
 
+class MoneyRequestAction {
+  static const String reject = 'REJECT';
+  static const String cancel = 'CANCEL';
+
+  static const Set<String> allowed = {reject, cancel};
+}
+
 class CreateMoneyRequestParams extends Equatable {
   final String toPhoneNumber;
   final double amount;
@@ -44,6 +51,28 @@ class CancelMoneyRequestParams extends Equatable {
   List<Object?> get props => [requestId];
 }
 
+class GetMoneyRequestDetailParams extends Equatable {
+  final String requestId;
+
+  const GetMoneyRequestDetailParams({required this.requestId});
+
+  @override
+  List<Object?> get props => [requestId];
+}
+
+class RespondMoneyRequestParams extends Equatable {
+  final String requestId;
+  final String action;
+
+  const RespondMoneyRequestParams({
+    required this.requestId,
+    required this.action,
+  });
+
+  @override
+  List<Object?> get props => [requestId, action];
+}
+
 final createMoneyRequestUsecaseProvider = Provider<CreateMoneyRequestUsecase>((
   ref,
 ) {
@@ -66,6 +95,21 @@ final cancelMoneyRequestUsecaseProvider = Provider<CancelMoneyRequestUsecase>((
     repository: ref.read(requestMoneyRepositoryProvider),
   );
 });
+
+final getMoneyRequestDetailUsecaseProvider =
+    Provider<GetMoneyRequestDetailUsecase>((ref) {
+      return GetMoneyRequestDetailUsecase(
+        repository: ref.read(requestMoneyRepositoryProvider),
+      );
+    });
+
+final respondMoneyRequestUsecaseProvider = Provider<RespondMoneyRequestUsecase>(
+  (ref) {
+    return RespondMoneyRequestUsecase(
+      repository: ref.read(requestMoneyRepositoryProvider),
+    );
+  },
+);
 
 class CreateMoneyRequestUsecase
     implements UsecaseWithParams<MoneyRequestEntity, CreateMoneyRequestParams> {
@@ -158,7 +202,65 @@ class CancelMoneyRequestUsecase
       );
     }
 
-    return _repository.cancelRequest(requestId: requestId);
+    return _repository.respondToRequest(
+      requestId: requestId,
+      action: MoneyRequestAction.cancel,
+    );
+  }
+}
+
+class GetMoneyRequestDetailUsecase
+    implements
+        UsecaseWithParams<MoneyRequestEntity, GetMoneyRequestDetailParams> {
+  final IRequestMoneyRepository _repository;
+
+  GetMoneyRequestDetailUsecase({required IRequestMoneyRepository repository})
+    : _repository = repository;
+
+  @override
+  Future<Either<Failure, MoneyRequestEntity>> call(
+    GetMoneyRequestDetailParams params,
+  ) {
+    final requestId = params.requestId.trim();
+    if (requestId.isEmpty) {
+      return Future.value(
+        const Left(ValidationFailure(message: 'Request ID is required.')),
+      );
+    }
+
+    return _repository.getRequestDetail(requestId: requestId);
+  }
+}
+
+class RespondMoneyRequestUsecase
+    implements
+        UsecaseWithParams<MoneyRequestEntity, RespondMoneyRequestParams> {
+  final IRequestMoneyRepository _repository;
+
+  RespondMoneyRequestUsecase({required IRequestMoneyRepository repository})
+    : _repository = repository;
+
+  @override
+  Future<Either<Failure, MoneyRequestEntity>> call(
+    RespondMoneyRequestParams params,
+  ) {
+    final requestId = params.requestId.trim();
+    if (requestId.isEmpty) {
+      return Future.value(
+        const Left(ValidationFailure(message: 'Request ID is required.')),
+      );
+    }
+
+    final action = params.action.trim().toUpperCase();
+    if (!MoneyRequestAction.allowed.contains(action)) {
+      return Future.value(
+        const Left(
+          ValidationFailure(message: 'Action must be REJECT or CANCEL.'),
+        ),
+      );
+    }
+
+    return _repository.respondToRequest(requestId: requestId, action: action);
   }
 }
 

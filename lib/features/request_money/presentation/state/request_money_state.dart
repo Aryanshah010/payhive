@@ -7,7 +7,6 @@ enum RequestMoneyAction { none, loadInitial, refresh, loadMore, submit, cancel }
 
 class RequestMoneyState extends Equatable {
   static const Object _unset = Object();
-  static final RegExp _phonePattern = RegExp(r'^\d{10}$');
 
   final RequestMoneyStatus status;
   final RequestMoneyAction action;
@@ -21,6 +20,11 @@ class RequestMoneyState extends Equatable {
   final int totalPages;
   final bool isLoadingMore;
 
+  final String? phoneError;
+  final String? amountError;
+  final String? remarkError;
+  final bool showValidationErrors;
+  final String? pendingErrorMessage;
   final String? errorMessage;
   final String? activeCancelRequestId;
 
@@ -34,6 +38,11 @@ class RequestMoneyState extends Equatable {
     required this.page,
     required this.totalPages,
     required this.isLoadingMore,
+    this.phoneError,
+    this.amountError,
+    this.remarkError,
+    required this.showValidationErrors,
+    this.pendingErrorMessage,
     this.errorMessage,
     this.activeCancelRequestId,
   });
@@ -49,6 +58,11 @@ class RequestMoneyState extends Equatable {
       page: 0,
       totalPages: 1,
       isLoadingMore: false,
+      phoneError: null,
+      amountError: null,
+      remarkError: null,
+      showValidationErrors: false,
+      pendingErrorMessage: null,
       errorMessage: null,
       activeCancelRequestId: null,
     );
@@ -60,14 +74,7 @@ class RequestMoneyState extends Equatable {
       status == RequestMoneyStatus.loading &&
       action == RequestMoneyAction.submit;
 
-  bool get isSubmitEnabled {
-    if (isSubmitting) return false;
-    if (!_phonePattern.hasMatch(phoneNumber.trim())) return false;
-
-    final amount = double.tryParse(amountInput);
-    if (amount == null || amount <= 0) return false;
-    return true;
-  }
+  bool get isSubmitEnabled => !isSubmitting;
 
   RequestMoneyState copyWith({
     RequestMoneyStatus? status,
@@ -79,6 +86,11 @@ class RequestMoneyState extends Equatable {
     int? page,
     int? totalPages,
     bool? isLoadingMore,
+    Object? phoneError = _unset,
+    Object? amountError = _unset,
+    Object? remarkError = _unset,
+    bool? showValidationErrors,
+    Object? pendingErrorMessage = _unset,
     Object? errorMessage = _unset,
     Object? activeCancelRequestId = _unset,
   }) {
@@ -92,6 +104,19 @@ class RequestMoneyState extends Equatable {
       page: page ?? this.page,
       totalPages: totalPages ?? this.totalPages,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      phoneError: phoneError == _unset
+          ? this.phoneError
+          : phoneError as String?,
+      amountError: amountError == _unset
+          ? this.amountError
+          : amountError as String?,
+      remarkError: remarkError == _unset
+          ? this.remarkError
+          : remarkError as String?,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
+      pendingErrorMessage: pendingErrorMessage == _unset
+          ? this.pendingErrorMessage
+          : pendingErrorMessage as String?,
       errorMessage: errorMessage == _unset
           ? this.errorMessage
           : errorMessage as String?,
@@ -112,6 +137,11 @@ class RequestMoneyState extends Equatable {
     page,
     totalPages,
     isLoadingMore,
+    phoneError,
+    amountError,
+    remarkError,
+    showValidationErrors,
+    pendingErrorMessage,
     errorMessage,
     activeCancelRequestId,
   ];

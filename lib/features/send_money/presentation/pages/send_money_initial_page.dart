@@ -10,8 +10,26 @@ import 'package:payhive/features/send_money/presentation/state/send_money_state.
 import 'package:payhive/features/send_money/presentation/view_model/send_money_view_model.dart';
 import 'package:payhive/features/send_money/presentation/widgets/balance_card_widget.dart';
 
+class SendMoneyPrefillArgs {
+  final String phoneNumber;
+  final String? amountInput;
+  final String? remark;
+  final bool autoLookup;
+  final String? sourceMoneyRequestId;
+
+  const SendMoneyPrefillArgs({
+    required this.phoneNumber,
+    this.amountInput,
+    this.remark,
+    this.autoLookup = true,
+    this.sourceMoneyRequestId,
+  });
+}
+
 class SendMoneyInitialPage extends ConsumerStatefulWidget {
-  const SendMoneyInitialPage({super.key});
+  const SendMoneyInitialPage({super.key, this.prefill});
+
+  final SendMoneyPrefillArgs? prefill;
 
   static const double tabletBreakpoint = 600;
   static const double wideBreakpoint = 900;
@@ -37,10 +55,24 @@ class _SendMoneyInitialPageState extends ConsumerState<SendMoneyInitialPage> {
 
     Future.microtask(() {
       if (!mounted) return;
-      ref.read(sendMoneyViewModelProvider.notifier).resetFlow();
-    });
+      final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
+      viewModel.resetFlow();
 
-    _phoneController.text = '';
+      final prefill = widget.prefill;
+      if (prefill == null) return;
+
+      viewModel.setPhoneNumber(prefill.phoneNumber);
+      if (prefill.amountInput != null) {
+        viewModel.setAmountInput(prefill.amountInput!);
+      }
+      if (prefill.remark != null) {
+        viewModel.setRemark(prefill.remark);
+      }
+      viewModel.setSourceMoneyRequestId(prefill.sourceMoneyRequestId);
+      if (prefill.autoLookup) {
+        viewModel.lookupBeneficiary();
+      }
+    });
   }
 
   @override
@@ -63,6 +95,7 @@ class _SendMoneyInitialPageState extends ConsumerState<SendMoneyInitialPage> {
     final viewModel = ref.read(sendMoneyViewModelProvider.notifier);
     final profileState = ref.watch(profileViewModelProvider);
     final balanceText = formatNpr(profileState.balance ?? 0);
+    _syncPhoneController(state.phoneNumber);
 
     ref.listen<SendMoneyState>(sendMoneyViewModelProvider, (prev, next) {
       if (prev?.status == next.status) return;
@@ -147,6 +180,14 @@ class _SendMoneyInitialPageState extends ConsumerState<SendMoneyInitialPage> {
           ),
         ),
       ),
+    );
+  }
+
+  void _syncPhoneController(String value) {
+    if (_phoneController.text == value) return;
+    _phoneController.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
     );
   }
 }

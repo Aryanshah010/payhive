@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:payhive/core/entities/transaction_entity.dart';
+import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/features/request_money/domain/entity/request_money_entity.dart';
 import 'package:payhive/features/request_money/domain/usecases/request_money_usecase.dart';
 import 'package:payhive/features/request_money/presentation/pages/request_money_page.dart';
@@ -16,8 +17,8 @@ class MockCreateMoneyRequestUsecase extends Mock
 class MockGetOutgoingMoneyRequestsUsecase extends Mock
     implements GetOutgoingMoneyRequestsUsecase {}
 
-class MockCancelMoneyRequestUsecase extends Mock
-    implements CancelMoneyRequestUsecase {}
+class MockRespondMoneyRequestUsecase extends Mock
+    implements RespondMoneyRequestUsecase {}
 
 class FakeLoadingMoreRequestMoneyViewModel extends RequestMoneyViewModel {
   @override
@@ -72,7 +73,7 @@ class FakeLoadingMoreRequestMoneyViewModel extends RequestMoneyViewModel {
 void main() {
   late MockCreateMoneyRequestUsecase mockCreateUsecase;
   late MockGetOutgoingMoneyRequestsUsecase mockGetOutgoingUsecase;
-  late MockCancelMoneyRequestUsecase mockCancelUsecase;
+  late MockRespondMoneyRequestUsecase mockRespondUsecase;
 
   setUpAll(() {
     registerFallbackValue(
@@ -81,13 +82,18 @@ void main() {
     registerFallbackValue(
       const GetOutgoingMoneyRequestsParams(page: 1, limit: 10),
     );
-    registerFallbackValue(const CancelMoneyRequestParams(requestId: 'req-1'));
+    registerFallbackValue(
+      const RespondMoneyRequestParams(
+        requestId: 'req-1',
+        action: MoneyRequestAction.cancel,
+      ),
+    );
   });
 
   setUp(() {
     mockCreateUsecase = MockCreateMoneyRequestUsecase();
     mockGetOutgoingUsecase = MockGetOutgoingMoneyRequestsUsecase();
-    mockCancelUsecase = MockCancelMoneyRequestUsecase();
+    mockRespondUsecase = MockRespondMoneyRequestUsecase();
   });
 
   MoneyRequestEntity pendingRequest() {
@@ -141,8 +147,8 @@ void main() {
           getOutgoingMoneyRequestsUsecaseProvider.overrideWithValue(
             mockGetOutgoingUsecase,
           ),
-          cancelMoneyRequestUsecaseProvider.overrideWithValue(
-            mockCancelUsecase,
+          respondMoneyRequestUsecaseProvider.overrideWithValue(
+            mockRespondUsecase,
           ),
         ],
         child: const MaterialApp(home: RequestMoneyPage()),
@@ -190,7 +196,7 @@ void main() {
   });
 
   testWidgets(
-    'request button is disabled until valid phone and amount are entered',
+    'tapping request money with empty fields shows inline validation',
     (tester) async {
       when(
         () => mockGetOutgoingUsecase(any()),
@@ -198,22 +204,34 @@ void main() {
 
       await pumpPage(tester);
 
-      ElevatedButton button = tester.widget(
-        find.widgetWithText(ElevatedButton, 'REQUEST MONEY'),
-      );
-      expect(button.onPressed, isNull);
+      await tester.tap(find.text('REQUEST MONEY'));
+      await tester.pumpAndSettle();
 
-      final fields = find.byType(TextField);
-      await tester.enterText(fields.at(0), '9800000002');
-      await tester.enterText(fields.at(1), '150');
-      await tester.pump();
-
-      button = tester.widget(
-        find.widgetWithText(ElevatedButton, 'REQUEST MONEY'),
+      expect(
+        find.text('Enter a valid 10-digit mobile number.'),
+        findsOneWidget,
       );
-      expect(button.onPressed, isNotNull);
+      expect(find.text('Amount is required.'), findsOneWidget);
+      verifyNever(() => mockCreateUsecase(any()));
     },
   );
+
+  testWidgets('invalid submit does not trigger create usecase', (tester) async {
+    when(
+      () => mockGetOutgoingUsecase(any()),
+    ).thenAnswer((_) async => Right(pendingPage([])));
+
+    await pumpPage(tester);
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), '123');
+    await tester.enterText(fields.at(1), '0');
+
+    await tester.tap(find.text('REQUEST MONEY'));
+    await tester.pumpAndSettle();
+
+    verifyNever(() => mockCreateUsecase(any()));
+  });
 
   testWidgets('cancel opens confirmation and triggers cancel usecase', (
     tester,
@@ -222,7 +240,7 @@ void main() {
       () => mockGetOutgoingUsecase(any()),
     ).thenAnswer((_) async => Right(pendingPage([pendingRequest()])));
     when(
-      () => mockCancelUsecase(any()),
+      () => mockRespondUsecase(any()),
     ).thenAnswer((_) async => Right(pendingRequest()));
 
     await pumpPage(tester);
@@ -236,7 +254,14 @@ void main() {
     await tester.tap(find.text('Confirm'));
     await tester.pumpAndSettle();
 
-    verify(() => mockCancelUsecase(any())).called(1);
+    verify(
+      () => mockRespondUsecase(
+        const RespondMoneyRequestParams(
+          requestId: 'req-1',
+          action: MoneyRequestAction.cancel,
+        ),
+      ),
+    ).called(1);
   });
 
   testWidgets('shows empty pending state message', (tester) async {
@@ -248,6 +273,20 @@ void main() {
 
     expect(find.text('No pending requests yet.'), findsOneWidget);
   });
+
+  testWidgets(
+    'shows pending section error state when initial list load fails',
+    (tester) async {
+      when(
+        () => mockGetOutgoingUsecase(any()),
+      ).thenAnswer((_) async => const Left(ApiFalilure(message: 'Failed')));
+
+      await pumpPage(tester);
+
+      expect(find.text('Could not load pending requests.'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+    },
+  );
 
   testWidgets('shows loading-more indicator when isLoadingMore is true', (
     tester,
