@@ -9,4 +9,13 @@ abstract interface class IStatementRemoteDatasource {
   });
 
   Future<StatementReceiptApiModel> getDetail({required String txId});
+
+  Future<UndoRequestApiModel> createUndoRequest({required String txId});
+
+  Future<AcceptUndoResultApiModel> acceptUndoRequest({
+    required String requestId,
+    required String pin,
+  });
+
+  Future<UndoRequestApiModel> rejectUndoRequest({required String requestId});
 }

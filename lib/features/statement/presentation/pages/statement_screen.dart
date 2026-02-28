@@ -138,6 +138,14 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
       viewModel.clearError();
     });
 
+    ref.listen<StatementState>(statementViewModelProvider, (prev, next) {
+      if (prev?.actionMessage == next.actionMessage) return;
+      final message = next.actionMessage;
+      if (message == null || message.isEmpty) return;
+      SnackbarUtil.showSuccess(context, message);
+      viewModel.clearActionMessage();
+    });
+
     return Scaffold(
       appBar: AppBar(title: const Text('Statement'), centerTitle: true),
       body: Column(
@@ -258,10 +266,15 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
           }
 
           final transaction = state.transactions[index];
+          final txId = transaction.txId.trim();
+          final undoStatus = state.undoStatusByTxId[txId];
+          final isRequestingUndo = state.requestingUndoTxIds.contains(txId);
 
           return StatementItemTile(
             transaction: transaction,
             currentUserId: currentUserId,
+            undoStatus: undoStatus,
+            isRequestingUndo: isRequestingUndo,
             onTap: () {
               AppRoutes.push(
                 context,
@@ -272,10 +285,9 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
               );
             },
             onUndoTap: () {
-              SnackbarUtil.showInfo(
-                context,
-                'Undo request flow will be added in the next step.',
-              );
+              ref
+                  .read(statementViewModelProvider.notifier)
+                  .requestUndo(transaction.txId);
             },
           );
         },

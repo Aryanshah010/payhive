@@ -53,6 +53,11 @@ class ApiEndpoints {
   static const String transactionsBeneficiary = '/transactions/beneficiary';
   static const String transactionsHistory = '/transactions';
   static String transactionDetail(String txId) => '/transactions/$txId';
+  static const String undoRequests = '/undo-requests';
+  static String undoRequestAccept(String requestId) =>
+      '/undo-requests/$requestId/accept';
+  static String undoRequestReject(String requestId) =>
+      '/undo-requests/$requestId/reject';
   static const String moneyRequests = '/money-requests';
   static const String moneyRequestsOutgoing = '/money-requests/outgoing';
   static String moneyRequestDetail(String requestId) =>

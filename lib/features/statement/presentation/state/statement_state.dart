@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 
 enum StatementViewStatus { initial, loading, loaded, error }
 
@@ -29,6 +30,9 @@ class StatementState extends Equatable {
   final bool isLoadingMore;
   final String search;
   final StatementDirectionFilter direction;
+  final Map<String, UndoStatusUi> undoStatusByTxId;
+  final Set<String> requestingUndoTxIds;
+  final String? actionMessage;
 
   const StatementState({
     required this.status,
@@ -39,6 +43,9 @@ class StatementState extends Equatable {
     required this.isLoadingMore,
     required this.search,
     required this.direction,
+    required this.undoStatusByTxId,
+    required this.requestingUndoTxIds,
+    this.actionMessage,
   });
 
   factory StatementState.initial() {
@@ -51,6 +58,9 @@ class StatementState extends Equatable {
       isLoadingMore: false,
       search: '',
       direction: StatementDirectionFilter.all,
+      undoStatusByTxId: <String, UndoStatusUi>{},
+      requestingUndoTxIds: <String>{},
+      actionMessage: null,
     );
   }
 
@@ -65,6 +75,9 @@ class StatementState extends Equatable {
     bool? isLoadingMore,
     String? search,
     StatementDirectionFilter? direction,
+    Map<String, UndoStatusUi>? undoStatusByTxId,
+    Set<String>? requestingUndoTxIds,
+    Object? actionMessage = _unset,
   }) {
     return StatementState(
       status: status ?? this.status,
@@ -77,6 +90,11 @@ class StatementState extends Equatable {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       search: search ?? this.search,
       direction: direction ?? this.direction,
+      undoStatusByTxId: undoStatusByTxId ?? this.undoStatusByTxId,
+      requestingUndoTxIds: requestingUndoTxIds ?? this.requestingUndoTxIds,
+      actionMessage: actionMessage == _unset
+          ? this.actionMessage
+          : actionMessage as String?,
     );
   }
 
@@ -90,5 +108,8 @@ class StatementState extends Equatable {
     isLoadingMore,
     search,
     direction,
+    undoStatusByTxId,
+    requestingUndoTxIds,
+    actionMessage,
   ];
 }

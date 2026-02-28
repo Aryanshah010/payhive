@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 
 enum StatementEntryDirection { debit, credit }
 
 class StatementItemTile extends StatelessWidget {
   final ReceiptEntity transaction;
   final String? currentUserId;
+  final UndoStatusUi? undoStatus;
+  final bool isRequestingUndo;
   final VoidCallback? onUndoTap;
   final VoidCallback? onTap;
 
@@ -14,6 +17,8 @@ class StatementItemTile extends StatelessWidget {
     super.key,
     required this.transaction,
     this.currentUserId,
+    this.undoStatus,
+    this.isRequestingUndo = false,
     this.onUndoTap,
     this.onTap,
   });
@@ -24,7 +29,9 @@ class StatementItemTile extends StatelessWidget {
     final isDebit = direction == StatementEntryDirection.debit;
     final isBankTransfer = _isBankTransferTransaction();
     final isServiceDebit = isDebit && _isServiceDebitTransaction();
-    final showUndoButton = isDebit && !isServiceDebit && !isBankTransfer;
+    final canShowUndoControls = isDebit && !isServiceDebit && !isBankTransfer;
+    final showUndoButton = canShowUndoControls && undoStatus == null;
+    final showUndoStatusChip = canShowUndoControls && undoStatus != null;
     final counterparty = isDebit ? transaction.to : transaction.from;
     final amountColor = isDebit ? Colors.red.shade600 : Colors.green.shade600;
     final arrowIcon = isDebit
@@ -109,27 +116,40 @@ class StatementItemTile extends StatelessWidget {
                         if (showUndoButton) ...[
                           const SizedBox(height: 10),
                           TextButton(
-                            onPressed: onUndoTap,
+                            onPressed: isRequestingUndo ? null : onUndoTap,
                             style: TextButton.styleFrom(
                               backgroundColor: Colors.green.shade600,
                               foregroundColor: Colors.white,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              minimumSize: const Size(68, 30),
+                              minimumSize: const Size(110, 30),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 0,
                               ),
                               shape: const StadiumBorder(),
                             ),
-                            child: const Text(
-                              'UNDO',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
+                            child: isRequestingUndo
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'REQUEST UNDO',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
                           ),
+                        ],
+                        if (showUndoStatusChip) ...[
+                          const SizedBox(height: 10),
+                          _UndoStatusChip(status: undoStatus!),
                         ],
                       ],
                     )
@@ -256,5 +276,32 @@ class StatementItemTile extends StatelessWidget {
     }
 
     return false;
+  }
+}
+
+class _UndoStatusChip extends StatelessWidget {
+  final UndoStatusUi status;
+
+  const _UndoStatusChip({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: status.color.withOpacity(0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: status.color.withOpacity(0.45)),
+      ),
+      child: Text(
+        status.label,
+        style: TextStyle(
+          color: status.color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
   }
 }

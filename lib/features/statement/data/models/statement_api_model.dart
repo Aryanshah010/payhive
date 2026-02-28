@@ -1,5 +1,6 @@
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/statement/domain/entity/statement_entity.dart';
+import 'package:payhive/features/statement/domain/entity/undo_request_entity.dart';
 
 class StatementRecipientApiModel {
   final String id;
@@ -165,6 +166,89 @@ class TransactionHistoryApiModel {
   }
 }
 
+class UndoRequestApiModel {
+  final String id;
+  final String transactionId;
+  final String? originalTxId;
+  final StatementRecipientApiModel requester;
+  final StatementRecipientApiModel receiver;
+  final double amount;
+  final String status;
+  final String? refundTransactionId;
+  final DateTime? respondedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  UndoRequestApiModel({
+    required this.id,
+    required this.transactionId,
+    required this.originalTxId,
+    required this.requester,
+    required this.receiver,
+    required this.amount,
+    required this.status,
+    required this.refundTransactionId,
+    required this.respondedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory UndoRequestApiModel.fromJson(Map<String, dynamic> json) {
+    return UndoRequestApiModel(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      transactionId: (json['transactionId'] ?? '').toString(),
+      originalTxId: _toNullableString(json['originalTxId']),
+      requester: StatementRecipientApiModel.fromJson(_asMap(json['requester'])),
+      receiver: StatementRecipientApiModel.fromJson(_asMap(json['receiver'])),
+      amount: _parseAmount(json['amount']),
+      status: (json['status'] ?? '').toString(),
+      refundTransactionId: _toNullableString(json['refundTransactionId']),
+      respondedAt: _toNullableDate(json['respondedAt']),
+      createdAt: _parseDate(json['createdAt']),
+      updatedAt: _parseDate(json['updatedAt']),
+    );
+  }
+
+  UndoRequestEntity toEntity() {
+    return UndoRequestEntity(
+      id: id,
+      transactionId: transactionId,
+      originalTxId: originalTxId,
+      requester: requester.toEntity(),
+      receiver: receiver.toEntity(),
+      amount: amount,
+      status: status,
+      refundTransactionId: refundTransactionId,
+      respondedAt: respondedAt,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+}
+
+class AcceptUndoResultApiModel {
+  final UndoRequestApiModel request;
+  final StatementReceiptApiModel receipt;
+
+  AcceptUndoResultApiModel({required this.request, required this.receipt});
+
+  factory AcceptUndoResultApiModel.fromJson(Map<String, dynamic> json) {
+    final rawRequest = _asMap(json['request']);
+    final rawReceipt = _asMap(json['receipt']);
+    return AcceptUndoResultApiModel(
+      request: UndoRequestApiModel.fromJson(rawRequest),
+      receipt: StatementReceiptApiModel.fromJson(rawReceipt),
+    );
+  }
+
+  AcceptUndoResultEntity toEntity() {
+    return AcceptUndoResultEntity(
+      request: request.toEntity(),
+      receipt: receipt.toEntity(),
+    );
+  }
+}
+
 int? _parseInt(dynamic value) {
   if (value == null) return null;
   if (value is int) return value;
@@ -204,6 +288,21 @@ Map<String, dynamic>? _extractPagination(Map<String, dynamic> json) {
     if (hasFields) return data;
   }
   return null;
+}
+
+DateTime? _toNullableDate(dynamic value) {
+  if (value == null) return null;
+  if (value is String && value.trim().isEmpty) return null;
+  return _parseDate(value);
+}
+
+String? _toNullableString(dynamic value) {
+  if (value == null) return null;
+  final resolved = value.toString().trim();
+  if (resolved.isEmpty || resolved == 'null') {
+    return null;
+  }
+  return resolved;
 }
 
 DateTime _parseDate(dynamic value) {

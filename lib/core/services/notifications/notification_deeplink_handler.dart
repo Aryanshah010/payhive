@@ -10,6 +10,8 @@ import 'package:payhive/features/notifications/presentation/pages/notifications_
 import 'package:payhive/features/request_money/presentation/pages/request_money_info_page.dart';
 import 'package:payhive/features/request_money/presentation/state/request_money_info_state.dart';
 import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
+import 'package:payhive/features/statement/presentation/pages/undo_request_action_page.dart';
+import 'package:payhive/features/statement/presentation/state/undo_request_action_state.dart';
 
 final notificationDeepLinkHandlerProvider =
     Provider<NotificationDeepLinkHandler>((_) => NotificationDeepLinkHandler());
@@ -70,7 +72,11 @@ class NotificationDeepLinkHandler {
     final type = _resolveType(payload);
     final txId = _resolveTxId(payload);
 
-    if ((type == 'PAYMENT_SUCCESS' || type == 'UNDO_REQUEST') && txId != null) {
+    if (type == 'UNDO_REQUEST') {
+      return _handleUndoRequestPayload(context, payload);
+    }
+
+    if (type == 'PAYMENT_SUCCESS' && txId != null) {
       AppRoutes.push(context, StatementDetailPage(txId: txId));
       return true;
     }
@@ -110,6 +116,60 @@ class NotificationDeepLinkHandler {
     return true;
   }
 
+  bool _handleUndoRequestPayload(
+    BuildContext context,
+    Map<String, dynamic> payload,
+  ) {
+    final action = _resolveUndoAction(payload);
+    final originalTxId = _resolveUndoOriginalTxId(payload);
+    final refundTxId = _resolveUndoRefundTxId(payload);
+
+    if (action == 'ACCEPTED') {
+      final txId = refundTxId ?? originalTxId;
+      if (txId != null) {
+        AppRoutes.push(context, StatementDetailPage(txId: txId));
+        return true;
+      }
+    }
+
+    if (action == 'DENIED') {
+      if (originalTxId != null) {
+        AppRoutes.push(context, StatementDetailPage(txId: originalTxId));
+        return true;
+      }
+    }
+
+    AppRoutes.push(
+      context,
+      UndoRequestActionPage(fallbackData: _buildUndoFallbackData(payload)),
+    );
+    return true;
+  }
+
+  UndoRequestActionFallbackData _buildUndoFallbackData(
+    Map<String, dynamic> payload,
+  ) {
+    return UndoRequestActionFallbackData(
+      undoRequestId: _resolveUndoRequestId(payload),
+      action: _resolveUndoAction(payload),
+      originalTxId: _resolveUndoOriginalTxId(payload),
+      refundTxId: _resolveUndoRefundTxId(payload),
+      transactionId: _readString(payload, 'transactionId'),
+      amount: _readFirstDouble(payload, const ['amount']),
+      requesterName: _readFirstString(payload, const ['requesterName']),
+      requesterPhoneNumber: _readFirstString(payload, const [
+        'requesterPhoneNumber',
+      ]),
+      receiverName: _readFirstString(payload, const ['receiverName']),
+      receiverPhoneNumber: _readFirstString(payload, const [
+        'receiverPhoneNumber',
+      ]),
+      title: _readString(payload, '__title') ?? _readString(payload, 'title'),
+      body: _readString(payload, '__body') ?? _readString(payload, 'body'),
+      createdAt: _resolveCreatedAt(payload),
+    );
+  }
+
   void _openFallbackDetail(
     BuildContext context,
     Map<String, dynamic> payload, {
@@ -145,6 +205,22 @@ class NotificationDeepLinkHandler {
     if (raw == null) return null;
     final txId = raw.toString().trim();
     return txId.isEmpty ? null : txId;
+  }
+
+  String? _resolveUndoRequestId(Map<String, dynamic> payload) {
+    return _readFirstString(payload, const ['undoRequestId', 'requestId']);
+  }
+
+  String? _resolveUndoAction(Map<String, dynamic> payload) {
+    return _readFirstString(payload, const ['action'])?.toUpperCase();
+  }
+
+  String? _resolveUndoOriginalTxId(Map<String, dynamic> payload) {
+    return _readFirstString(payload, const ['originalTxId']);
+  }
+
+  String? _resolveUndoRefundTxId(Map<String, dynamic> payload) {
+    return _readFirstString(payload, const ['refundTxId']);
   }
 
   String? _resolveRequesterPhoneNumber(Map<String, dynamic> payload) {
@@ -221,6 +297,19 @@ class NotificationDeepLinkHandler {
     for (final key in keys) {
       final value = _readString(source, key);
       if (value != null) return value;
+    }
+    return null;
+  }
+
+  double? _readFirstDouble(Map<String, dynamic> source, List<String> keys) {
+    for (final key in keys) {
+      final raw = source[key];
+      if (raw == null) continue;
+      if (raw is num) return raw.toDouble();
+      if (raw is String) {
+        final parsed = double.tryParse(raw.trim());
+        if (parsed != null) return parsed;
+      }
     }
     return null;
   }

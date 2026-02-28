@@ -66,4 +66,44 @@ class StatementRemoteDatasource implements IStatementRemoteDatasource {
     final data = response.data['data'] as Map<String, dynamic>;
     return StatementReceiptApiModel.fromJson(data);
   }
+
+  @override
+  Future<UndoRequestApiModel> createUndoRequest({required String txId}) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.undoRequests,
+      data: {'txId': txId},
+      options: _authOptions(),
+    );
+
+    final data = response.data['data'] as Map<String, dynamic>;
+    return UndoRequestApiModel.fromJson(data);
+  }
+
+  @override
+  Future<AcceptUndoResultApiModel> acceptUndoRequest({
+    required String requestId,
+    required String pin,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.undoRequestAccept(requestId),
+      data: {'pin': pin},
+      options: _authOptions(),
+    );
+
+    final data = response.data['data'] as Map<String, dynamic>;
+    return AcceptUndoResultApiModel.fromJson(data);
+  }
+
+  @override
+  Future<UndoRequestApiModel> rejectUndoRequest({
+    required String requestId,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.undoRequestReject(requestId),
+      options: _authOptions(),
+    );
+
+    final data = response.data['data'] as Map<String, dynamic>;
+    return UndoRequestApiModel.fromJson(data);
+  }
 }

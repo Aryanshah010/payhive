@@ -12,6 +12,8 @@ import 'package:payhive/core/services/notifications/notification_deeplink_handle
 import 'package:payhive/features/request_money/domain/entity/request_money_entity.dart';
 import 'package:payhive/features/request_money/domain/usecases/request_money_usecase.dart';
 import 'package:payhive/features/request_money/presentation/pages/request_money_info_page.dart';
+import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
+import 'package:payhive/features/statement/presentation/pages/undo_request_action_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockGetMoneyRequestDetailUsecase extends Mock
@@ -108,7 +110,7 @@ void main() {
     handler = NotificationDeepLinkHandler();
   }
 
-  RequestMoneyInfoPage _expectRequestInfoRoute() {
+  RequestMoneyInfoPage expectRequestInfoRoute() {
     final route = observer.lastPushedRoute;
     expect(route, isA<MaterialPageRoute<dynamic>>());
     final page = (route as MaterialPageRoute<dynamic>).builder(
@@ -116,6 +118,14 @@ void main() {
     );
     expect(page, isA<RequestMoneyInfoPage>());
     return page as RequestMoneyInfoPage;
+  }
+
+  dynamic pushedPage() {
+    final route = observer.lastPushedRoute;
+    expect(route, isA<MaterialPageRoute<dynamic>>());
+    return (route as MaterialPageRoute<dynamic>).builder(
+      AppRoutes.navigatorKey.currentContext!,
+    );
   }
 
   testWidgets('REQUEST_MONEY with requestId routes to request info page', (
@@ -132,7 +142,7 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    final page = _expectRequestInfoRoute();
+    final page = expectRequestInfoRoute();
     expect(page.requestId, 'mr-1');
     expect(page.fallbackData.phoneNumber, '9800000001');
     expect(page.fallbackData.amountInput, '120.50');
@@ -155,7 +165,7 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    final page = _expectRequestInfoRoute();
+    final page = expectRequestInfoRoute();
     expect(page.requestId, 'mr-2');
     expect(page.fallbackData.phoneNumber, '9800000002');
     expect(page.fallbackData.amountInput, '99.99');
@@ -175,8 +185,71 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    final page = _expectRequestInfoRoute();
+    final page = expectRequestInfoRoute();
     expect(page.requestId, isNull);
     expect(page.fallbackData.amountInput, '10');
   });
+
+  testWidgets('UNDO_REQUEST CREATED routes to undo action page', (
+    tester,
+  ) async {
+    await pumpHarness(tester);
+
+    handler.handlePayload({
+      'type': 'UNDO_REQUEST',
+      'action': 'CREATED',
+      'undoRequestId': 'undo-1',
+      'originalTxId': 'tx-1001',
+      'amount': '120.50',
+    });
+    await tester.pump();
+
+    final page = pushedPage();
+    expect(page, isA<UndoRequestActionPage>());
+    final undoPage = page as UndoRequestActionPage;
+    expect(undoPage.fallbackData.undoRequestId, 'undo-1');
+    expect(undoPage.fallbackData.originalTxId, 'tx-1001');
+    expect(undoPage.fallbackData.action, 'CREATED');
+  });
+
+  testWidgets(
+    'UNDO_REQUEST ACCEPTED routes to statement detail using refundTxId',
+    (tester) async {
+      await pumpHarness(tester);
+
+      handler.handlePayload({
+        'type': 'UNDO_REQUEST',
+        'action': 'ACCEPTED',
+        'undoRequestId': 'undo-1',
+        'originalTxId': 'tx-1001',
+        'refundTxId': 'refund-tx-1',
+        'transactionId': 'mongo-object-id',
+      });
+      await tester.pump();
+
+      final page = pushedPage();
+      expect(page, isA<StatementDetailPage>());
+      expect((page as StatementDetailPage).txId, 'refund-tx-1');
+    },
+  );
+
+  testWidgets(
+    'UNDO_REQUEST DENIED routes to statement detail using originalTxId',
+    (tester) async {
+      await pumpHarness(tester);
+
+      handler.handlePayload({
+        'type': 'UNDO_REQUEST',
+        'action': 'DENIED',
+        'undoRequestId': 'undo-1',
+        'originalTxId': 'tx-1001',
+        'transactionId': 'mongo-object-id',
+      });
+      await tester.pump();
+
+      final page = pushedPage();
+      expect(page, isA<StatementDetailPage>());
+      expect((page as StatementDetailPage).txId, 'tx-1001');
+    },
+  );
 }

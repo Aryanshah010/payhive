@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 import 'package:payhive/features/statement/presentation/widgets/statement_item_tile.dart';
 
 void main() {
@@ -73,7 +74,7 @@ void main() {
     );
 
     expect(find.text('Service Payment'), findsOneWidget);
-    expect(find.text('UNDO'), findsNothing);
+    expect(find.text('REQUEST UNDO'), findsNothing);
   });
 
   testWidgets('service paymentType debit shows Service Payment and no undo', (
@@ -95,7 +96,7 @@ void main() {
     );
 
     expect(find.text('Service Payment'), findsOneWidget);
-    expect(find.text('UNDO'), findsNothing);
+    expect(find.text('REQUEST UNDO'), findsNothing);
   });
 
   testWidgets('service remark debit shows Service Payment and no undo', (
@@ -117,7 +118,7 @@ void main() {
     );
 
     expect(find.text('Service Payment'), findsOneWidget);
-    expect(find.text('UNDO'), findsNothing);
+    expect(find.text('REQUEST UNDO'), findsNothing);
   });
 
   testWidgets('normal debit keeps transfer title and undo action', (
@@ -136,6 +137,57 @@ void main() {
     );
 
     expect(find.text('Fund transferred to Receiver'), findsOneWidget);
-    expect(find.text('UNDO'), findsOneWidget);
+    expect(find.text('REQUEST UNDO'), findsOneWidget);
+  });
+
+  testWidgets('pending undo status chip is shown instead of action button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatementItemTile(
+            transaction: makeReceipt(direction: 'DEBIT'),
+            currentUserId: 'me-id',
+            undoStatus: pendingUndoStatus,
+            onUndoTap: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Pending'), findsOneWidget);
+    expect(find.text('REQUEST UNDO'), findsNothing);
+  });
+
+  testWidgets('accepted and rejected status chips are rendered', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              StatementItemTile(
+                transaction: makeReceipt(direction: 'DEBIT', remark: 'one'),
+                currentUserId: 'me-id',
+                undoStatus: acceptedUndoStatus,
+                onUndoTap: () {},
+              ),
+              StatementItemTile(
+                transaction: makeReceipt(direction: 'DEBIT', remark: 'two'),
+                currentUserId: 'me-id',
+                undoStatus: rejectedUndoStatus,
+                onUndoTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Accepted'), findsOneWidget);
+    expect(find.text('Rejected'), findsOneWidget);
+    expect(find.text('REQUEST UNDO'), findsNothing);
   });
 }
