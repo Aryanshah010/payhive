@@ -83,6 +83,7 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
     return ReceiptApiModel.fromJson(data);
   }
 
+  @override
   Future<RecipientApiModel> lookupBeneficiary({
     required String phoneNumber,
   }) async {

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/core/usecases/app_usecase.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/send_money/data/repositories/send_money_repositories.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/send_money/domain/repositories/send_money_repositories.dart';
@@ -91,12 +92,12 @@ class PreviewTransferUsecase
 
   @override
   Future<Either<Failure, PreviewEntity>> call(PreviewTransferParams params) {
-    final phoneError = _validatePhone(params.toPhoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.toPhoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
@@ -122,17 +123,17 @@ class ConfirmTransferUsecase
 
   @override
   Future<Either<Failure, ReceiptEntity>> call(ConfirmTransferParams params) {
-    final phoneError = _validatePhone(params.toPhoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.toPhoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
-    final pinError = _validatePin(params.pin);
+    final pinError = ValidatorUtil.validatePin(params.pin);
     if (pinError != null) {
       return Future.value(Left(ValidationFailure(message: pinError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
@@ -165,40 +166,13 @@ class LookupBeneficiaryUsecase
   Future<Either<Failure, RecipientEntity>> call(
     LookupBeneficiaryParams params,
   ) {
-    final phoneError = _validatePhone(params.phoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.phoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
     return _repository.lookupBeneficiary(phoneNumber: params.phoneNumber);
   }
-}
-
-String? _validatePhone(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{10}$').hasMatch(cleaned)) {
-    return 'Phone number must be exactly 10 digits.';
-  }
-  return null;
-}
-
-String? _validatePin(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
-    return 'PIN must be exactly 4 digits.';
-  }
-  return null;
-}
-
-String? _validateAmount(double amount) {
-  if (amount <= 0) {
-    return 'Amount must be greater than 0.';
-  }
-  final scaled = amount * 100;
-  if ((scaled - scaled.round()).abs() > 0.000001) {
-    return 'Amount can have at most 2 decimal places.';
-  }
-  return null;
 }
 
 double _normalizeAmount(double amount) {

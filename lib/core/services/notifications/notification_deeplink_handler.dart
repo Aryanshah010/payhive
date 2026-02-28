@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/devices/presentation/pages/manage_devices_page.dart';
 import 'package:payhive/features/notifications/domain/entity/notification_entity.dart';
 import 'package:payhive/features/notifications/presentation/pages/notification_detail_page.dart';
@@ -251,7 +252,7 @@ class NotificationDeepLinkHandler {
       'requestedAmount',
     ]);
     if (rawAmount == null) return null;
-    return _normalizeAmountInput(rawAmount);
+    return ValidatorUtil.normalizeAmountInput(rawAmount);
   }
 
   String? _resolveRemark(Map<String, dynamic> payload) {
@@ -312,29 +313,6 @@ class NotificationDeepLinkHandler {
       }
     }
     return null;
-  }
-
-  String? _normalizeAmountInput(String value) {
-    var sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
-    if (sanitized.isEmpty) return null;
-
-    final firstDot = sanitized.indexOf('.');
-    if (firstDot >= 0) {
-      final integerPart = sanitized.substring(0, firstDot);
-      var decimalPart = sanitized.substring(firstDot + 1).replaceAll('.', '');
-      if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-      }
-      sanitized = decimalPart.isEmpty
-          ? '$integerPart.'
-          : '$integerPart.$decimalPart';
-    }
-
-    if (sanitized.startsWith('.')) {
-      sanitized = '0$sanitized';
-    }
-
-    return sanitized.isEmpty ? null : sanitized;
   }
 
   Map<String, dynamic> _normalizePayload(Map<String, dynamic> payload) {

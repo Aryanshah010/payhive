@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:payhive/app/routes/app_routes.dart';
@@ -10,19 +9,17 @@ import 'package:payhive/core/api/api_endpoints.dart';
 import 'package:payhive/core/services/notifications/app_badge_service.dart';
 import 'package:payhive/core/services/notifications/notification_push_service.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
-import 'package:payhive/core/widgets/main_text_form_field.dart';
-import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
-import 'package:payhive/features/profile/domain/usecases/verify_pin_usecase.dart';
 import 'package:payhive/features/profile/presentation/pages/fingerprint_setup_sheet.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/pages/pin_management_page.dart';
 import 'package:payhive/features/profile/presentation/pages/update_profile_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
 import 'package:payhive/features/devices/presentation/pages/manage_devices_page.dart';
+import 'package:payhive/features/profile/presentation/widgets/pin_verification_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -51,7 +48,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (sheetContext) {
-        return const _PinVerificationSheet();
+        return const PinVerificationSheet();
       },
     );
     return allowed ?? false;
@@ -514,157 +511,6 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PinVerificationSheet extends ConsumerStatefulWidget {
-  const _PinVerificationSheet();
-
-  @override
-  ConsumerState<_PinVerificationSheet> createState() =>
-      _PinVerificationSheetState();
-}
-
-class _PinVerificationSheetState extends ConsumerState<_PinVerificationSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _pinController = TextEditingController();
-  bool _obscurePin = true;
-  bool _isLoading = false;
-  String? _errorMessage;
-
-  @override
-  void dispose() {
-    _pinController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleVerify() async {
-    if (_isLoading) return;
-    final formState = _formKey.currentState;
-    if (formState == null || !formState.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    final result = await ref.read(verifyPinUsecaseProvider)(
-      VerifyPinParams(pin: _pinController.text.trim()),
-    );
-
-    if (!mounted) return;
-
-    result.fold((failure) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = failure.message;
-      });
-    }, (_) => Navigator.of(context).pop(true));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 48,
-                    height: 5,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.outline.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                Text(
-                  'Enter PIN',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Verify your 4-digit PIN to continue.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.65),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                MainTextFormField(
-                  controller: _pinController,
-                  prefixIcon: Icons.lock_outline,
-                  hintText: 'Enter PIN',
-                  label: 'PIN',
-                  keyboardType: TextInputType.number,
-                  obscureText: _obscurePin,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(4),
-                  ],
-                  validator: (value) {
-                    final cleaned = value?.trim() ?? '';
-                    if (cleaned.isEmpty) {
-                      return 'Please enter your PIN';
-                    }
-                    if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
-                      return 'PIN must be exactly 4 digits.';
-                    }
-                    return null;
-                  },
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePin ? Icons.visibility_off : Icons.visibility,
-                      color: colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    onPressed: () => setState(() => _obscurePin = !_obscurePin),
-                  ),
-                ),
-                if (_errorMessage != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: colorScheme.error,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                PrimaryButtonWidget(
-                  onPressed: _isLoading ? () {} : _handleVerify,
-                  isLoading: _isLoading,
-                  text: 'Verify PIN',
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: _isLoading
-                      ? null
-                      : () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

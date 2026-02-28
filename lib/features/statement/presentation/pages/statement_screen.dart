@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
-import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
 import 'package:payhive/features/statement/presentation/state/statement_state.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_view_model.dart';
-import 'package:payhive/features/statement/presentation/widgets/statement_item_tile.dart';
+import 'package:payhive/features/statement/presentation/widgets/filter_option_widget.dart';
+import 'package:payhive/features/statement/presentation/widgets/statement_body_widget.dart';
 
 class StatementScreen extends ConsumerStatefulWidget {
   const StatementScreen({super.key});
@@ -76,19 +75,19 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 8),
-              _filterOption(
+              FilterOption(
                 context: context,
                 value: StatementDirectionFilter.all,
                 groupValue: selected,
                 label: 'All',
               ),
-              _filterOption(
+              FilterOption(
                 context: context,
                 value: StatementDirectionFilter.debit,
                 groupValue: selected,
                 label: 'Debit',
               ),
-              _filterOption(
+              FilterOption(
                 context: context,
                 value: StatementDirectionFilter.credit,
                 groupValue: selected,
@@ -105,23 +104,6 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
     await ref
         .read(statementViewModelProvider.notifier)
         .applyDirection(nextFilter);
-  }
-
-  Widget _filterOption({
-    required BuildContext context,
-    required StatementDirectionFilter value,
-    required StatementDirectionFilter groupValue,
-    required String label,
-  }) {
-    return RadioListTile<StatementDirectionFilter>(
-      value: value,
-      groupValue: groupValue,
-      title: Text(label),
-      onChanged: (next) {
-        if (next == null) return;
-        Navigator.pop(context, next);
-      },
-    );
   }
 
   @override
@@ -188,109 +170,15 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
             ),
           ),
           Expanded(
-            child: _buildBody(
+            child: StatementBody(
+              ref: ref,
+              scrollController: _scrollController,
               context: context,
               state: state,
               currentUserId: currentUserId,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBody({
-    required BuildContext context,
-    required StatementState state,
-    required String? currentUserId,
-  }) {
-    if (state.status == StatementViewStatus.loading &&
-        state.transactions.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (state.status == StatementViewStatus.error &&
-        state.transactions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.receipt_long_outlined, size: 42),
-              const SizedBox(height: 10),
-              const Text('Could not load statements.'),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.read(statementViewModelProvider.notifier).loadInitial(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (state.transactions.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: () =>
-            ref.read(statementViewModelProvider.notifier).refresh(),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
-          children: const [
-            SizedBox(height: 80),
-            Icon(Icons.inbox_outlined, size: 52),
-            SizedBox(height: 16),
-            Center(child: Text('No transactions found for this filter.')),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: () => ref.read(statementViewModelProvider.notifier).refresh(),
-      child: ListView.separated(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        itemCount: state.transactions.length + (state.isLoadingMore ? 1 : 0),
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          if (index >= state.transactions.length) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          final transaction = state.transactions[index];
-          final txId = transaction.txId.trim();
-          final undoStatus = state.undoStatusByTxId[txId];
-          final isRequestingUndo = state.requestingUndoTxIds.contains(txId);
-
-          return StatementItemTile(
-            transaction: transaction,
-            currentUserId: currentUserId,
-            undoStatus: undoStatus,
-            isRequestingUndo: isRequestingUndo,
-            onTap: () {
-              AppRoutes.push(
-                context,
-                StatementDetailPage(
-                  txId: transaction.txId,
-                  initialReceipt: transaction,
-                ),
-              );
-            },
-            onUndoTap: () {
-              ref
-                  .read(statementViewModelProvider.notifier)
-                  .requestUndo(transaction.txId);
-            },
-          );
-        },
       ),
     );
   }

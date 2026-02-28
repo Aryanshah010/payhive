@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/request_money/domain/usecases/request_money_usecase.dart';
 import 'package:payhive/features/request_money/presentation/state/request_money_state.dart';
 
@@ -9,7 +10,6 @@ final requestMoneyViewModelProvider =
 
 class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
   static const int pageSize = 10;
-  static final RegExp _phonePattern = RegExp(r'^\d{10}$');
   static final RegExp _amountPattern = RegExp(r'^\d+(\.\d{0,2})?$');
 
   late final CreateMoneyRequestUsecase _createMoneyRequestUsecase;
@@ -34,13 +34,13 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     state = state.copyWith(
       phoneNumber: normalized,
       phoneError: state.showValidationErrors
-          ? _validatePhone(normalized)
+          ? ValidatorUtil.phoneNumberValidator(normalized)
           : null,
     );
   }
 
   void setAmountInput(String value) {
-    final normalized = _normalizeAmountInput(value);
+    final normalized = ValidatorUtil.normalizeAmountInput(value);
     if (normalized == state.amountInput) return;
     state = state.copyWith(
       amountInput: normalized,
@@ -57,7 +57,7 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     state = state.copyWith(
       remark: normalized,
       remarkError: state.showValidationErrors
-          ? _validateRemark(normalized)
+          ? ValidatorUtil.validateRemark(normalized)
           : null,
     );
   }
@@ -294,9 +294,9 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
   }
 
   bool _validateForm() {
-    final phoneError = _validatePhone(state.phoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(state.phoneNumber);
     final amountError = _validateAmountInput(state.amountInput);
-    final remarkError = _validateRemark(state.remark);
+    final remarkError = ValidatorUtil.validateRemark(state.remark);
 
     state = state.copyWith(
       phoneError: phoneError,
@@ -306,14 +306,6 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     );
 
     return phoneError == null && amountError == null && remarkError == null;
-  }
-
-  String? _validatePhone(String input) {
-    final cleaned = input.trim();
-    if (!_phonePattern.hasMatch(cleaned)) {
-      return 'Enter a valid 10-digit mobile number.';
-    }
-    return null;
   }
 
   String? _validateAmountInput(String input) {
@@ -333,43 +325,9 @@ class RequestMoneyViewModel extends Notifier<RequestMoneyState> {
     return null;
   }
 
-  String? _validateRemark(String? remark) {
-    final value = remark?.trim();
-    if (value != null && value.length > 140) {
-      return 'Remark must be 140 characters or less.';
-    }
-    return null;
-  }
-
   RequestMoneyStatus _resolveNonLoadingStatus() {
     return state.pendingRequests.isEmpty
         ? RequestMoneyStatus.initial
         : RequestMoneyStatus.loaded;
-  }
-
-  String _normalizeAmountInput(String value) {
-    var sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
-
-    if (sanitized.isEmpty) {
-      return '';
-    }
-
-    final firstDot = sanitized.indexOf('.');
-    if (firstDot >= 0) {
-      final integerPart = sanitized.substring(0, firstDot);
-      var decimalPart = sanitized.substring(firstDot + 1).replaceAll('.', '');
-      if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-      }
-      sanitized = decimalPart.isEmpty
-          ? '$integerPart.'
-          : '$integerPart.$decimalPart';
-    }
-
-    if (sanitized.startsWith('.')) {
-      sanitized = '0$sanitized';
-    }
-
-    return sanitized;
   }
 }

@@ -7,6 +7,7 @@ import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/request_money/presentation/state/request_money_info_state.dart';
 import 'package:payhive/features/request_money/presentation/view_model/request_money_info_view_model.dart';
+import 'package:payhive/features/request_money/presentation/widgets/info_card_widget.dart';
 import 'package:payhive/features/send_money/presentation/pages/send_money_initial_page.dart';
 
 class RequestMoneyInfoPage extends ConsumerStatefulWidget {
@@ -153,8 +154,8 @@ class _RequestMoneyInfoPageState extends ConsumerState<RequestMoneyInfoPage> {
           ),
         ),
         const SizedBox(height: 12),
-        _infoCard(
-          context,
+        InfoCardWidget(
+          context: context,
           children: [
             _row('Amount', amountText),
             _row('Requester', _firstNonEmpty(requesterName, '--')!),
@@ -240,19 +241,6 @@ class _RequestMoneyInfoPageState extends ConsumerState<RequestMoneyInfoPage> {
           sourceMoneyRequestId: prefill.sourceMoneyRequestId,
         ),
       ),
-    );
-  }
-
-  Widget _infoCard(BuildContext context, {required List<Widget> children}) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outline),
-      ),
-      child: Column(children: children),
     );
   }
 

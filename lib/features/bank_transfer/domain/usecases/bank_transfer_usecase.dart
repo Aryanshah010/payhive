@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/entities/transaction_entity.dart';
 import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/core/usecases/app_usecase.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/bank_transfer/data/repositories/bank_transfer_repositories.dart';
 import 'package:payhive/features/bank_transfer/domain/entity/bank_entity.dart';
 import 'package:payhive/features/bank_transfer/domain/repositories/bank_transfer_repositories.dart';
@@ -92,22 +93,22 @@ class PreviewBankTransferUsecase
   Future<Either<Failure, PreviewEntity>> call(
     PreviewBankTransferParams params,
   ) {
-    final bankNameError = _validateBankName(params.bankName);
+    final bankNameError = ValidatorUtil.validateBankName(params.bankName);
     if (bankNameError != null) {
       return Future.value(Left(ValidationFailure(message: bankNameError)));
     }
 
-    final accountNumberError = _validateAccountNumber(params.accountNumber);
+    final accountNumberError = ValidatorUtil.validateAccountNumber(params.accountNumber);
     if (accountNumberError != null) {
       return Future.value(Left(ValidationFailure(message: accountNumberError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
 
-    final normalizedAmount = _normalizeAmount(params.amount);
+    final normalizedAmount = ValidatorUtil.normalizeAmount(params.amount);
 
     return _repository.previewBankTransfer(
       bankName: params.bankName.trim(),
@@ -129,27 +130,27 @@ class ConfirmBankTransferUsecase
   Future<Either<Failure, ReceiptEntity>> call(
     ConfirmBankTransferParams params,
   ) {
-    final bankNameError = _validateBankName(params.bankName);
+    final bankNameError = ValidatorUtil.validateBankName(params.bankName);
     if (bankNameError != null) {
       return Future.value(Left(ValidationFailure(message: bankNameError)));
     }
 
-    final accountNumberError = _validateAccountNumber(params.accountNumber);
+    final accountNumberError = ValidatorUtil.validateAccountNumber(params.accountNumber);
     if (accountNumberError != null) {
       return Future.value(Left(ValidationFailure(message: accountNumberError)));
     }
 
-    final pinError = _validatePin(params.pin);
+    final pinError = ValidatorUtil.validatePin(params.pin);
     if (pinError != null) {
       return Future.value(Left(ValidationFailure(message: pinError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
 
-    final normalizedAmount = _normalizeAmount(params.amount);
+    final normalizedAmount = ValidatorUtil.normalizeAmount(params.amount);
     final idempotencyKey =
         (params.idempotencyKey == null || params.idempotencyKey!.isEmpty)
         ? _uuid.v4()
@@ -165,41 +166,9 @@ class ConfirmBankTransferUsecase
   }
 }
 
-String? _validatePin(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
-    return 'PIN must be exactly 4 digits.';
-  }
-  return null;
-}
 
-String? _validateBankName(String value) {
-  final cleaned = value.trim();
-  if (cleaned.length < 2) {
-    return 'Bank name must be at least 2 characters.';
-  }
-  return null;
-}
 
-String? _validateAccountNumber(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{8,20}$').hasMatch(cleaned)) {
-    return 'Account number must be 8 to 20 digits.';
-  }
-  return null;
-}
 
-String? _validateAmount(double amount) {
-  if (amount <= 0) {
-    return 'Amount must be greater than 0.';
-  }
-  final scaled = amount * 100;
-  if ((scaled - scaled.round()).abs() > 0.000001) {
-    return 'Amount can have at most 2 decimal places.';
-  }
-  return null;
-}
 
-double _normalizeAmount(double amount) {
-  return double.parse(amount.toStringAsFixed(2));
-}
+
+

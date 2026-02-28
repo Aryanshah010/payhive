@@ -81,6 +81,7 @@ class SendMoneyRepository implements ISendMoneyRepository {
     return const Left(ApiFalilure(message: 'No Internet connection'));
   }
 
+  @override
   Future<Either<Failure, RecipientEntity>> lookupBeneficiary({
     required String phoneNumber,
   }) async {

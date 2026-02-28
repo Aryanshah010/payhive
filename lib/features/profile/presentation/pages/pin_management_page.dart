@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
-import 'package:payhive/core/widgets/main_text_form_field.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/profile/presentation/state/pin_state.dart';
 import 'package:payhive/features/profile/presentation/view_model/pin_view_model.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:payhive/features/profile/presentation/widgets/pin_text_form_field_widget.dart';
 
 class PinManagementPage extends ConsumerStatefulWidget {
   final bool hasPin;
@@ -31,7 +30,6 @@ class _PinManagementPageState extends ConsumerState<PinManagementPage> {
   final _oldPinController = TextEditingController();
   final _newPinController = TextEditingController();
   final _confirmPinController = TextEditingController();
-  bool _obscurePin = true;
 
   @override
   void dispose() {
@@ -63,7 +61,9 @@ class _PinManagementPageState extends ConsumerState<PinManagementPage> {
   Future<void> _handleSubmit() async {
     if (_formKey.currentState!.validate()) {
       FocusManager.instance.primaryFocus?.unfocus();
-      await ref.read(pinViewModelProvider.notifier).submitPin(
+      await ref
+          .read(pinViewModelProvider.notifier)
+          .submitPin(
             newPin: _newPinController.text.trim(),
             oldPin: widget.hasPin ? _oldPinController.text.trim() : null,
           );
@@ -141,81 +141,31 @@ class _PinManagementPageState extends ConsumerState<PinManagementPage> {
                 child: Column(
                   children: [
                     if (widget.hasPin) ...[
-                      MainTextFormField(
-                        controller: _oldPinController,
-                        prefixIcon: Icons.lock_outline,
-                        hintText: 'Enter current PIN',
-                        label: 'Current PIN',
-                        keyboardType: TextInputType.number,
-                        obscureText: _obscurePin,
-                        validator: _pinValidator,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(4),
-                        ],
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePin
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePin = !_obscurePin,
-                          ),
+                      if (widget.hasPin) ...[
+                        PinTextFormField(
+                          controller: _oldPinController,
+                          hintText: 'Enter current PIN',
+                          label: 'Current PIN',
+                          validator: _pinValidator,
                         ),
+                        SizedBox(height: verticalSpacing),
+                      ],
+
+                      PinTextFormField(
+                        controller: _newPinController,
+                        hintText: 'Enter new PIN',
+                        label: 'New PIN',
+                        validator: _pinValidator,
                       ),
                       SizedBox(height: verticalSpacing),
+
+                      PinTextFormField(
+                        controller: _confirmPinController,
+                        hintText: 'Re-type new PIN',
+                        label: 'Confirm PIN',
+                        validator: _confirmPinValidator,
+                      ),
                     ],
-                    MainTextFormField(
-                      controller: _newPinController,
-                      prefixIcon: Icons.lock_outline,
-                      hintText: 'Enter new PIN',
-                      label: 'New PIN',
-                      keyboardType: TextInputType.number,
-                      obscureText: _obscurePin,
-                      validator: _pinValidator,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                      ],
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePin
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePin = !_obscurePin,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: verticalSpacing),
-                    MainTextFormField(
-                      controller: _confirmPinController,
-                      prefixIcon: Icons.lock_outline,
-                      hintText: 'Re-type new PIN',
-                      label: 'Confirm PIN',
-                      keyboardType: TextInputType.number,
-                      obscureText: _obscurePin,
-                      validator: _confirmPinValidator,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                      ],
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePin
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        onPressed: () => setState(
-                          () => _obscurePin = !_obscurePin,
-                        ),
-                      ),
-                    ),
                     SizedBox(height: isTablet ? 20 : 12),
                     PrimaryButtonWidget(
                       onPressed: _handleSubmit,

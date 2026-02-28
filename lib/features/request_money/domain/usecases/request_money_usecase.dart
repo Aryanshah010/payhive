@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/core/usecases/app_usecase.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/request_money/data/repositories/request_money_repositories.dart';
 import 'package:payhive/features/request_money/domain/entity/request_money_entity.dart';
 import 'package:payhive/features/request_money/domain/repositories/request_money_repositories.dart';
@@ -122,23 +123,23 @@ class CreateMoneyRequestUsecase
   Future<Either<Failure, MoneyRequestEntity>> call(
     CreateMoneyRequestParams params,
   ) {
-    final phoneError = _validatePhone(params.toPhoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.toPhoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
 
-    final remarkError = _validateRemark(params.remark);
+    final remarkError = ValidatorUtil.validateRemark(params.remark);
     if (remarkError != null) {
       return Future.value(Left(ValidationFailure(message: remarkError)));
     }
 
     final normalizedAmount = _normalizeAmount(params.amount);
-    final normalizedRemark = _normalizeRemark(params.remark);
+    final normalizedRemark = ValidatorUtil.normalizeRemark(params.remark);
 
     return _repository.createRequest(
       toPhoneNumber: params.toPhoneNumber.trim(),
@@ -264,42 +265,6 @@ class RespondMoneyRequestUsecase
   }
 }
 
-String? _validatePhone(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{10}$').hasMatch(cleaned)) {
-    return 'Phone number must be exactly 10 digits.';
-  }
-  return null;
-}
-
-String? _validateAmount(double amount) {
-  if (amount <= 0) {
-    return 'Amount must be greater than 0.';
-  }
-
-  final scaled = amount * 100;
-  if ((scaled - scaled.round()).abs() > 0.000001) {
-    return 'Amount can have at most 2 decimal places.';
-  }
-
-  return null;
-}
-
-String? _validateRemark(String? remark) {
-  final normalized = _normalizeRemark(remark);
-  if (normalized != null && normalized.length > 140) {
-    return 'Request message must be at most 140 characters.';
-  }
-  return null;
-}
-
-String? _normalizeRemark(String? remark) {
-  final trimmed = remark?.trim();
-  if (trimmed == null || trimmed.isEmpty) {
-    return null;
-  }
-  return trimmed;
-}
 
 double _normalizeAmount(double amount) {
   return double.parse(amount.toStringAsFixed(2));

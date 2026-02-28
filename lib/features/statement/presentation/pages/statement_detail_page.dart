@@ -1,18 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
-
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:payhive/core/utils/pdf_downloader.dart';
-import 'package:payhive/core/utils/share_and_pdf_util.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
 import 'package:payhive/features/statement/presentation/state/statement_detail_state.dart';
 import 'package:payhive/core/utils/statement_status_mapper.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_detail_view_model.dart';
+import 'package:payhive/features/statement/presentation/widgets/build_action_row_widget.dart';
+import 'package:payhive/features/statement/presentation/widgets/build_status_header_widget.dart';
 
 class StatementDetailPage extends ConsumerStatefulWidget {
   final String txId;
@@ -145,9 +142,9 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
                       padding: EdgeInsets.only(bottom: 10),
                       child: LinearProgressIndicator(minHeight: 3),
                     ),
-                  _buildStatusHeader(context, statusUi),
+                  BuildStatusHeader(context: context, statusUi: statusUi),
                   const SizedBox(height: 20),
-                  _buildActionRow(context, receipt),
+                  BuildActionRow(context: context, receipt: receipt),
                   const SizedBox(height: 20),
                   Container(
                     width: double.infinity,
@@ -248,107 +245,6 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildStatusHeader(BuildContext context, StatementStatusUi statusUi) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final statusBg = statusUi.color.withOpacity(0.16);
-
-    return Column(
-      children: [
-        Container(
-          width: 82,
-          height: 82,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: statusBg),
-          child: Icon(statusUi.icon, color: statusUi.color, size: 44),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          'Transaction Details',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          decoration: BoxDecoration(
-            color: statusBg,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: statusUi.color.withOpacity(0.5)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(statusUi.icon, color: statusUi.color, size: 16),
-              const SizedBox(width: 6),
-              Text(
-                statusUi.label,
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionRow(BuildContext context, ReceiptEntity receipt) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              await sharePdf(context, receipt);
-            },
-            icon: const Icon(Icons.share, size: 18),
-            label: const Text(
-              'Share',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () async {
-              try {
-                final bytes = await buildPdfBytes(receipt);
-
-                if (Platform.isAndroid) {
-                  await PdfDownloader.saveToDownloads(
-                    bytes: bytes,
-                    filename: 'statement_${receipt.txId}.pdf',
-                  );
-                  SnackbarUtil.showInfo(context, 'Saved to Downloads');
-                  return;
-                }
-
-                if (Platform.isIOS) {
-                  await sharePdf(context, receipt);
-                  return;
-                }
-
-                SnackbarUtil.showWarning(
-                  context,
-                  'PDF export not supported on this platform',
-                );
-              } catch (_) {
-                SnackbarUtil.showError(context, 'Failed to save PDF');
-              }
-            },
-            icon: const Icon(Icons.download, size: 18),
-            label: const Text(
-              'PDF',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-      ],
     );
   }
 

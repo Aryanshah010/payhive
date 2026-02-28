@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/send_money/domain/usecases/send_money_usecase.dart';
 import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
 import 'package:uuid/uuid.dart';
@@ -79,7 +80,7 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
   }
 
   void setAmountInput(String value) {
-    final normalized = _normalizeAmountInput(value);
+    final normalized = ValidatorUtil.normalizeAmountInput(value);
     if (normalized == state.amountInput) return;
     _invalidateConfirmLifecycle();
     state = state.copyWith(amountInput: normalized);
@@ -288,29 +289,5 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
     });
   }
 
-  String _normalizeAmountInput(String value) {
-    var sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
-
-    if (sanitized.isEmpty) {
-      return '';
-    }
-
-    final firstDot = sanitized.indexOf('.');
-    if (firstDot >= 0) {
-      final integerPart = sanitized.substring(0, firstDot);
-      var decimalPart = sanitized.substring(firstDot + 1).replaceAll('.', '');
-      if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-      }
-      sanitized = decimalPart.isEmpty
-          ? '$integerPart.'
-          : '$integerPart.$decimalPart';
-    }
-
-    if (sanitized.startsWith('.')) {
-      sanitized = '0$sanitized';
-    }
-
-    return sanitized;
-  }
+ 
 }
