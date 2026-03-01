@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:payhive/core/entities/transaction_entity.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/pdf_downloader.dart';
 import 'package:payhive/core/utils/share_and_pdf_util.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
@@ -20,6 +21,8 @@ class BuildActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = ResponsiveLayout.isTablet(context);
+
     return Row(
       children: [
         Expanded(
@@ -27,8 +30,8 @@ class BuildActionRow extends StatelessWidget {
             onPressed: () async {
               await sharePdf(context, receipt);
             },
-            icon: const Icon(Icons.share, size: 18),
-            label: const Text(
+            icon: Icon(Icons.share, size: isTablet ? 20 : 18),
+            label: Text(
               'Share',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
@@ -63,8 +66,8 @@ class BuildActionRow extends StatelessWidget {
                 SnackbarUtil.showError(context, 'Failed to save PDF');
               }
             },
-            icon: const Icon(Icons.download, size: 18),
-            label: const Text(
+            icon: Icon(Icons.download, size: isTablet ? 20 : 18),
+            label: Text(
               'PDF',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),

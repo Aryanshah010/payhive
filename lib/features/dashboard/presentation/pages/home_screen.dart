@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/features/bank_transfer/presentation/pages/bank_transfer_page.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/quick_action_btn_widgets.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/service_tile_widget.dart';
@@ -23,8 +24,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final width = MediaQuery.of(context).size.width;
-    final isTablet = width >= 600;
+    final isTablet = ResponsiveLayout.isTablet(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final profileState = ref.watch(profileViewModelProvider);
@@ -39,7 +39,7 @@ class HomeScreen extends ConsumerWidget {
     final balanceDisplay = isBalanceVisible ? balanceText : "XXXXX";
     final unreadCount = notificationState.unreadCount;
 
-    final double horizontalPadding = isTablet ? 48 : 24;
+    final double horizontalPadding = isTablet ? 48 : 20;
     final double imageWidth = isTablet ? 220 : 120;
 
     return Scaffold(
@@ -284,9 +284,9 @@ class HomeScreen extends ConsumerWidget {
 
                           GridView.count(
                             crossAxisCount: 2,
-                            mainAxisSpacing: 20,
-                            crossAxisSpacing: 20,
-                            childAspectRatio: 3.2,
+                            mainAxisSpacing: isTablet ? 20 : 12,
+                            crossAxisSpacing: isTablet ? 20 : 12,
+                            childAspectRatio: isTablet ? 3.2 : 2.45,
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             children: [

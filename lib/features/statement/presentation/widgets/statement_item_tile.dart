@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 
@@ -47,16 +48,20 @@ class StatementItemTile extends StatelessWidget {
     ).format(transaction.createdAt.toLocal());
     final amountText = NumberFormat('#,##0.00').format(transaction.amount);
     final theme = Theme.of(context);
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.12 : 1.0;
+    final cardRadius = isTablet ? 18.0 : 16.0;
+    final amountSize = isTablet ? 22.0 : 18.0;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(cardRadius),
         child: Ink(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isTablet ? 20 : 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(cardRadius),
             border: Border.all(color: theme.colorScheme.outlineVariant),
             color: theme.colorScheme.surface,
           ),
@@ -71,6 +76,7 @@ class StatementItemTile extends StatelessWidget {
                       title,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
+                        fontSize: 16 * scale,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -78,6 +84,7 @@ class StatementItemTile extends StatelessWidget {
                       subtitle,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 14 * scale,
                       ),
                     ),
                     if ((transaction.remark ?? '').trim().isNotEmpty) ...[
@@ -88,6 +95,7 @@ class StatementItemTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withOpacity(0.75),
+                          fontSize: 12.5 * scale,
                         ),
                       ),
                     ],
@@ -102,13 +110,18 @@ class StatementItemTile extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(arrowIcon, color: amountColor, size: 18),
+                            Icon(
+                              arrowIcon,
+                              color: amountColor,
+                              size: amountSize,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               amountText,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 color: amountColor,
                                 fontWeight: FontWeight.w800,
+                                fontSize: 19 * scale,
                               ),
                             ),
                           ],
@@ -121,7 +134,10 @@ class StatementItemTile extends StatelessWidget {
                               backgroundColor: Colors.green.shade600,
                               foregroundColor: Colors.white,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              minimumSize: const Size(110, 30),
+                              minimumSize: Size(
+                                isTablet ? 132 : 110,
+                                isTablet ? 34 : 30,
+                              ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 0,
@@ -137,10 +153,10 @@ class StatementItemTile extends StatelessWidget {
                                       color: Colors.white,
                                     ),
                                   )
-                                : const Text(
+                                : Text(
                                     'REQUEST UNDO',
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: isTablet ? 12 : 11,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 0.3,
                                     ),
@@ -156,13 +172,14 @@ class StatementItemTile extends StatelessWidget {
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(arrowIcon, color: amountColor, size: 18),
+                        Icon(arrowIcon, color: amountColor, size: amountSize),
                         const SizedBox(width: 4),
                         Text(
                           amountText,
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: amountColor,
                             fontWeight: FontWeight.w800,
+                            fontSize: 19 * scale,
                           ),
                         ),
                       ],
@@ -286,8 +303,13 @@ class _UndoStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet = ResponsiveLayout.isTablet(context);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 14 : 12,
+        vertical: isTablet ? 5 : 4,
+      ),
       decoration: BoxDecoration(
         color: status.color.withOpacity(0.16),
         borderRadius: BorderRadius.circular(999),
@@ -297,7 +319,7 @@ class _UndoStatusChip extends StatelessWidget {
         status.label,
         style: TextStyle(
           color: status.color,
-          fontSize: 11,
+          fontSize: isTablet ? 12 : 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.2,
         ),

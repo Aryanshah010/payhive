@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
@@ -55,6 +56,7 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
       await showModalBottomSheet(
         context: context,
         isScrollControlled: true,
+        constraints: ResponsiveLayout.bottomSheetConstraints(context),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -86,98 +88,99 @@ class _SendMoneyAmountPageState extends ConsumerState<SendMoneyAmountPage> {
               }
 
               return Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 16,
-                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-                ),
+                padding: ResponsiveLayout.bottomSheetPadding(sheetContext),
                 child: SafeArea(
                   child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 48,
-                            height: 5,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: colorScheme.outline.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          "Enter PIN",
-                          style: Theme.of(sheetContext).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _pinController,
-                          keyboardType: TextInputType.number,
-                          obscureText: true,
-                          maxLength: 4,
-                          decoration: InputDecoration(
-                            counterText: '',
-                            hintText: "4-digit PIN",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        if (showError)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              state.errorMessage!,
-                              style: TextStyle(
-                                color: colorScheme.error,
-                                fontWeight: FontWeight.w600,
+                    child: ResponsiveLayout.constrainedContent(
+                      sheetContext,
+                      tabletMaxWidth: 560,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 48,
+                              height: 5,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.outline.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
                           ),
-                        if (isLocked)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              lockoutText,
-                              style: TextStyle(
-                                color: colorScheme.error,
-                                fontWeight: FontWeight.w600,
+                          Text(
+                            "Enter PIN",
+                            style: Theme.of(sheetContext).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _pinController,
+                            keyboardType: TextInputType.number,
+                            obscureText: true,
+                            maxLength: 4,
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: "4-digit PIN",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
-                        const SizedBox(height: 16),
-                        Opacity(
-                          opacity: isConfirmDisabled ? 0.6 : 1,
-                          child: IgnorePointer(
-                            ignoring: isConfirmDisabled,
-                            child: PrimaryButtonWidget(
-                              onPressed: () {
-                                FocusManager.instance.primaryFocus?.unfocus();
-                                viewModel.confirmTransfer(_pinController.text);
-                              },
-                              isLoading: isConfirming,
-                              text: "CONFIRM",
+                          if (showError)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                state.errorMessage!,
+                                style: TextStyle(
+                                  color: colorScheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        if (isConfirmLocked && !isConfirming)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 10),
-                            child: Text(
-                              "Confirmation already submitted. Start a new transfer.",
-                              style: TextStyle(
-                                color: colorScheme.onSurface.withOpacity(0.7),
-                                fontWeight: FontWeight.w600,
+                          if (isLocked)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                lockoutText,
+                                style: TextStyle(
+                                  color: colorScheme.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          Opacity(
+                            opacity: isConfirmDisabled ? 0.6 : 1,
+                            child: IgnorePointer(
+                              ignoring: isConfirmDisabled,
+                              child: PrimaryButtonWidget(
+                                onPressed: () {
+                                  FocusManager.instance.primaryFocus?.unfocus();
+                                  viewModel.confirmTransfer(
+                                    _pinController.text,
+                                  );
+                                },
+                                isLoading: isConfirming,
+                                text: "CONFIRM",
                               ),
                             ),
                           ),
-                        const SizedBox(height: 16),
-                      ],
+                          if (isConfirmLocked && !isConfirming)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Text(
+                                "Confirmation already submitted. Start a new transfer.",
+                                style: TextStyle(
+                                  color: colorScheme.onSurface.withOpacity(0.7),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
                     ),
                   ),
                 ),

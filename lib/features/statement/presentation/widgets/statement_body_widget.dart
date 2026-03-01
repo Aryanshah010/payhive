@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
 import 'package:payhive/features/statement/presentation/state/statement_state.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_view_model.dart';
@@ -11,14 +12,12 @@ class StatementBody extends StatelessWidget {
     super.key,
     required this.ref,
     required ScrollController scrollController,
-    required this.context,
     required this.state,
     required this.currentUserId,
   }) : _scrollController = scrollController;
 
   final WidgetRef ref;
   final ScrollController _scrollController;
-  final BuildContext context;
   final StatementState state;
   final String? currentUserId;
 
@@ -31,22 +30,26 @@ class StatementBody extends StatelessWidget {
 
     if (state.status == StatementViewStatus.error &&
         state.transactions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.receipt_long_outlined, size: 42),
-              const SizedBox(height: 10),
-              const Text('Could not load statements.'),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.read(statementViewModelProvider.notifier).loadInitial(),
-                child: const Text('Retry'),
-              ),
-            ],
+      return ResponsiveLayout.constrainedContent(
+        context,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.receipt_long_outlined, size: 42),
+                const SizedBox(height: 10),
+                const Text('Could not load statements.'),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () => ref
+                      .read(statementViewModelProvider.notifier)
+                      .loadInitial(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -58,12 +61,21 @@ class StatementBody extends StatelessWidget {
             ref.read(statementViewModelProvider.notifier).refresh(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
-          children: const [
-            SizedBox(height: 80),
-            Icon(Icons.inbox_outlined, size: 52),
-            SizedBox(height: 16),
-            Center(child: Text('No transactions found for this filter.')),
+          padding: ResponsiveLayout.pagePadding(context),
+          children: [
+            ResponsiveLayout.constrainedContent(
+              context,
+              child: const Padding(
+                padding: EdgeInsets.only(top: 80),
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_outlined, size: 52),
+                    SizedBox(height: 16),
+                    Text('No transactions found for this filter.'),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -74,7 +86,7 @@ class StatementBody extends StatelessWidget {
       child: ListView.separated(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: ResponsiveLayout.pagePadding(context, top: 8, bottom: 24),
         itemCount: state.transactions.length + (state.isLoadingMore ? 1 : 0),
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -90,26 +102,29 @@ class StatementBody extends StatelessWidget {
           final undoStatus = state.undoStatusByTxId[txId];
           final isRequestingUndo = state.requestingUndoTxIds.contains(txId);
 
-          return StatementItemTile(
-            transaction: transaction,
-            currentUserId: currentUserId,
-            undoStatus: undoStatus,
-            isRequestingUndo: isRequestingUndo,
-            onTap: () {
-              AppRoutes.push(
-                context,
-                StatementDetailPage(
-                  txId: transaction.txId,
-                  initialReceipt: transaction,
-                  initialUndoStatus: undoStatus,
-                ),
-              );
-            },
-            onUndoTap: () {
-              ref
-                  .read(statementViewModelProvider.notifier)
-                  .requestUndo(transaction.txId);
-            },
+          return ResponsiveLayout.constrainedContent(
+            context,
+            child: StatementItemTile(
+              transaction: transaction,
+              currentUserId: currentUserId,
+              undoStatus: undoStatus,
+              isRequestingUndo: isRequestingUndo,
+              onTap: () {
+                AppRoutes.push(
+                  context,
+                  StatementDetailPage(
+                    txId: transaction.txId,
+                    initialReceipt: transaction,
+                    initialUndoStatus: undoStatus,
+                  ),
+                );
+              },
+              onUndoTap: () {
+                ref
+                    .read(statementViewModelProvider.notifier)
+                    .requestUndo(transaction.txId);
+              },
+            ),
           );
         },
       ),

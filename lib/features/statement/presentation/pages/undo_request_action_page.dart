@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
@@ -116,99 +117,116 @@ class _UndoRequestActionPageState extends ConsumerState<UndoRequestActionPage> {
       body: SafeArea(
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: ResponsiveLayout.pagePadding(context, top: 12, bottom: 24),
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.14),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                statusLabel,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: statusColor,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _infoCard(
+            ResponsiveLayout.constrainedContent(
               context,
-              children: [
-                _row('Amount', amountText),
-                _row('Requester', requesterName),
-                _row('Requester Phone', requesterPhone),
-                _row('Receiver', receiverName),
-                _row('Receiver Phone', receiverPhone),
-                _row('Original Tx ID', state.resolvedOriginalTxId ?? '--'),
-                _row('Refund Tx ID', state.resolvedRefundTxId ?? '--'),
-                _row(
-                  'Created',
-                  createdAt == null
-                      ? '--'
-                      : DateFormat(
-                          'dd MMM yyyy, hh:mm a',
-                        ).format(createdAt.toLocal()),
-                ),
-                _row('Undo Request ID', state.requestId ?? '--'),
-              ],
-            ),
-            const SizedBox(height: 14),
-            if (!state.canTakeAction)
-              Text(
-                _readOnlyMessage(state),
-                style: TextStyle(
-                  color: colorScheme.onSurface.withOpacity(0.75),
-                ),
-              ),
-            const SizedBox(height: 20),
-            if (state.canTakeAction)
-              Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: state.isRejecting
-                          ? null
-                          : () => ref
-                                .read(
-                                  undoRequestActionViewModelProvider.notifier,
-                                )
-                                .rejectRequest(),
-                      child: state.isRejecting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('REJECT'),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      statusLabel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: statusColor,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: PrimaryButtonWidget(
-                      onPressed: _openPinSheet,
-                      text: 'ACCEPT',
-                    ),
+                  const SizedBox(height: 12),
+                  _infoCard(
+                    context,
+                    children: [
+                      _row('Amount', amountText),
+                      _row('Requester', requesterName),
+                      _row('Requester Phone', requesterPhone),
+                      _row('Receiver', receiverName),
+                      _row('Receiver Phone', receiverPhone),
+                      _row(
+                        'Original Tx ID',
+                        state.resolvedOriginalTxId ?? '--',
+                      ),
+                      _row('Refund Tx ID', state.resolvedRefundTxId ?? '--'),
+                      _row(
+                        'Created',
+                        createdAt == null
+                            ? '--'
+                            : DateFormat(
+                                'dd MMM yyyy, hh:mm a',
+                              ).format(createdAt.toLocal()),
+                      ),
+                      _row('Undo Request ID', state.requestId ?? '--'),
+                    ],
                   ),
+                  const SizedBox(height: 14),
+                  if (!state.canTakeAction)
+                    Text(
+                      _readOnlyMessage(state),
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withOpacity(0.75),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  if (state.canTakeAction)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: state.isRejecting
+                                ? null
+                                : () => ref
+                                      .read(
+                                        undoRequestActionViewModelProvider
+                                            .notifier,
+                                      )
+                                      .rejectRequest(),
+                            child: state.isRejecting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('REJECT'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: PrimaryButtonWidget(
+                            onPressed: _openPinSheet,
+                            text: 'ACCEPT',
+                          ),
+                        ),
+                      ],
+                    ),
+                  if (!state.canTakeAction && resolvedTxId != null) ...[
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        AppRoutes.push(
+                          context,
+                          StatementDetailPage(
+                            txId: resolvedTxId,
+                            initialUndoStatus: state.status,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                      label: const Text('VIEW TRANSACTION'),
+                    ),
+                  ],
                 ],
               ),
-            if (!state.canTakeAction && resolvedTxId != null) ...[
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () {
-                  AppRoutes.push(
-                    context,
-                    StatementDetailPage(
-                      txId: resolvedTxId,
-                      initialUndoStatus: state.status,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.receipt_long_outlined, size: 18),
-                label: const Text('VIEW TRANSACTION'),
-              ),
-            ],
+            ),
           ],
         ),
       ),
@@ -224,6 +242,7 @@ class _UndoRequestActionPageState extends ConsumerState<UndoRequestActionPage> {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        constraints: ResponsiveLayout.bottomSheetConstraints(context),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
@@ -237,69 +256,68 @@ class _UndoRequestActionPageState extends ConsumerState<UndoRequestActionPage> {
               final colorScheme = Theme.of(sheetContext).colorScheme;
 
               return Padding(
-                padding: EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 16,
-                  bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 20,
-                ),
+                padding: ResponsiveLayout.bottomSheetPadding(sheetContext),
                 child: SafeArea(
                   child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Center(
-                          child: Container(
-                            width: 48,
-                            height: 5,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: colorScheme.outline.withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(10),
+                    child: ResponsiveLayout.constrainedContent(
+                      sheetContext,
+                      tabletMaxWidth: 560,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 48,
+                              height: 5,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: colorScheme.outline.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                           ),
-                        ),
-                        Text(
-                          'Enter PIN',
-                          style: Theme.of(sheetContext).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _pinController,
-                          keyboardType: TextInputType.number,
-                          obscureText: true,
-                          maxLength: 4,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(4),
-                          ],
-                          decoration: InputDecoration(
-                            counterText: '',
-                            hintText: '4-digit PIN',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          Text(
+                            'Enter PIN',
+                            style: Theme.of(sheetContext).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 12),
+                          TextField(
+                            controller: _pinController,
+                            keyboardType: TextInputType.number,
+                            obscureText: true,
+                            maxLength: 4,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(4),
+                            ],
+                            decoration: InputDecoration(
+                              counterText: '',
+                              hintText: '4-digit PIN',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        PrimaryButtonWidget(
-                          onPressed: () {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                            viewModel.acceptRequest(_pinController.text);
-                          },
-                          isLoading: state.isAccepting,
-                          text: 'CONFIRM',
-                        ),
-                        const SizedBox(height: 8),
-                        TextButton(
-                          onPressed: state.isAccepting
-                              ? null
-                              : () => Navigator.of(sheetContext).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          PrimaryButtonWidget(
+                            onPressed: () {
+                              FocusManager.instance.primaryFocus?.unfocus();
+                              viewModel.acceptRequest(_pinController.text);
+                            },
+                            isLoading: state.isAccepting,
+                            text: 'CONFIRM',
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: state.isAccepting
+                                ? null
+                                : () => Navigator.of(sheetContext).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

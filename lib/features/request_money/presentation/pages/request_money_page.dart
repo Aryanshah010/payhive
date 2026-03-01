@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/request_money/domain/entity/request_money_entity.dart';
@@ -61,6 +62,8 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(requestMoneyViewModelProvider);
     final viewModel = ref.read(requestMoneyViewModelProvider.notifier);
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.15 : 1.0;
 
     ref.listen<RequestMoneyState>(requestMoneyViewModelProvider, (prev, next) {
       _syncControllers(next);
@@ -100,24 +103,42 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                child: _buildFormCard(
+                padding: ResponsiveLayout.pagePadding(
                   context,
-                  state,
-                  isSubmitting: isSubmitting,
-                  onSubmit: () {
-                    FocusManager.instance.primaryFocus?.unfocus();
-                    viewModel.submitRequest();
-                  },
+                  top: 16,
+                  bottom: 12,
+                ),
+                child: ResponsiveLayout.constrainedContent(
+                  context,
+                  child: _buildFormCard(
+                    context,
+                    state,
+                    isSubmitting: isSubmitting,
+                    onSubmit: () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      viewModel.submitRequest();
+                    },
+                  ),
                 ),
               ),
             ),
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 4, 16, 10),
-                child: Text(
-                  'Pending Requests',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                padding: EdgeInsets.fromLTRB(
+                  ResponsiveLayout.horizontalPadding(context),
+                  4,
+                  ResponsiveLayout.horizontalPadding(context),
+                  10,
+                ),
+                child: ResponsiveLayout.constrainedContent(
+                  context,
+                  child: Text(
+                    'Pending Requests',
+                    style: TextStyle(
+                      fontSize: 18 * scale,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -135,11 +156,13 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
     required VoidCallback onSubmit,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.12 : 1.0;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isTablet ? 20 : 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(isTablet ? 18 : 16),
         border: Border.all(color: colorScheme.outline),
       ),
       child: Column(
@@ -148,6 +171,7 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
           TextField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
+            style: TextStyle(fontSize: 15 * scale),
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(10),
@@ -163,10 +187,11 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
               errorText: state.showValidationErrors ? state.phoneError : null,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14 * scale),
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            style: TextStyle(fontSize: 15 * scale),
             onChanged: ref
                 .read(requestMoneyViewModelProvider.notifier)
                 .setAmountInput,
@@ -177,10 +202,11 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
               errorText: state.showValidationErrors ? state.amountError : null,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14 * scale),
           TextField(
             controller: _messageController,
             maxLength: 140,
+            style: TextStyle(fontSize: 15 * scale),
             onChanged: ref
                 .read(requestMoneyViewModelProvider.notifier)
                 .setRemark,
@@ -193,7 +219,7 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
             minLines: 2,
             maxLines: 3,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12 * scale),
           PrimaryButtonWidget(
             onPressed: isSubmitting ? null : onSubmit,
             text: 'REQUEST MONEY',
@@ -222,22 +248,30 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
       return [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Could not load pending requests.'),
-                const SizedBox(height: 8),
-                TextButton(
-                  style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                  onPressed: () {
-                    ref
-                        .read(requestMoneyViewModelProvider.notifier)
-                        .loadInitialPending();
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
+            padding: EdgeInsets.fromLTRB(
+              ResponsiveLayout.horizontalPadding(context),
+              0,
+              ResponsiveLayout.horizontalPadding(context),
+              8,
+            ),
+            child: ResponsiveLayout.constrainedContent(
+              context,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Could not load pending requests.'),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                    onPressed: () {
+                      ref
+                          .read(requestMoneyViewModelProvider.notifier)
+                          .loadInitialPending();
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -260,13 +294,21 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
 
     return [
       SliverPadding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveLayout.horizontalPadding(context),
+          0,
+          ResponsiveLayout.horizontalPadding(context),
+          12,
+        ),
         sliver: SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final item = state.pendingRequests[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _pendingRequestCard(context, state, item),
+            return ResponsiveLayout.constrainedContent(
+              context,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _pendingRequestCard(context, state, item),
+              ),
             );
           }, childCount: state.pendingRequests.length),
         ),
@@ -289,6 +331,8 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
     MoneyRequestEntity item,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.1 : 1.0;
     final receiverName = item.receiver.fullName.trim().isEmpty
         ? 'Unknown Recipient'
         : item.receiver.fullName.trim();
@@ -299,10 +343,10 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
         state.activeCancelRequestId == item.id;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(isTablet ? 16 : 14),
       decoration: BoxDecoration(
         color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(isTablet ? 16 : 14),
         border: Border.all(color: colorScheme.outline),
       ),
       child: Column(
@@ -313,9 +357,9 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
               Expanded(
                 child: Text(
                   receiverName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 16,
+                    fontSize: 16 * scale,
                   ),
                 ),
               ),
@@ -341,14 +385,14 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
               'PayHive ID: $receiverPhone',
               style: TextStyle(
                 color: colorScheme.onSurface.withOpacity(0.7),
-                fontSize: 13,
+                fontSize: 13 * scale,
               ),
             ),
           ],
           const SizedBox(height: 8),
           Text(
             formatNpr(item.amount),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            style: TextStyle(fontSize: 18 * scale, fontWeight: FontWeight.w800),
           ),
           if (item.remark.trim().isNotEmpty) ...[
             const SizedBox(height: 6),
@@ -356,7 +400,7 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
               item.remark.trim(),
               style: TextStyle(
                 color: colorScheme.onSurface.withOpacity(0.8),
-                fontSize: 13,
+                fontSize: 13 * scale,
               ),
             ),
           ],
@@ -370,7 +414,7 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
                   ).format(item.createdAt.toLocal()),
                   style: TextStyle(
                     color: colorScheme.onSurface.withOpacity(0.65),
-                    fontSize: 12,
+                    fontSize: 12 * scale,
                   ),
                 ),
               ),
@@ -406,6 +450,8 @@ class _RequestMoneyPageState extends ConsumerState<RequestMoneyPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          constraints: ResponsiveLayout.dialogConstraints(context),
+          insetPadding: ResponsiveLayout.dialogInsetPadding(context),
           title: const Text('Cancel request?'),
           content: const Text('This will cancel the pending money request.'),
           actions: [

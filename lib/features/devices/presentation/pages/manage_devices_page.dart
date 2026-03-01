@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/services/storage/device_storage_service.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/devices/domain/entity/device_entity.dart';
 import 'package:payhive/features/devices/presentation/state/device_state.dart';
@@ -33,6 +34,7 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
     final state = ref.watch(deviceViewModelProvider);
     final viewModel = ref.read(deviceViewModelProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = ResponsiveLayout.isTablet(context);
 
     ref.listen<DeviceState>(deviceViewModelProvider, (prev, next) {
       if (prev?.errorMessage == next.errorMessage) return;
@@ -54,7 +56,7 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () => viewModel.loadDevices(),
-        child: _buildBody(context, state, colorScheme),
+        child: _buildBody(context, state, colorScheme, isTablet),
       ),
     );
   }
@@ -63,6 +65,7 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
     BuildContext context,
     DeviceState state,
     ColorScheme colorScheme,
+    bool isTablet,
   ) {
     if (state.status == DeviceViewStatus.loading && state.devices.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -70,18 +73,27 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
 
     if (state.devices.isEmpty) {
       return ListView(
-        padding: const EdgeInsets.all(24),
-        children: const [
-          SizedBox(height: 120),
-          Icon(Icons.devices_rounded, size: 56),
-          SizedBox(height: 16),
-          Center(child: Text('No devices found.')),
+        padding: ResponsiveLayout.pagePadding(context, top: 24, bottom: 24),
+        children: [
+          ResponsiveLayout.constrainedContent(
+            context,
+            child: const Padding(
+              padding: EdgeInsets.only(top: 120),
+              child: Column(
+                children: [
+                  Icon(Icons.devices_rounded, size: 56),
+                  SizedBox(height: 16),
+                  Text('No devices found.'),
+                ],
+              ),
+            ),
+          ),
         ],
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveLayout.pagePadding(context, top: 16, bottom: 24),
       itemCount: state.devices.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -94,153 +106,171 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
 
         final dismissDirection = _dismissDirectionFor(device.status);
 
-        return Dismissible(
-          key: ValueKey('device-${device.deviceId}'),
-          direction: dismissDirection,
-          background: _buildSwipeBackground(
-            context,
-            label: 'Allow',
-            color: Colors.green.shade600,
-            icon: Icons.check_circle_rounded,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.only(left: 20),
-          ),
-          secondaryBackground: _buildSwipeBackground(
-            context,
-            label: 'Block',
-            color: Colors.red.shade600,
-            icon: Icons.block_rounded,
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-          ),
-          confirmDismiss: (direction) async {
-            if (direction == DismissDirection.startToEnd) {
-              if (device.status == DeviceStatus.blocked ||
-                  device.status == DeviceStatus.pending) {
-                ref.read(deviceViewModelProvider.notifier).allowDevice(
-                  device.deviceId,
-                );
-              }
-            } else if (direction == DismissDirection.endToStart) {
-              if (device.status == DeviceStatus.allowed ||
-                  device.status == DeviceStatus.pending) {
-                ref.read(deviceViewModelProvider.notifier).blockDevice(
-                  device.deviceId,
-                );
-              }
-            }
-            return false;
-          },
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                if (isExpanded) {
-                  _expanded.remove(device.deviceId);
-                } else {
-                  _expanded.add(device.deviceId);
+        return ResponsiveLayout.constrainedContent(
+          context,
+          child: Dismissible(
+            key: ValueKey('device-${device.deviceId}'),
+            direction: dismissDirection,
+            background: _buildSwipeBackground(
+              context,
+              label: 'Allow',
+              color: Colors.green.shade600,
+              icon: Icons.check_circle_rounded,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 20),
+            ),
+            secondaryBackground: _buildSwipeBackground(
+              context,
+              label: 'Block',
+              color: Colors.red.shade600,
+              icon: Icons.block_rounded,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+            ),
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.startToEnd) {
+                if (device.status == DeviceStatus.blocked ||
+                    device.status == DeviceStatus.pending) {
+                  ref
+                      .read(deviceViewModelProvider.notifier)
+                      .allowDevice(device.deviceId);
                 }
-              });
+              } else if (direction == DismissDirection.endToStart) {
+                if (device.status == DeviceStatus.allowed ||
+                    device.status == DeviceStatus.pending) {
+                  ref
+                      .read(deviceViewModelProvider.notifier)
+                      .blockDevice(device.deviceId);
+                }
+              }
+              return false;
             },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: colorScheme.outlineVariant),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.devices_other_rounded,
-                        color: colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              (device.deviceName == null ||
-                                      device.deviceName!.trim().isEmpty)
-                                  ? 'Unknown device'
-                                  : device.deviceName!,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 6,
-                              children: [
-                                _statusChip(device.status),
-                                if (isCurrent)
-                                  Chip(
-                                    label: const Text('This device'),
-                                    backgroundColor:
-                                        AppColors.primary.withOpacity(0.12),
-                                    labelStyle: const TextStyle(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (isActionLoading)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 6),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      else
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isExpanded) {
+                    _expanded.remove(device.deviceId);
+                  } else {
+                    _expanded.add(device.deviceId);
+                  }
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.all(isTablet ? 20 : 16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(isTablet ? 16 : 14),
+                  border: Border.all(color: colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Icon(
-                          isExpanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded,
-                          color: colorScheme.onSurfaceVariant,
+                          Icons.devices_other_rounded,
+                          color: colorScheme.onSurface.withOpacity(0.7),
+                          size: isTablet ? 24 : 22,
+                        ),
+                        SizedBox(width: isTablet ? 14 : 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                (device.deviceName == null ||
+                                        device.deviceName!.trim().isEmpty)
+                                    ? 'Unknown device'
+                                    : device.deviceName!,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: isTablet ? 18 : 16,
+                                ),
+                              ),
+                              SizedBox(height: isTablet ? 8 : 6),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                children: [
+                                  _statusChip(context, device.status),
+                                  if (isCurrent)
+                                    Chip(
+                                      label: Text(
+                                        'This device',
+                                        style: TextStyle(
+                                          fontSize: isTablet ? 13 : 12,
+                                        ),
+                                      ),
+                                      backgroundColor: AppColors.primary
+                                          .withOpacity(0.12),
+                                      labelStyle: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isActionLoading)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 6),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        else
+                          Icon(
+                            isExpanded
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            color: colorScheme.onSurfaceVariant,
+                            size: isTablet ? 28 : 24,
+                          ),
+                      ],
+                    ),
+                    if (isExpanded) ...[
+                      SizedBox(height: isTablet ? 14 : 12),
+                      _detailRow(context, 'Device ID', device.deviceId),
+                      if (device.userAgent != null &&
+                          device.userAgent!.trim().isNotEmpty)
+                        _detailRow(context, 'User Agent', device.userAgent!),
+                      _detailRow(
+                        context,
+                        'Status',
+                        _statusLabel(device.status),
+                      ),
+                      if (device.lastSeenAt != null)
+                        _detailRow(
+                          context,
+                          'Last Seen',
+                          _formatDate(device.lastSeenAt!),
+                        ),
+                      if (device.allowedAt != null)
+                        _detailRow(
+                          context,
+                          'Allowed At',
+                          _formatDate(device.allowedAt!),
+                        ),
+                      if (device.blockedAt != null)
+                        _detailRow(
+                          context,
+                          'Blocked At',
+                          _formatDate(device.blockedAt!),
+                        ),
+                      if (device.createdAt != null)
+                        _detailRow(
+                          context,
+                          'Created At',
+                          _formatDate(device.createdAt!),
                         ),
                     ],
-                  ),
-                  if (isExpanded) ...[
-                    const SizedBox(height: 12),
-                    _detailRow('Device ID', device.deviceId),
-                    if (device.userAgent != null &&
-                        device.userAgent!.trim().isNotEmpty)
-                      _detailRow('User Agent', device.userAgent!),
-                    _detailRow('Status', _statusLabel(device.status)),
-                    if (device.lastSeenAt != null)
-                      _detailRow(
-                        'Last Seen',
-                        _formatDate(device.lastSeenAt!),
-                      ),
-                    if (device.allowedAt != null)
-                      _detailRow(
-                        'Allowed At',
-                        _formatDate(device.allowedAt!),
-                      ),
-                    if (device.blockedAt != null)
-                      _detailRow(
-                        'Blocked At',
-                        _formatDate(device.blockedAt!),
-                      ),
-                    if (device.createdAt != null)
-                      _detailRow(
-                        'Created At',
-                        _formatDate(device.createdAt!),
-                      ),
                   ],
-                ],
+                ),
               ),
             ),
           ),
@@ -292,23 +322,32 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isTablet = ResponsiveLayout.isTablet(context);
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: EdgeInsets.only(bottom: isTablet ? 8 : 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 110,
+            width: isTablet ? 140 : 110,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: isTablet ? 14 : 13,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(color: Colors.grey.shade700),
+              style: TextStyle(
+                color: colorScheme.onSurface.withOpacity(0.75),
+                fontSize: isTablet ? 14 : 13,
+              ),
             ),
           ),
         ],
@@ -331,12 +370,17 @@ class _ManageDevicesPageState extends ConsumerState<ManageDevicesPage> {
     }
   }
 
-  Widget _statusChip(DeviceStatus status) {
+  Widget _statusChip(BuildContext context, DeviceStatus status) {
+    final isTablet = ResponsiveLayout.isTablet(context);
     final color = _statusColor(status);
+
     return Chip(
       label: Text(
         _statusLabel(status),
-        style: const TextStyle(fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: isTablet ? 13 : 12,
+        ),
       ),
       backgroundColor: color.withOpacity(0.12),
       labelStyle: TextStyle(color: color),

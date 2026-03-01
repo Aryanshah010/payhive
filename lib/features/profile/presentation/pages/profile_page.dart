@@ -8,6 +8,7 @@ import 'package:payhive/app/theme/theme_notifier.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
 import 'package:payhive/core/services/notifications/app_badge_service.dart';
 import 'package:payhive/core/services/notifications/notification_push_service.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
 import 'package:payhive/features/auth/presentation/providers/biometric_login_provider.dart';
@@ -45,6 +46,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     final allowed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      constraints: ResponsiveLayout.bottomSheetConstraints(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -76,6 +78,8 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        constraints: ResponsiveLayout.dialogConstraints(context),
+        insetPadding: ResponsiveLayout.dialogInsetPadding(context),
         title: const Text("Permission Required"),
         content: const Text(
           "This feature requires permission to access your  gallery. Please enable it in your device settings.",
@@ -357,6 +361,10 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                                 showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
+                                  constraints:
+                                      ResponsiveLayout.bottomSheetConstraints(
+                                        context,
+                                      ),
                                   shape: const RoundedRectangleBorder(
                                     borderRadius: BorderRadius.vertical(
                                       top: Radius.circular(24),
@@ -473,6 +481,8 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        constraints: ResponsiveLayout.dialogConstraints(dialogContext),
+        insetPadding: ResponsiveLayout.dialogInsetPadding(dialogContext),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Logout',

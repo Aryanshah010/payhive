@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/services/domain/entity/flight_entity.dart';
 import 'package:payhive/features/services/presentation/state/flight_bookings_state.dart';
@@ -72,11 +73,11 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Flight Bookings')),
-      body: _buildBody(state),
+      body: _buildBody(context, state),
     );
   }
 
-  Widget _buildBody(FlightBookingsState state) {
+  Widget _buildBody(BuildContext context, FlightBookingsState state) {
     if ((state.status == FlightBookingsViewStatus.initial ||
             state.status == FlightBookingsViewStatus.loading) &&
         state.bookings.isEmpty) {
@@ -85,25 +86,28 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
 
     if (state.status == FlightBookingsViewStatus.error &&
         state.bookings.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.receipt_long_outlined, size: 44),
-              const SizedBox(height: 10),
-              const Text('Could not load flight bookings.'),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  ref
-                      .read(flightBookingsViewModelProvider.notifier)
-                      .loadInitial();
-                },
-                child: const Text('Retry'),
-              ),
-            ],
+      return ResponsiveLayout.constrainedContent(
+        context,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.receipt_long_outlined, size: 44),
+                const SizedBox(height: 10),
+                const Text('Could not load flight bookings.'),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    ref
+                        .read(flightBookingsViewModelProvider.notifier)
+                        .loadInitial();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -115,12 +119,21 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
             ref.read(flightBookingsViewModelProvider.notifier).refresh(),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(24),
+          padding: ResponsiveLayout.pagePadding(context),
           children: [
-            const SizedBox(height: 80),
-            const Icon(Icons.inbox_outlined, size: 52),
-            const SizedBox(height: 16),
-            const Center(child: Text('No flight bookings found.')),
+            ResponsiveLayout.constrainedContent(
+              context,
+              child: const Padding(
+                padding: EdgeInsets.only(top: 80),
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_outlined, size: 52),
+                    SizedBox(height: 16),
+                    Text('No flight bookings found.'),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -132,7 +145,7 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
       child: ListView.separated(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: ResponsiveLayout.pagePadding(context, top: 8, bottom: 24),
         itemCount: state.bookings.length + (state.isLoadingMore ? 1 : 0),
         separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -144,14 +157,17 @@ class _MyFlightBookingsPageState extends ConsumerState<MyFlightBookingsPage> {
           }
 
           final booking = state.bookings[index];
-          return _BookingCard(
-            booking: booking,
-            isPaying: state.isBookingPaying(booking.id),
-            onPay: () {
-              ref
-                  .read(flightBookingsViewModelProvider.notifier)
-                  .payBooking(booking.id);
-            },
+          return ResponsiveLayout.constrainedContent(
+            context,
+            child: _BookingCard(
+              booking: booking,
+              isPaying: state.isBookingPaying(booking.id),
+              onPay: () {
+                ref
+                    .read(flightBookingsViewModelProvider.notifier)
+                    .payBooking(booking.id);
+              },
+            ),
           );
         },
       ),
@@ -175,10 +191,12 @@ class _BookingCard extends StatelessWidget {
     final status = booking.status.toLowerCase();
     final canPay = status == 'created';
     final dateFormat = DateFormat('MMM d, hh:mm a');
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.1 : 1.0;
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(isTablet ? 16 : 14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -186,29 +204,44 @@ class _BookingCard extends StatelessWidget {
               booking.airline != null && booking.flightNumber != null
                   ? '${booking.airline} (${booking.flightNumber})'
                   : 'Flight Booking',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 16 * scale,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               (booking.from != null && booking.to != null)
                   ? '${booking.from} -> ${booking.to}'
                   : 'Route unavailable',
+              style: TextStyle(fontSize: 14 * scale),
             ),
             if (booking.departure != null) ...[
               const SizedBox(height: 4),
               Text(
                 'Departure: ${dateFormat.format(booking.departure!.toLocal())}',
+                style: TextStyle(fontSize: 13 * scale),
               ),
             ],
             const SizedBox(height: 8),
-            Text('Booking ID: ${booking.id}'),
-            Text('Status: ${status.toUpperCase()}'),
+            Text(
+              'Booking ID: ${booking.id}',
+              style: TextStyle(fontSize: 13 * scale),
+            ),
+            Text(
+              'Status: ${status.toUpperCase()}',
+              style: TextStyle(fontSize: 13 * scale),
+            ),
             if (booking.quantity != null)
-              Text('Passengers: ${booking.quantity}'),
+              Text(
+                'Passengers: ${booking.quantity}',
+                style: TextStyle(fontSize: 13 * scale),
+              ),
             if (booking.price != null)
-              Text('Amount: ${formatNpr(booking.price!)}'),
+              Text(
+                'Amount: ${formatNpr(booking.price!)}',
+                style: TextStyle(fontSize: 13 * scale),
+              ),
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
@@ -220,7 +253,10 @@ class _BookingCard extends StatelessWidget {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(canPay ? 'Pay Booking' : 'Paid / Not Payable'),
+                    : Text(
+                        canPay ? 'Pay Booking' : 'Paid / Not Payable',
+                        style: TextStyle(fontSize: isTablet ? 16 : 15),
+                      ),
               ),
             ),
           ],

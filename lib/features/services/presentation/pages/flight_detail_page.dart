@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:payhive/core/utils/currency_formatter.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
@@ -35,6 +36,8 @@ class _FlightDetailPageState extends ConsumerState<FlightDetailPage> {
     final state = ref.watch(flightBookingViewModelProvider);
     final viewModel = ref.read(flightBookingViewModelProvider.notifier);
     final dateFormat = DateFormat('MMM d, hh:mm a');
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.1 : 1.0;
 
     ref.listen<FlightBookingState>(flightBookingViewModelProvider, (
       prev,
@@ -74,180 +77,208 @@ class _FlightDetailPageState extends ConsumerState<FlightDetailPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Flight Detail')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${flight.airline} (${flight.flightNumber})',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+        padding: ResponsiveLayout.pagePadding(context, top: 16, bottom: 24),
+        child: ResponsiveLayout.constrainedContent(
+          context,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(isTablet ? 16 : 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${flight.airline} (${flight.flightNumber})',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16 * scale,
+                            ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text('${flight.from} -> ${flight.to}'),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Departure: ${dateFormat.format(flight.departure.toLocal())}',
-                    ),
-                    Text(
-                      'Arrival: ${dateFormat.format(flight.arrival.toLocal())}',
-                    ),
-                    const SizedBox(height: 6),
-                    Text('Class: ${flight.flightClass}'),
-                    Text('Available seats: ${flight.seatsAvailable}'),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Price per seat: ${formatNpr(flight.price)}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '${flight.from} -> ${flight.to}',
+                        style: TextStyle(fontSize: 14 * scale),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Departure: ${dateFormat.format(flight.departure.toLocal())}',
+                        style: TextStyle(fontSize: 13 * scale),
+                      ),
+                      Text(
+                        'Arrival: ${dateFormat.format(flight.arrival.toLocal())}',
+                        style: TextStyle(fontSize: 13 * scale),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Class: ${flight.flightClass}',
+                        style: TextStyle(fontSize: 13.5 * scale),
+                      ),
+                      Text(
+                        'Available seats: ${flight.seatsAvailable}',
+                        style: TextStyle(fontSize: 13.5 * scale),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Price per seat: ${formatNpr(flight.price)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14 * scale,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Passengers',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: state.quantity > 1
-                              ? viewModel.decrementQuantity
-                              : null,
-                          icon: const Icon(Icons.remove_circle_outline),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: EdgeInsets.all(isTablet ? 16 : 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Passengers',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15 * scale,
                         ),
-                        Text(
-                          '${state.quantity}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        IconButton(
-                          onPressed: state.quantity < flight.seatsAvailable
-                              ? viewModel.incrementQuantity
-                              : null,
-                          icon: const Icon(Icons.add_circle_outline),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Total: ${formatNpr(totalAmount)}',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (state.createdBooking == null)
-              PrimaryButtonWidget(
-                onPressed: viewModel.createBooking,
-                isLoading: isCreateLoading,
-                text: 'Create Booking',
-              )
-            else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 10),
+                      Row(
                         children: [
-                          Text(
-                            'Booking ID: ${state.createdBooking!.bookingId}',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          IconButton(
+                            onPressed: state.quantity > 1
+                                ? viewModel.decrementQuantity
+                                : null,
+                            icon: const Icon(Icons.remove_circle_outline),
                           ),
-                          const SizedBox(height: 6),
                           Text(
-                            'Status: ${bookingStatus.toUpperCase()}',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                            '${state.quantity}',
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Amount: ${formatNpr(state.createdBooking!.price)}',
+                          IconButton(
+                            onPressed: state.quantity < flight.seatsAvailable
+                                ? viewModel.incrementQuantity
+                                : null,
+                            icon: const Icon(Icons.add_circle_outline),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Opacity(
-                    opacity: ((isPaid || state.payLocked) && !isPayLoading)
-                        ? 0.6
-                        : 1,
-                    child: IgnorePointer(
-                      ignoring: (isPaid || state.payLocked) && !isPayLoading,
-                      child: PrimaryButtonWidget(
-                        onPressed: viewModel.payBooking,
-                        isLoading: isPayLoading,
-                        text: isPaid ? 'Paid' : 'Pay Booking',
+                      const SizedBox(height: 6),
+                      Text(
+                        'Total: ${formatNpr(totalAmount)}',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                    ),
+                    ],
                   ),
-                  if (state.payLocked && !isPayLoading && !isPaid)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        'Payment request is in progress. Please wait.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  if (state.paymentResult != null) ...[
-                    const SizedBox(height: 12),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (state.createdBooking == null)
+                PrimaryButtonWidget(
+                  onPressed: viewModel.createBooking,
+                  isLoading: isCreateLoading,
+                  text: 'Create Booking',
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                     Card(
                       child: Padding(
-                        padding: const EdgeInsets.all(14),
+                        padding: EdgeInsets.all(isTablet ? 16 : 14),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Payment Breakdown',
-                              style: TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(height: 8),
                             Text(
-                              'Amount: ${formatNpr(state.paymentResult?.amount ?? state.createdBooking!.price)}',
+                              'Booking ID: ${state.createdBooking!.bookingId}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            if (state.paymentResult?.fee != null)
-                              Text(
-                                'Fee: ${formatNpr(state.paymentResult!.fee!)}',
+                            const SizedBox(height: 6),
+                            Text(
+                              'Status: ${bookingStatus.toUpperCase()}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
                               ),
-                            if (state.paymentResult?.totalDebited != null)
-                              Text(
-                                'Total Debited: ${formatNpr(state.paymentResult!.totalDebited!)}',
-                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Amount: ${formatNpr(state.createdBooking!.price)}',
+                            ),
                           ],
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Opacity(
+                      opacity: ((isPaid || state.payLocked) && !isPayLoading)
+                          ? 0.6
+                          : 1,
+                      child: IgnorePointer(
+                        ignoring: (isPaid || state.payLocked) && !isPayLoading,
+                        child: PrimaryButtonWidget(
+                          onPressed: viewModel.payBooking,
+                          isLoading: isPayLoading,
+                          text: isPaid ? 'Paid' : 'Pay Booking',
+                        ),
+                      ),
+                    ),
+                    if (state.payLocked && !isPayLoading && !isPaid)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Payment request is in progress. Please wait.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    if (state.paymentResult != null) ...[
+                      const SizedBox(height: 12),
+                      Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(isTablet ? 16 : 14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Payment Breakdown',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15 * scale,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Amount: ${formatNpr(state.paymentResult?.amount ?? state.createdBooking!.price)}',
+                              ),
+                              if (state.paymentResult?.fee != null)
+                                Text(
+                                  'Fee: ${formatNpr(state.paymentResult!.fee!)}',
+                                ),
+                              if (state.paymentResult?.totalDebited != null)
+                                Text(
+                                  'Total Debited: ${formatNpr(state.paymentResult!.totalDebited!)}',
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );

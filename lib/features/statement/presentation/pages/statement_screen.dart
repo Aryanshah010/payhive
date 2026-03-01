@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/statement/presentation/state/statement_state.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_view_model.dart';
@@ -66,35 +67,49 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
   ) async {
     final nextFilter = await showModalBottomSheet<StatementDirectionFilter>(
       context: context,
+      constraints: ResponsiveLayout.bottomSheetConstraints(
+        context,
+        tabletMaxWidth: 520,
+      ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
+        final isTablet = ResponsiveLayout.isTablet(sheetContext);
+        final scale = isTablet ? 1.15 : 1.0;
+
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              FilterOption(
-                context: context,
-                value: StatementDirectionFilter.all,
-                groupValue: selected,
-                label: 'All',
-              ),
-              FilterOption(
-                context: context,
-                value: StatementDirectionFilter.debit,
-                groupValue: selected,
-                label: 'Debit',
-              ),
-              FilterOption(
-                context: context,
-                value: StatementDirectionFilter.credit,
-                groupValue: selected,
-                label: 'Credit',
-              ),
-              const SizedBox(height: 12),
-            ],
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12 * scale, 12, 12 * scale, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 52,
+                  height: 5,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(sheetContext).colorScheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                FilterOption(
+                  value: StatementDirectionFilter.all,
+                  groupValue: selected,
+                  label: 'All',
+                ),
+                FilterOption(
+                  value: StatementDirectionFilter.debit,
+                  groupValue: selected,
+                  label: 'Debit',
+                ),
+                FilterOption(
+                  value: StatementDirectionFilter.credit,
+                  groupValue: selected,
+                  label: 'Credit',
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -111,6 +126,7 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
     final state = ref.watch(statementViewModelProvider);
     final viewModel = ref.read(statementViewModelProvider.notifier);
     final currentUserId = ref.read(userSessionServiceProvider).getUserId();
+    final isTablet = ResponsiveLayout.isTablet(context);
 
     ref.listen<StatementState>(statementViewModelProvider, (prev, next) {
       if (prev?.errorMessage == next.errorMessage) return;
@@ -132,48 +148,68 @@ class _StatementScreenState extends ConsumerState<StatementScreen> {
       appBar: AppBar(title: const Text('Statement'), centerTitle: true),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {});
-                      _onSearchChanged(value);
-                    },
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: 'Search by remark or phone',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                _onSearchChanged('');
-                                setState(() {});
-                              },
-                              icon: const Icon(Icons.close_rounded),
-                            )
-                          : null,
+          ResponsiveLayout.constrainedContent(
+            context,
+            child: Padding(
+              padding: ResponsiveLayout.pagePadding(
+                context,
+                top: 12,
+                bottom: 12,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (value) {
+                        setState(() {});
+                        _onSearchChanged(value);
+                      },
+                      textInputAction: TextInputAction.search,
+                      style: TextStyle(fontSize: isTablet ? 17 : 14),
+                      decoration: InputDecoration(
+                        hintText: 'Search by remark or phone',
+                        hintStyle: TextStyle(fontSize: isTablet ? 17 : 14),
+                        prefixIcon: Icon(
+                          Icons.search_rounded,
+                          size: isTablet ? 26 : 22,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _onSearchChanged('');
+                                  setState(() {});
+                                },
+                                icon: Icon(
+                                  Icons.close_rounded,
+                                  size: isTablet ? 24 : 20,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  tooltip: 'Filter',
-                  onPressed: () => _openFilterSheet(context, state.direction),
-                  icon: const Icon(Icons.filter_alt_outlined),
-                ),
-              ],
+                  SizedBox(width: isTablet ? 12 : 8),
+                  IconButton(
+                    tooltip: 'Filter',
+                    style: IconButton.styleFrom(
+                      minimumSize: Size(isTablet ? 48 : 40, isTablet ? 48 : 40),
+                    ),
+                    onPressed: () => _openFilterSheet(context, state.direction),
+                    icon: Icon(
+                      Icons.filter_alt_outlined,
+                      size: isTablet ? 28 : 24,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
             child: StatementBody(
               ref: ref,
               scrollController: _scrollController,
-              context: context,
               state: state,
               currentUserId: currentUserId,
             ),
