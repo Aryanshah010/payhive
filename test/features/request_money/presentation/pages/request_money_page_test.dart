@@ -208,7 +208,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Enter a valid 10-digit mobile number.'),
+        find.text('Please enter your mobile number.'),
         findsOneWidget,
       );
       expect(find.text('Amount is required.'), findsOneWidget);

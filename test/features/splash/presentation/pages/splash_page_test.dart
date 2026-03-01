@@ -28,6 +28,9 @@ class FakeProfileViewModel extends ProfileViewModel {
   Future<void> loadProfile() async {}
 
   @override
+  Future<void> ensureLoaded() async {}
+
+  @override
   Future<void> refreshProfile() async {}
 }
 

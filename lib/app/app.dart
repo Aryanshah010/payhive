@@ -1,16 +1,30 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/app_theme.dart';
 import 'package:payhive/app/theme/theme_notifier.dart';
-import 'package:payhive/core/utils/responsive_layout.dart';
+import 'package:payhive/core/services/sensors/shake_service.dart';
 import 'package:payhive/features/splash/presentation/pages/splash_page.dart';
 
-class App extends ConsumerWidget {
+class App extends ConsumerStatefulWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<App> createState() => _AppState();
+}
+
+class _AppState extends ConsumerState<App> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(shakeServiceProvider).start();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeNotifierProvider);
 
     return MaterialApp(
@@ -19,37 +33,6 @@ class App extends ConsumerWidget {
       themeMode: themeMode,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      builder: (context, child) {
-        final media = MediaQuery.of(context);
-        final isTablet =
-            media.size.shortestSide >= ResponsiveLayout.tabletBreakpoint;
-
-        if (!isTablet) {
-          return child ?? const SizedBox.shrink();
-        }
-
-        final theme = Theme.of(context);
-        final appBarTitleBase =
-            theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge;
-
-        final scaledTheme = theme.copyWith(
-          appBarTheme: theme.appBarTheme.copyWith(
-            toolbarHeight: 62,
-            titleTextStyle: appBarTitleBase?.copyWith(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        );
-
-        return MediaQuery(
-          data: media.copyWith(textScaler: const TextScaler.linear(1.18)),
-          child: Theme(
-            data: scaledTheme,
-            child: child ?? const SizedBox.shrink(),
-          ),
-        );
-      },
       home: const SplashPage(),
     );
   }
