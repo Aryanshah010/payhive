@@ -6,6 +6,7 @@ import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/send_money/presentation/widgets/info_row.dart';
 import 'package:payhive/features/statement/presentation/state/statement_detail_state.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 import 'package:payhive/core/utils/statement_status_mapper.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_detail_view_model.dart';
 import 'package:payhive/features/statement/presentation/widgets/build_action_row_widget.dart';
@@ -14,11 +15,13 @@ import 'package:payhive/features/statement/presentation/widgets/build_status_hea
 class StatementDetailPage extends ConsumerStatefulWidget {
   final String txId;
   final ReceiptEntity? initialReceipt;
+  final UndoStatusUi? initialUndoStatus;
 
   const StatementDetailPage({
     super.key,
     required this.txId,
     this.initialReceipt,
+    this.initialUndoStatus,
   });
 
   @override
@@ -34,7 +37,11 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
       if (!mounted) return;
       ref
           .read(statementDetailViewModelProvider.notifier)
-          .load(txId: widget.txId, fallback: widget.initialReceipt);
+          .load(
+            txId: widget.txId,
+            fallback: widget.initialReceipt,
+            initialUndoStatus: widget.initialUndoStatus,
+          );
     });
   }
 
@@ -43,6 +50,7 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
     final state = ref.watch(statementDetailViewModelProvider);
     final viewModel = ref.read(statementDetailViewModelProvider.notifier);
     final receipt = state.receipt;
+    final undoStatus = state.undoStatus;
     final statusUi = mapStatementStatus(receipt?.status);
 
     ref.listen<StatementDetailState>(statementDetailViewModelProvider, (
@@ -81,6 +89,7 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
                     viewModel.load(
                       txId: widget.txId,
                       fallback: widget.initialReceipt,
+                      initialUndoStatus: widget.initialUndoStatus,
                     );
                   },
                   child: const Text('Retry'),
@@ -117,13 +126,14 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
     final hasFeeBreakdown =
         baseAmount != null || feeAmount != null || totalDebited != null;
     final displayAmount = baseAmount ?? receipt.amount;
-    final displayTotal = totalDebited ??
+    final displayTotal =
+        totalDebited ??
         (feeAmount != null
             ? receipt.amount
             : (baseAmount != null &&
-                      (receipt.amount - baseAmount).abs() > 0.009)
-                  ? receipt.amount
-                  : null);
+                  (receipt.amount - baseAmount).abs() > 0.009)
+            ? receipt.amount
+            : null);
     final amountText = _formatAmount(displayAmount);
 
     return Scaffold(
@@ -157,6 +167,11 @@ class _StatementDetailPageState extends ConsumerState<StatementDetailPage> {
                     child: Column(
                       children: [
                         InfoRow(label: 'Status', value: statusUi.label),
+                        if (undoStatus != null)
+                          InfoRow(
+                            label: 'Undo Status',
+                            value: undoStatus.label,
+                          ),
                         InfoRow(label: 'From', value: receipt.from.fullName),
                         InfoRow(label: 'To', value: receipt.to.fullName),
                         InfoRow(label: 'Transaction ID', value: receipt.txId),

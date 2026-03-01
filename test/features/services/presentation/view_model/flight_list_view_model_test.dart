@@ -36,6 +36,7 @@ void main() {
     required String to,
     DateTime? departure,
     DateTime? arrival,
+    int seatsAvailable = 30,
   }) {
     final departureAt =
         departure ?? DateTime.now().add(const Duration(days: 1));
@@ -53,7 +54,7 @@ void main() {
       flightClass: 'Economy',
       price: 4500,
       seatsTotal: 70,
-      seatsAvailable: 30,
+      seatsAvailable: seatsAvailable,
     );
   }
 
@@ -253,6 +254,40 @@ void main() {
       },
     );
 
+    test('initial load filters out sold-out upcoming flights', () async {
+      final now = DateTime.now();
+
+      when(() => mockUsecase(any())).thenAnswer((_) async {
+        return Right(
+          paged(
+            items: [
+              flight(
+                id: 'sold-out',
+                from: 'KTM',
+                to: 'PKR',
+                departure: now.add(const Duration(days: 2)),
+                seatsAvailable: 0,
+              ),
+              flight(
+                id: 'bookable',
+                from: 'KTM',
+                to: 'BWA',
+                departure: now.add(const Duration(days: 3)),
+                seatsAvailable: 4,
+              ),
+            ],
+            page: 1,
+            totalPages: 1,
+          ),
+        );
+      });
+
+      await container.read(flightListViewModelProvider.notifier).loadInitial();
+      final state = container.read(flightListViewModelProvider);
+
+      expect(state.flights.map((item) => item.id).toList(), ['bookable']);
+    });
+
     test('load more skips past-only page and continues to next page', () async {
       final now = DateTime.now();
 
@@ -315,6 +350,71 @@ void main() {
       expect(state.flights.map((item) => item.id).toList(), ['f1', 'f3']);
       expect(state.page, 3);
       expect(state.hasMore, isFalse);
+      verify(() => mockUsecase(any())).called(3);
+    });
+
+    test('load more skips sold-out-only page and continues', () async {
+      final now = DateTime.now();
+
+      when(() => mockUsecase(any())).thenAnswer((invocation) async {
+        final params = invocation.positionalArguments.first as GetFlightsParams;
+        if (params.page == 1) {
+          return Right(
+            paged(
+              items: [
+                flight(
+                  id: 'f1',
+                  from: 'KTM',
+                  to: 'PKR',
+                  departure: now.add(const Duration(days: 1)),
+                ),
+              ],
+              page: 1,
+              totalPages: 3,
+            ),
+          );
+        }
+        if (params.page == 2) {
+          return Right(
+            paged(
+              items: [
+                flight(
+                  id: 'f2-sold',
+                  from: 'KTM',
+                  to: 'BWA',
+                  departure: now.add(const Duration(days: 2)),
+                  seatsAvailable: 0,
+                ),
+              ],
+              page: 2,
+              totalPages: 3,
+            ),
+          );
+        }
+
+        return Right(
+          paged(
+            items: [
+              flight(
+                id: 'f3',
+                from: 'KTM',
+                to: 'BWA',
+                departure: now.add(const Duration(days: 5)),
+              ),
+            ],
+            page: 3,
+            totalPages: 3,
+          ),
+        );
+      });
+
+      final vm = container.read(flightListViewModelProvider.notifier);
+      await vm.loadInitial();
+      await vm.loadMore();
+
+      final state = container.read(flightListViewModelProvider);
+      expect(state.flights.map((item) => item.id).toList(), ['f1', 'f3']);
+      expect(state.page, 3);
       verify(() => mockUsecase(any())).called(3);
     });
   });

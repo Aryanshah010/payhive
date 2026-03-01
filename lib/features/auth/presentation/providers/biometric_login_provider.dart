@@ -3,7 +3,9 @@ import 'package:payhive/core/services/biometric/biometric_service.dart';
 import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/core/services/storage/token_service.dart';
 
-final biometricLoginAvailableProvider = FutureProvider<bool>((ref) async {
+final biometricLoginAvailableProvider = FutureProvider.autoDispose<bool>((
+  ref,
+) async {
   final biometricStorage = ref.read(biometricStorageServiceProvider);
   if (!biometricStorage.isEnabled()) return false;
 

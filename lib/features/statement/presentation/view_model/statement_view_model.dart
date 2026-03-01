@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/core/services/storage/undo_status_storage_service.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/features/notifications/domain/entity/notification_entity.dart';
 import 'package:payhive/features/notifications/domain/usecases/notification_usecases.dart';
@@ -21,6 +22,8 @@ class StatementViewModel extends Notifier<StatementState> {
   late final RequestUndoUsecase _requestUndoUsecase;
   late final GetNotificationsUsecase _getNotificationsUsecase;
   late final UserSessionService _userSessionService;
+  late final UndoStatusStorageService _undoStatusStorageService;
+  late final String? _currentUserId;
 
   @override
   StatementState build() {
@@ -28,16 +31,23 @@ class StatementViewModel extends Notifier<StatementState> {
     _requestUndoUsecase = ref.read(requestUndoUsecaseProvider);
     _getNotificationsUsecase = ref.read(getNotificationsUsecaseProvider);
     _userSessionService = ref.read(userSessionServiceProvider);
+    _undoStatusStorageService = ref.read(undoStatusStorageServiceProvider);
+    _currentUserId = _userSessionService.getUserId();
     return StatementState.initial();
   }
 
   Future<void> loadInitial() async {
+    final restoredStatuses = _readPersistedUndoStatuses();
     state = state.copyWith(
       status: StatementViewStatus.loading,
       isLoadingMore: false,
       errorMessage: null,
       page: 0,
       totalPages: 1,
+      undoStatusByTxId: _mergeUndoStatuses(
+        current: state.undoStatusByTxId,
+        hydrated: restoredStatuses,
+      ),
     );
     await _loadPage(page: 1, append: false);
   }
@@ -96,6 +106,7 @@ class StatementViewModel extends Notifier<StatementState> {
     final result = await _requestUndoUsecase(
       RequestUndoParams(txId: normalizedTxId),
     );
+    var shouldPersistStatuses = false;
 
     result.fold(
       (failure) {
@@ -112,6 +123,7 @@ class StatementViewModel extends Notifier<StatementState> {
             errorMessage: null,
             actionMessage: failure.message,
           );
+          shouldPersistStatuses = true;
           return;
         }
 
@@ -140,8 +152,13 @@ class StatementViewModel extends Notifier<StatementState> {
           errorMessage: null,
           actionMessage: 'Undo request submitted.',
         );
+        shouldPersistStatuses = true;
       },
     );
+
+    if (shouldPersistStatuses) {
+      await _persistUndoStatuses(state.undoStatusByTxId);
+    }
   }
 
   Future<void> _loadPage({
@@ -284,6 +301,7 @@ class StatementViewModel extends Notifier<StatementState> {
         type: 'UNDO_REQUEST',
       ),
     );
+    var shouldPersistStatuses = false;
 
     result.fold((_) {}, (response) {
       final hydrated = _buildHydratedUndoStatuses(response.items);
@@ -293,9 +311,17 @@ class StatementViewModel extends Notifier<StatementState> {
         current: state.undoStatusByTxId,
         hydrated: hydrated,
       );
+      if (_isSameUndoStatusMap(state.undoStatusByTxId, merged)) {
+        return;
+      }
 
       state = state.copyWith(undoStatusByTxId: merged);
+      shouldPersistStatuses = true;
     });
+
+    if (shouldPersistStatuses) {
+      await _persistUndoStatuses(state.undoStatusByTxId);
+    }
   }
 
   Map<String, UndoStatusUi> _buildHydratedUndoStatuses(
@@ -309,10 +335,15 @@ class StatementViewModel extends Notifier<StatementState> {
     for (final item in sorted) {
       final data = item.data;
       if (data == null || data.isEmpty) continue;
-      final originalTxId = _readAsString(data, 'originalTxId');
+      final originalTxId = _readFirstAsString(data, const [
+        'originalTxId',
+        'originalTransactionId',
+        'txId',
+        'transactionId',
+      ]);
       if (originalTxId == null) continue;
 
-      final action = _readAsString(data, 'action');
+      final action = _readFirstAsString(data, const ['action', 'status']);
       final mappedStatus = mapUndoLifecycleAction(action);
       if (mappedStatus == null) continue;
 
@@ -345,6 +376,58 @@ class StatementViewModel extends Notifier<StatementState> {
     });
 
     return merged;
+  }
+
+  bool _isSameUndoStatusMap(
+    Map<String, UndoStatusUi> a,
+    Map<String, UndoStatusUi> b,
+  ) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+
+    for (final entry in a.entries) {
+      if (b[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
+
+  Map<String, UndoStatusUi> _readPersistedUndoStatuses() {
+    final userId = _currentUserId?.trim();
+    if (userId == null || userId.isEmpty) return const <String, UndoStatusUi>{};
+
+    final stored = _undoStatusStorageService.readStatuses(userId: userId);
+    if (stored.isEmpty) return const <String, UndoStatusUi>{};
+
+    final resolved = <String, UndoStatusUi>{};
+    stored.forEach((txId, rawStatus) {
+      final status = deserializeUndoStatus(rawStatus);
+      if (status == null) return;
+      resolved[txId] = status;
+    });
+    return resolved;
+  }
+
+  Future<void> _persistUndoStatuses(Map<String, UndoStatusUi> statuses) async {
+    final userId = _currentUserId?.trim();
+    if (userId == null || userId.isEmpty) return;
+
+    final serialized = <String, String>{};
+    statuses.forEach((txId, status) {
+      serialized[txId] = serializeUndoStatus(status);
+    });
+
+    await _undoStatusStorageService.saveStatuses(
+      userId: userId,
+      statuses: serialized,
+    );
+  }
+
+  String? _readFirstAsString(Map<String, dynamic> source, List<String> keys) {
+    for (final key in keys) {
+      final value = _readAsString(source, key);
+      if (value != null) return value;
+    }
+    return null;
   }
 
   String? _readAsString(Map<String, dynamic> source, String key) {

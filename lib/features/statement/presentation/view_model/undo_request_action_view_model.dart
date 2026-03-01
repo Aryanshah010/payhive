@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:payhive/core/services/storage/undo_status_storage_service.dart';
+import 'package:payhive/core/services/storage/user_session_service.dart';
+import 'package:payhive/features/statement/domain/entity/undo_request_entity.dart';
 import 'package:payhive/features/statement/domain/usecases/statement_usecases.dart';
 import 'package:payhive/features/statement/presentation/state/undo_request_action_state.dart';
 import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
@@ -11,11 +14,15 @@ final undoRequestActionViewModelProvider =
 class UndoRequestActionViewModel extends Notifier<UndoRequestActionState> {
   late final AcceptUndoUsecase _acceptUndoUsecase;
   late final RejectUndoUsecase _rejectUndoUsecase;
+  late final UndoStatusStorageService _undoStatusStorageService;
+  late final UserSessionService _userSessionService;
 
   @override
   UndoRequestActionState build() {
     _acceptUndoUsecase = ref.read(acceptUndoUsecaseProvider);
     _rejectUndoUsecase = ref.read(rejectUndoUsecaseProvider);
+    _undoStatusStorageService = ref.read(undoStatusStorageServiceProvider);
+    _userSessionService = ref.read(userSessionServiceProvider);
     return UndoRequestActionState.initial();
   }
 
@@ -30,12 +37,17 @@ class UndoRequestActionViewModel extends Notifier<UndoRequestActionState> {
       fallbackData.action,
     )?.toUpperCase();
     final mappedStatus = mapUndoLifecycleAction(lifecycleAction);
+    final persistedStatus = _readPersistedStatus(fallbackData);
+    final resolvedStatus = _resolveStatus(
+      preferred: mappedStatus,
+      secondary: persistedStatus,
+    );
 
     state = UndoRequestActionState.initial().copyWith(
       fallbackData: fallbackData,
       requestId: requestId,
       lifecycleAction: lifecycleAction,
-      status: mappedStatus,
+      status: resolvedStatus,
     );
   }
 
@@ -56,14 +68,14 @@ class UndoRequestActionViewModel extends Notifier<UndoRequestActionState> {
       AcceptUndoParams(requestId: requestId, pin: pin),
     );
 
-    result.fold(
-      (failure) {
+    await result.fold<Future<void>>(
+      (failure) async {
         state = state.copyWith(
           isAccepting: false,
           errorMessage: failure.message,
         );
       },
-      (success) {
+      (success) async {
         state = state.copyWith(
           isAccepting: false,
           lifecycleAction: 'ACCEPTED',
@@ -72,6 +84,11 @@ class UndoRequestActionViewModel extends Notifier<UndoRequestActionState> {
           receipt: success.receipt,
           errorMessage: null,
           actionMessage: 'Undo request accepted.',
+        );
+        await _persistStatus(
+          status: acceptedUndoStatus,
+          request: success.request,
+          fallbackData: state.fallbackData,
         );
       },
     );
@@ -94,21 +111,28 @@ class UndoRequestActionViewModel extends Notifier<UndoRequestActionState> {
       RejectUndoParams(requestId: requestId),
     );
 
-    result.fold(
-      (failure) {
+    await result.fold<Future<void>>(
+      (failure) async {
         state = state.copyWith(
           isRejecting: false,
           errorMessage: failure.message,
         );
       },
-      (success) {
+      (success) async {
+        final resolvedStatus =
+            mapUndoRequestStatus(success.status) ?? rejectedUndoStatus;
         state = state.copyWith(
           isRejecting: false,
           lifecycleAction: 'DENIED',
-          status: mapUndoRequestStatus(success.status) ?? rejectedUndoStatus,
+          status: resolvedStatus,
           request: success,
           errorMessage: null,
           actionMessage: 'Undo request rejected.',
+        );
+        await _persistStatus(
+          status: resolvedStatus,
+          request: success,
+          fallbackData: state.fallbackData,
         );
       },
     );
@@ -122,6 +146,56 @@ class UndoRequestActionViewModel extends Notifier<UndoRequestActionState> {
   void clearActionMessage() {
     if (state.actionMessage == null) return;
     state = state.copyWith(actionMessage: null);
+  }
+
+  UndoStatusUi? _readPersistedStatus(
+    UndoRequestActionFallbackData fallbackData,
+  ) {
+    final userId = _userSessionService.getUserId()?.trim();
+    if (userId == null || userId.isEmpty) return null;
+
+    final txId =
+        _normalizeNullable(fallbackData.originalTxId) ??
+        _normalizeNullable(fallbackData.transactionId);
+    if (txId == null) return null;
+
+    final raw = _undoStatusStorageService.readStatus(
+      userId: userId,
+      txId: txId,
+    );
+    return deserializeUndoStatus(raw);
+  }
+
+  UndoStatusUi? _resolveStatus({
+    UndoStatusUi? preferred,
+    UndoStatusUi? secondary,
+  }) {
+    if (preferred == null) return secondary;
+    if (secondary == null) return preferred;
+    if (preferred.isTerminal) return preferred;
+    if (secondary.isTerminal) return secondary;
+    return preferred;
+  }
+
+  Future<void> _persistStatus({
+    required UndoStatusUi status,
+    required UndoRequestActionFallbackData fallbackData,
+    UndoRequestEntity? request,
+  }) async {
+    final userId = _userSessionService.getUserId()?.trim();
+    if (userId == null || userId.isEmpty) return;
+
+    final txId =
+        _normalizeNullable(request?.originalTxId) ??
+        _normalizeNullable(fallbackData.originalTxId) ??
+        _normalizeNullable(fallbackData.transactionId);
+    if (txId == null) return;
+
+    await _undoStatusStorageService.saveStatus(
+      userId: userId,
+      txId: txId,
+      status: serializeUndoStatus(status),
+    );
   }
 
   String? _normalizeNullable(String? value) {

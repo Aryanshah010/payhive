@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 
 enum StatementDetailViewStatus { initial, loading, loaded, error }
 
@@ -8,11 +9,13 @@ class StatementDetailState extends Equatable {
 
   final StatementDetailViewStatus status;
   final ReceiptEntity? receipt;
+  final UndoStatusUi? undoStatus;
   final String? errorMessage;
 
   const StatementDetailState({
     required this.status,
     this.receipt,
+    this.undoStatus,
     this.errorMessage,
   });
 
@@ -20,6 +23,7 @@ class StatementDetailState extends Equatable {
     return const StatementDetailState(
       status: StatementDetailViewStatus.initial,
       receipt: null,
+      undoStatus: null,
       errorMessage: null,
     );
   }
@@ -27,11 +31,15 @@ class StatementDetailState extends Equatable {
   StatementDetailState copyWith({
     StatementDetailViewStatus? status,
     Object? receipt = _unset,
+    Object? undoStatus = _unset,
     Object? errorMessage = _unset,
   }) {
     return StatementDetailState(
       status: status ?? this.status,
       receipt: receipt == _unset ? this.receipt : receipt as ReceiptEntity?,
+      undoStatus: undoStatus == _unset
+          ? this.undoStatus
+          : undoStatus as UndoStatusUi?,
       errorMessage: errorMessage == _unset
           ? this.errorMessage
           : errorMessage as String?,
@@ -39,5 +47,5 @@ class StatementDetailState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, receipt, errorMessage];
+  List<Object?> get props => [status, receipt, undoStatus, errorMessage];
 }

@@ -121,7 +121,7 @@ class FlightListViewModel extends Notifier<FlightListState> {
           failure = nextFailure;
         },
         (pagedData) {
-          filteredItems.addAll(_retainUpcomingFlights(pagedData.items));
+          filteredItems.addAll(_retainUpcomingBookableFlights(pagedData.items));
           resolvedPage = pagedData.page;
           resolvedTotalPages = pagedData.totalPages < 1
               ? 1
@@ -173,11 +173,13 @@ class FlightListViewModel extends Notifier<FlightListState> {
     );
   }
 
-  List<FlightEntity> _retainUpcomingFlights(List<FlightEntity> flights) {
+  List<FlightEntity> _retainUpcomingBookableFlights(
+    List<FlightEntity> flights,
+  ) {
     final today = _asLocalDate(DateTime.now());
     return flights.where((flight) {
       final departureDate = _asLocalDate(flight.departure.toLocal());
-      return !departureDate.isBefore(today);
+      return !departureDate.isBefore(today) && flight.seatsAvailable > 0;
     }).toList();
   }
 

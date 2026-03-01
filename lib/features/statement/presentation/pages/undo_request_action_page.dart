@@ -199,7 +199,10 @@ class _UndoRequestActionPageState extends ConsumerState<UndoRequestActionPage> {
                 onPressed: () {
                   AppRoutes.push(
                     context,
-                    StatementDetailPage(txId: resolvedTxId),
+                    StatementDetailPage(
+                      txId: resolvedTxId,
+                      initialUndoStatus: state.status,
+                    ),
                   );
                 },
                 icon: const Icon(Icons.receipt_long_outlined, size: 18),

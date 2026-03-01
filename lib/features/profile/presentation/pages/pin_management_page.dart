@@ -141,31 +141,28 @@ class _PinManagementPageState extends ConsumerState<PinManagementPage> {
                 child: Column(
                   children: [
                     if (widget.hasPin) ...[
-                      if (widget.hasPin) ...[
-                        PinTextFormField(
-                          controller: _oldPinController,
-                          hintText: 'Enter current PIN',
-                          label: 'Current PIN',
-                          validator: _pinValidator,
-                        ),
-                        SizedBox(height: verticalSpacing),
-                      ],
-
                       PinTextFormField(
-                        controller: _newPinController,
-                        hintText: 'Enter new PIN',
-                        label: 'New PIN',
+                        controller: _oldPinController,
+                        hintText: 'Enter current PIN',
+                        label: 'Current PIN',
                         validator: _pinValidator,
                       ),
                       SizedBox(height: verticalSpacing),
-
-                      PinTextFormField(
-                        controller: _confirmPinController,
-                        hintText: 'Re-type new PIN',
-                        label: 'Confirm PIN',
-                        validator: _confirmPinValidator,
-                      ),
                     ],
+                    PinTextFormField(
+                      controller: _newPinController,
+                      hintText: 'Enter new PIN',
+                      label: 'New PIN',
+                      validator: _pinValidator,
+                    ),
+                    SizedBox(height: verticalSpacing),
+
+                    PinTextFormField(
+                      controller: _confirmPinController,
+                      hintText: 'Re-type new PIN',
+                      label: 'Confirm PIN',
+                      validator: _confirmPinValidator,
+                    ),
                     SizedBox(height: isTablet ? 20 : 12),
                     PrimaryButtonWidget(
                       onPressed: _handleSubmit,

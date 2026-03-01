@@ -30,14 +30,18 @@ void main() {
     container.dispose();
   });
 
-  HotelEntity hotel({required String id, required String city}) {
+  HotelEntity hotel({
+    required String id,
+    required String city,
+    int roomsAvailable = 12,
+  }) {
     return HotelEntity(
       id: id,
       name: 'Hotel $id',
       city: city,
       roomType: 'Deluxe',
       roomsTotal: 50,
-      roomsAvailable: 12,
+      roomsAvailable: roomsAvailable,
       pricePerNight: 4800,
       amenities: const ['wifi'],
       images: const [],
@@ -165,6 +169,67 @@ void main() {
       expect(state.hotels.length, 2);
       expect(state.page, 2);
       expect(state.hasMore, isFalse);
+    });
+
+    test('initial load filters out sold-out hotels', () async {
+      when(() => mockUsecase(any())).thenAnswer(
+        (_) async => Right(
+          paged(
+            items: [
+              hotel(id: 'h-sold', city: 'Kathmandu', roomsAvailable: 0),
+              hotel(id: 'h-open', city: 'Kathmandu', roomsAvailable: 2),
+            ],
+            page: 1,
+            totalPages: 1,
+          ),
+        ),
+      );
+
+      await container.read(hotelListViewModelProvider.notifier).loadInitial();
+      final state = container.read(hotelListViewModelProvider);
+
+      expect(state.hotels.map((item) => item.id).toList(), ['h-open']);
+    });
+
+    test('load more skips sold-out-only page and continues', () async {
+      when(() => mockUsecase(any())).thenAnswer((invocation) async {
+        final params = invocation.positionalArguments.first as GetHotelsParams;
+        if (params.page == 1) {
+          return Right(
+            paged(
+              items: [hotel(id: 'h1', city: 'Kathmandu')],
+              page: 1,
+              totalPages: 3,
+            ),
+          );
+        }
+        if (params.page == 2) {
+          return Right(
+            paged(
+              items: [hotel(id: 'h2-sold', city: 'Pokhara', roomsAvailable: 0)],
+              page: 2,
+              totalPages: 3,
+            ),
+          );
+        }
+
+        return Right(
+          paged(
+            items: [hotel(id: 'h3', city: 'Chitwan')],
+            page: 3,
+            totalPages: 3,
+          ),
+        );
+      });
+
+      final vm = container.read(hotelListViewModelProvider.notifier);
+      await vm.loadInitial();
+      await vm.loadMore();
+
+      final state = container.read(hotelListViewModelProvider);
+      expect(state.hotels.map((item) => item.id).toList(), ['h1', 'h3']);
+      expect(state.page, 3);
+      verify(() => mockUsecase(any())).called(3);
     });
   });
 }

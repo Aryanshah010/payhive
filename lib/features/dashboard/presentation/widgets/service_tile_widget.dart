@@ -20,6 +20,9 @@ class ServiceTile extends StatelessWidget {
 
     final double horizontalPadding = isTablet ? 24 : 12;
     final double verticalPadding = isTablet ? 24 : 12;
+    final double iconSize = isTablet ? 36 : 24;
+    final double labelFontSize = isTablet ? 24 : 16;
+    final double contentGap = isTablet ? 12 : 8;
 
     return Material(
       color: Colors.transparent,
@@ -36,14 +39,18 @@ class ServiceTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Icon(icon, size: isTablet ? 36 : 24, color: AppColors.primary),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: isTablet ? 24 : 16,
+              Icon(icon, size: iconSize, color: AppColors.primary),
+              SizedBox(width: contentGap),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: labelFontSize,
+                  ),
                 ),
               ),
             ],

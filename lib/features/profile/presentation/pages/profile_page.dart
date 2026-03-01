@@ -10,6 +10,7 @@ import 'package:payhive/core/services/notifications/app_badge_service.dart';
 import 'package:payhive/core/services/notifications/notification_push_service.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
+import 'package:payhive/features/auth/presentation/providers/biometric_login_provider.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
@@ -498,6 +499,7 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                   .clearServerFcmTokenOnLogout();
               await ref.read(appBadgeServiceProvider).setBadgeCount(0);
               await ref.read(authViewModelProvider.notifier).logout();
+              ref.invalidate(biometricLoginAvailableProvider);
               if (context.mounted) {
                 AppRoutes.pushAndRemoveUntil(context, const LoginPage());
               }

@@ -101,6 +101,7 @@ class StatementBody extends StatelessWidget {
                 StatementDetailPage(
                   txId: transaction.txId,
                   initialReceipt: transaction,
+                  initialUndoStatus: undoStatus,
                 ),
               );
             },

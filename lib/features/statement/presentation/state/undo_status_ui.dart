@@ -47,6 +47,21 @@ const UndoStatusUi rejectedUndoStatus = UndoStatusUi(
   color: Colors.red,
 );
 
+String serializeUndoStatus(UndoStatusUi status) {
+  switch (status.type) {
+    case UndoStatusType.pending:
+      return 'PENDING';
+    case UndoStatusType.accepted:
+      return 'ACCEPTED';
+    case UndoStatusType.rejected:
+      return 'REJECTED';
+  }
+}
+
+UndoStatusUi? deserializeUndoStatus(String? rawStatus) {
+  return mapUndoRequestStatus(rawStatus) ?? mapUndoLifecycleAction(rawStatus);
+}
+
 UndoStatusUi? mapUndoRequestStatus(String? rawStatus) {
   final normalized = rawStatus?.trim().toUpperCase();
   if (normalized == null || normalized.isEmpty) return null;
@@ -66,9 +81,15 @@ UndoStatusUi? mapUndoLifecycleAction(String? rawAction) {
   final normalized = rawAction?.trim().toUpperCase();
   if (normalized == null || normalized.isEmpty) return null;
 
-  if (normalized == 'CREATED') return pendingUndoStatus;
+  if (normalized == 'CREATED' || normalized == 'PENDING') {
+    return pendingUndoStatus;
+  }
   if (normalized == 'ACCEPTED') return acceptedUndoStatus;
-  if (normalized == 'DENIED') return rejectedUndoStatus;
+  if (normalized == 'DENIED' ||
+      normalized == 'REJECTED' ||
+      normalized == 'UNDO_REJECTED') {
+    return rejectedUndoStatus;
+  }
 
   return null;
 }

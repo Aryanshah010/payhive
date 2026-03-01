@@ -5,13 +5,78 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/core/services/storage/undo_status_storage_service.dart';
+import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/statement/domain/usecases/statement_usecases.dart';
 import 'package:payhive/features/statement/presentation/state/statement_detail_state.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 import 'package:payhive/features/statement/presentation/view_model/statement_detail_view_model.dart';
 
 class MockGetTransactionDetailUsecase extends Mock
     implements GetTransactionDetailUsecase {}
+
+class FakeUserSessionService implements UserSessionService {
+  FakeUserSessionService(this.userId);
+
+  final String userId;
+
+  @override
+  Future<void> clearUserSession() async {}
+
+  @override
+  String? getUserFullName() => 'Test User';
+
+  @override
+  String? getUserId() => userId;
+
+  @override
+  String? getUserPhoneNumber() => '9800000000';
+
+  @override
+  bool isLoggedIn() => true;
+
+  @override
+  Future<void> saveUserSession({
+    required String userId,
+    required String fullName,
+    required String phoneNumber,
+  }) async {}
+}
+
+class FakeUndoStatusStorageService implements UndoStatusStorageService {
+  FakeUndoStatusStorageService(this.seeded);
+
+  final Map<String, Map<String, String>> seeded;
+
+  @override
+  Map<String, String> readStatuses({required String userId}) {
+    return Map<String, String>.from(seeded[userId] ?? const <String, String>{});
+  }
+
+  @override
+  String? readStatus({required String userId, required String txId}) {
+    return seeded[userId]?[txId];
+  }
+
+  @override
+  Future<void> saveStatus({
+    required String userId,
+    required String txId,
+    required String status,
+  }) async {
+    final next = seeded.putIfAbsent(userId, () => <String, String>{});
+    next[txId] = status;
+  }
+
+  @override
+  Future<void> saveStatuses({
+    required String userId,
+    required Map<String, String> statuses,
+  }) async {
+    seeded[userId] = Map<String, String>.from(statuses);
+  }
+}
 
 void main() {
   late MockGetTransactionDetailUsecase mockUsecase;
@@ -23,9 +88,16 @@ void main() {
 
   setUp(() {
     mockUsecase = MockGetTransactionDetailUsecase();
+    final fakeUndoStorage = FakeUndoStatusStorageService({
+      'user-1': {'tx-persisted': 'ACCEPTED'},
+    });
     container = ProviderContainer(
       overrides: [
         getTransactionDetailUsecaseProvider.overrideWithValue(mockUsecase),
+        userSessionServiceProvider.overrideWithValue(
+          FakeUserSessionService('user-1'),
+        ),
+        undoStatusStorageServiceProvider.overrideWithValue(fakeUndoStorage),
       ],
     );
   });
@@ -135,5 +207,21 @@ void main() {
       expect(state.errorMessage, isNull);
       verify(() => mockUsecase(any())).called(2);
     });
+
+    test(
+      'prefers terminal persisted undo status over pending initial status',
+      () async {
+        final receipt = makeReceipt(txId: 'tx-persisted', status: 'SUCCESS');
+        when(() => mockUsecase(any())).thenAnswer((_) async => Right(receipt));
+
+        await container
+            .read(statementDetailViewModelProvider.notifier)
+            .load(txId: 'tx-persisted', initialUndoStatus: pendingUndoStatus);
+
+        final state = container.read(statementDetailViewModelProvider);
+        expect(state.status, StatementDetailViewStatus.loaded);
+        expect(state.undoStatus, acceptedUndoStatus);
+      },
+    );
   });
 }

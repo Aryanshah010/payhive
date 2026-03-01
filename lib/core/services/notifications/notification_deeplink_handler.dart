@@ -13,6 +13,7 @@ import 'package:payhive/features/request_money/presentation/state/request_money_
 import 'package:payhive/features/statement/presentation/pages/statement_detail_page.dart';
 import 'package:payhive/features/statement/presentation/pages/undo_request_action_page.dart';
 import 'package:payhive/features/statement/presentation/state/undo_request_action_state.dart';
+import 'package:payhive/features/statement/presentation/state/undo_status_ui.dart';
 
 final notificationDeepLinkHandlerProvider =
     Provider<NotificationDeepLinkHandler>((_) => NotificationDeepLinkHandler());
@@ -128,14 +129,26 @@ class NotificationDeepLinkHandler {
     if (action == 'ACCEPTED') {
       final txId = refundTxId ?? originalTxId;
       if (txId != null) {
-        AppRoutes.push(context, StatementDetailPage(txId: txId));
+        AppRoutes.push(
+          context,
+          StatementDetailPage(
+            txId: txId,
+            initialUndoStatus: acceptedUndoStatus,
+          ),
+        );
         return true;
       }
     }
 
-    if (action == 'DENIED') {
+    if (action == 'DENIED' || action == 'REJECTED') {
       if (originalTxId != null) {
-        AppRoutes.push(context, StatementDetailPage(txId: originalTxId));
+        AppRoutes.push(
+          context,
+          StatementDetailPage(
+            txId: originalTxId,
+            initialUndoStatus: rejectedUndoStatus,
+          ),
+        );
         return true;
       }
     }
@@ -213,7 +226,7 @@ class NotificationDeepLinkHandler {
   }
 
   String? _resolveUndoAction(Map<String, dynamic> payload) {
-    return _readFirstString(payload, const ['action'])?.toUpperCase();
+    return _readFirstString(payload, const ['action', 'status'])?.toUpperCase();
   }
 
   String? _resolveUndoOriginalTxId(Map<String, dynamic> payload) {
