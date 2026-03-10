@@ -8,6 +8,7 @@ class ProfileState extends Equatable {
   final String? phoneNumber;
   final String? email;
   final String? imageUrl;
+  final double? balance;
   final bool hasPin;
   final String? errorMessage;
 
@@ -17,6 +18,7 @@ class ProfileState extends Equatable {
     this.phoneNumber,
     this.email,
     this.imageUrl,
+    this.balance,
     this.hasPin = false,
     this.errorMessage,
   });
@@ -31,6 +33,7 @@ class ProfileState extends Equatable {
     String? phoneNumber,
     String? email,
     String? imageUrl,
+    double? balance,
     bool? hasPin,
     String? errorMessage,
   }) {
@@ -40,6 +43,7 @@ class ProfileState extends Equatable {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       email: email ?? this.email,
       imageUrl: imageUrl ?? this.imageUrl,
+      balance: balance ?? this.balance,
       hasPin: hasPin ?? this.hasPin,
       errorMessage: errorMessage,
     );
@@ -52,6 +56,7 @@ class ProfileState extends Equatable {
     phoneNumber,
     email,
     imageUrl,
+    balance,
     hasPin,
     errorMessage,
   ];

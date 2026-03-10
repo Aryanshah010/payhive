@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/send_money/domain/usecases/send_money_usecase.dart';
 import 'package:payhive/features/send_money/presentation/state/send_money_state.dart';
 import 'package:uuid/uuid.dart';
@@ -52,10 +53,7 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
     if (state.confirmIdempotencyKey == null && !state.confirmLocked) {
       return;
     }
-    state = state.copyWith(
-      confirmIdempotencyKey: null,
-      confirmLocked: false,
-    );
+    state = state.copyWith(confirmIdempotencyKey: null, confirmLocked: false);
   }
 
   void _emitConfirmLockedError() {
@@ -79,6 +77,21 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
     if (normalized == state.remark) return;
     _invalidateConfirmLifecycle();
     state = state.copyWith(remark: normalized);
+  }
+
+  void setAmountInput(String value) {
+    final normalized = ValidatorUtil.normalizeAmountInput(value);
+    if (normalized == state.amountInput) return;
+    _invalidateConfirmLifecycle();
+    state = state.copyWith(amountInput: normalized);
+  }
+
+  void setSourceMoneyRequestId(String? value) {
+    final normalized = value?.trim();
+    final next = (normalized == null || normalized.isEmpty) ? null : normalized;
+    if (next == state.sourceMoneyRequestId) return;
+    _invalidateConfirmLifecycle();
+    state = state.copyWith(sourceMoneyRequestId: next);
   }
 
   void appendAmountKey(String key) {
@@ -131,17 +144,14 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
       LookupBeneficiaryParams(phoneNumber: state.phoneNumber),
     );
 
-    result.fold(
-      (failure) => _handleFailure(failure),
-      (recipient) {
-        state = state.copyWith(
-          status: SendMoneyStatus.lookupSuccess,
-          action: SendMoneyAction.none,
-          recipient: recipient,
-          errorMessage: null,
-        );
-      },
-    );
+    result.fold((failure) => _handleFailure(failure), (recipient) {
+      state = state.copyWith(
+        status: SendMoneyStatus.lookupSuccess,
+        action: SendMoneyAction.none,
+        recipient: recipient,
+        errorMessage: null,
+      );
+    });
   }
 
   Future<void> previewTransfer() async {
@@ -164,29 +174,26 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
         toPhoneNumber: state.phoneNumber,
         amount: amount,
         remark: state.remark,
+        moneyRequestId: state.sourceMoneyRequestId,
       ),
     );
 
-    result.fold(
-      (failure) => _handleFailure(failure),
-      (preview) {
-        final existingKey = state.confirmIdempotencyKey;
-        final idempotencyKey =
-            (existingKey == null || existingKey.isEmpty)
-                ? _uuid.v4()
-                : existingKey;
+    result.fold((failure) => _handleFailure(failure), (preview) {
+      final existingKey = state.confirmIdempotencyKey;
+      final idempotencyKey = (existingKey == null || existingKey.isEmpty)
+          ? _uuid.v4()
+          : existingKey;
 
-        state = state.copyWith(
-          status: SendMoneyStatus.previewSuccess,
-          action: SendMoneyAction.none,
-          recipient: preview.recipient,
-          warning: preview.warning,
-          errorMessage: null,
-          confirmIdempotencyKey: idempotencyKey,
-          confirmLocked: false,
-        );
-      },
-    );
+      state = state.copyWith(
+        status: SendMoneyStatus.previewSuccess,
+        action: SendMoneyAction.none,
+        recipient: preview.recipient,
+        warning: preview.warning,
+        errorMessage: null,
+        confirmIdempotencyKey: idempotencyKey,
+        confirmLocked: false,
+      );
+    });
   }
 
   Future<void> confirmTransfer(String pin) async {
@@ -198,8 +205,9 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
 
     final amount = double.tryParse(state.amountInput) ?? 0;
     final existingKey = state.confirmIdempotencyKey;
-    final idempotencyKey =
-        (existingKey == null || existingKey.isEmpty) ? _uuid.v4() : existingKey;
+    final idempotencyKey = (existingKey == null || existingKey.isEmpty)
+        ? _uuid.v4()
+        : existingKey;
 
     state = state.copyWith(
       status: SendMoneyStatus.loading,
@@ -216,6 +224,7 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
         pin: pin,
         remark: state.remark,
         idempotencyKey: idempotencyKey,
+        moneyRequestId: state.sourceMoneyRequestId,
       ),
     );
 
@@ -279,4 +288,6 @@ class SendMoneyViewModel extends Notifier<SendMoneyState> {
       }
     });
   }
+
+ 
 }

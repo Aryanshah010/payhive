@@ -88,12 +88,86 @@ class ValidatorUtil {
     return null;
   }
 
-  String? validatePin(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
-    return 'PIN must be exactly 4 digits.';
+  static String? validatePin(String value) {
+    final cleaned = value.trim();
+    if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
+      return 'PIN must be exactly 4 digits.';
+    }
+    return null;
   }
-  return null;
-}
 
+  static String? validateAmount(double amount) {
+    if (amount <= 0) {
+      return 'Amount must be greater than 0.';
+    }
+
+    final scaled = amount * 100;
+    if ((scaled - scaled.round()).abs() > 0.000001) {
+      return 'Amount can have at most 2 decimal places.';
+    }
+
+    return null;
+  }
+
+  static String? validateRemark(String? remark) {
+    final normalized = normalizeRemark(remark);
+    if (normalized != null && normalized.length > 140) {
+      return 'Request message must be at most 140 characters.';
+    }
+    return null;
+  }
+
+  static String? normalizeRemark(String? remark) {
+    final trimmed = remark?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
+
+  static String normalizeAmountInput(String value) {
+    var sanitized = value.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    if (sanitized.isEmpty) {
+      return '';
+    }
+
+    final firstDot = sanitized.indexOf('.');
+    if (firstDot >= 0) {
+      final integerPart = sanitized.substring(0, firstDot);
+      var decimalPart = sanitized.substring(firstDot + 1).replaceAll('.', '');
+      if (decimalPart.length > 2) {
+        decimalPart = decimalPart.substring(0, 2);
+      }
+      sanitized = decimalPart.isEmpty
+          ? '$integerPart.'
+          : '$integerPart.$decimalPart';
+    }
+
+    if (sanitized.startsWith('.')) {
+      sanitized = '0$sanitized';
+    }
+
+    return sanitized;
+  }
+
+  static double normalizeAmount(double amount) {
+    return double.parse(amount.toStringAsFixed(2));
+  }
+
+  static String? validateAccountNumber(String value) {
+    final cleaned = value.trim();
+    if (!RegExp(r'^\d{8,20}$').hasMatch(cleaned)) {
+      return 'Account number must be 8 to 20 digits.';
+    }
+    return null;
+  }
+
+  static String? validateBankName(String value) {
+    final cleaned = value.trim();
+    if (cleaned.length < 2) {
+      return 'Bank name must be at least 2 characters.';
+    }
+    return null;
+  }
 }

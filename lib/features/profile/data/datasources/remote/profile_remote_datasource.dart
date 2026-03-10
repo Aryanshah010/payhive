@@ -61,6 +61,31 @@ class ProfileRemoteDataSource implements IProfileRemoteDataSource {
   }
 
   @override
+  Future<void> updateProfile({
+    String? fullName,
+    String? email,
+    String? password,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (fullName != null && fullName.trim().isNotEmpty) {
+      payload['fullName'] = fullName.trim();
+    }
+    if (email != null && email.trim().isNotEmpty) {
+      payload['email'] = email.trim();
+    }
+    if (password != null && password.trim().isNotEmpty) {
+      payload['password'] = password.trim();
+    }
+
+    final token = _tokenService.getToken();
+    await _apiClient.put(
+      ApiEndpoints.profileUpdate,
+      data: payload,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
   Future<void> setPin({required String newPin, String? oldPin}) async {
     final token = _tokenService.getToken();
     await _apiClient.put(

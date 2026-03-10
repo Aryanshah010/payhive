@@ -6,14 +6,14 @@ import 'package:payhive/core/services/storage/token_service.dart';
 import 'package:payhive/features/send_money/data/datasources/send_money_datasource.dart';
 import 'package:payhive/features/send_money/data/models/send_money_api_model.dart';
 
-final sendMoneyRemoteDatasourceProvider = Provider<ISendMoneyRemoteDatasource>(
-  (ref) {
-    return SendMoneyRemoteDatasource(
-      apiClient: ref.read(apiClientProvider),
-      tokenService: ref.read(tokenServiceProvider),
-    );
-  },
-);
+final sendMoneyRemoteDatasourceProvider = Provider<ISendMoneyRemoteDatasource>((
+  ref,
+) {
+  return SendMoneyRemoteDatasource(
+    apiClient: ref.read(apiClientProvider),
+    tokenService: ref.read(tokenServiceProvider),
+  );
+});
 
 class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
   final ApiClient _apiClient;
@@ -27,9 +27,7 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
 
   Options _authOptions({String? idempotencyKey}) {
     final token = _tokenService.getToken();
-    final headers = <String, dynamic>{
-      'Authorization': 'Bearer $token',
-    };
+    final headers = <String, dynamic>{'Authorization': 'Bearer $token'};
     if (idempotencyKey != null && idempotencyKey.isNotEmpty) {
       headers['Idempotency-Key'] = idempotencyKey;
     }
@@ -41,6 +39,7 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
     required String toPhoneNumber,
     required double amount,
     String? remark,
+    String? moneyRequestId,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.transactionsPreview,
@@ -48,6 +47,8 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
         'toPhoneNumber': toPhoneNumber,
         'amount': amount,
         if (remark != null && remark.trim().isNotEmpty) 'remark': remark.trim(),
+        if (moneyRequestId != null && moneyRequestId.trim().isNotEmpty)
+          'moneyRequestId': moneyRequestId.trim(),
       },
       options: _authOptions(),
     );
@@ -63,6 +64,7 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
     required String pin,
     String? remark,
     String? idempotencyKey,
+    String? moneyRequestId,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.transactionsConfirm,
@@ -70,6 +72,8 @@ class SendMoneyRemoteDatasource implements ISendMoneyRemoteDatasource {
         'toPhoneNumber': toPhoneNumber,
         'amount': amount,
         if (remark != null && remark.trim().isNotEmpty) 'remark': remark.trim(),
+        if (moneyRequestId != null && moneyRequestId.trim().isNotEmpty)
+          'moneyRequestId': moneyRequestId.trim(),
         'pin': pin,
       },
       options: _authOptions(idempotencyKey: idempotencyKey),

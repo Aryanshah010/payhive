@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 // Provider for ApiClient
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -27,10 +26,11 @@ class ApiClient {
       ),
     );
 
-    // Add interceptors
+    // Interceptors
     _dio.interceptors.add(_AuthInterceptor());
+    _dio.interceptors.add(_LoggerInterceptor());
 
-    // Auto retry on network failures
+    // Auto retry for network failures
     _dio.interceptors.add(
       RetryInterceptor(
         dio: _dio,
@@ -41,7 +41,6 @@ class ApiClient {
           Duration(seconds: 3),
         ],
         retryEvaluator: (error, attempt) {
-          // Retry on connection errors and timeouts, not on 4xx/5xx
           return error.type == DioExceptionType.connectionTimeout ||
               error.type == DioExceptionType.sendTimeout ||
               error.type == DioExceptionType.receiveTimeout ||
@@ -49,25 +48,11 @@ class ApiClient {
         },
       ),
     );
-
-    // Only add logger in debug mode
-    if (kDebugMode) {
-      _dio.interceptors.add(
-        PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
-          responseBody: true,
-          responseHeader: false,
-          error: true,
-          compact: true,
-        ),
-      );
-    }
   }
 
   Dio get dio => _dio;
 
-  // GET request
+  // GET
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -76,7 +61,7 @@ class ApiClient {
     return _dio.get(path, queryParameters: queryParameters, options: options);
   }
 
-  // POST request
+  // POST
   Future<Response> post(
     String path, {
     dynamic data,
@@ -91,7 +76,7 @@ class ApiClient {
     );
   }
 
-  // PUT request
+  // PUT
   Future<Response> put(
     String path, {
     dynamic data,
@@ -106,7 +91,22 @@ class ApiClient {
     );
   }
 
-  // DELETE request
+  // PATCH
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return _dio.patch(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  // DELETE
   Future<Response> delete(
     String path, {
     dynamic data,
@@ -121,7 +121,7 @@ class ApiClient {
     );
   }
 
-  // Multipart request for file uploads
+  // File upload
   Future<Response> uploadFile(
     String path, {
     required FormData formData,
@@ -159,6 +159,7 @@ class _AuthInterceptor extends Interceptor {
   ) async {
     if (!_isPublicEndpoint(options.path)) {
       final token = await _storage.read(key: _tokenKey);
+
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -172,6 +173,66 @@ class _AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       _storage.delete(key: _tokenKey);
     }
+
+    handler.next(err);
+  }
+}
+
+class _LoggerInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (kDebugMode) {
+      debugPrint('╔════════════════ REQUEST ════════════════');
+      debugPrint('║ ${options.method} ${options.uri}');
+      debugPrint('║ Headers: ${options.headers}');
+
+      if (options.queryParameters.isNotEmpty) {
+        debugPrint('║ Query: ${options.queryParameters}');
+      }
+
+      if (options.data != null) {
+        debugPrint('║ Body: ${options.data}');
+      }
+
+      debugPrint('╚══════════════════════════════════════════');
+    }
+
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (kDebugMode) {
+      final request = response.requestOptions;
+
+      debugPrint('╔════════════════ RESPONSE ═══════════════');
+      debugPrint(
+        '║ ${request.method} ${request.uri} -> ${response.statusCode}',
+      );
+      debugPrint('║ Data: ${response.data}');
+      debugPrint('╚══════════════════════════════════════════');
+    }
+
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (kDebugMode) {
+      final request = err.requestOptions;
+
+      debugPrint('╔════════════════ ERROR ══════════════════');
+      debugPrint('║ ${request.method} ${request.uri}');
+      debugPrint('║ Status: ${err.response?.statusCode}');
+      debugPrint('║ Message: ${err.message}');
+
+      if (err.response?.data != null) {
+        debugPrint('║ Response: ${err.response?.data}');
+      }
+
+      debugPrint('╚══════════════════════════════════════════');
+    }
+
     handler.next(err);
   }
 }

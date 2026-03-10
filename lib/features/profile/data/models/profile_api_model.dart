@@ -7,6 +7,7 @@ class ProfileApiModel {
   final String email;
   final String? imageUrl;
   final bool hasPin;
+  final double balance;
 
   ProfileApiModel({
     this.id,
@@ -15,6 +16,7 @@ class ProfileApiModel {
     required this.email,
     this.imageUrl,
     this.hasPin = false,
+    this.balance = 0,
   });
 
   factory ProfileApiModel.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,7 @@ class ProfileApiModel {
       email: json['email'] ?? '',
       imageUrl: json['imageUrl'],
       hasPin: json['hasPin'] == true,
+      balance: _parseBalance(json['balance']),
     );
   }
 
@@ -35,6 +38,7 @@ class ProfileApiModel {
     'email': email,
     'imageUrl': imageUrl,
     'hasPin': hasPin,
+    'balance': balance,
   };
 
   ProfileEntity toEntity() {
@@ -45,6 +49,7 @@ class ProfileApiModel {
       email: email,
       imageUrl: imageUrl,
       hasPin: hasPin,
+      balance: balance,
     );
   }
 
@@ -56,6 +61,13 @@ class ProfileApiModel {
       email: entity.email,
       imageUrl: entity.imageUrl,
       hasPin: entity.hasPin,
+      balance: entity.balance,
     );
+  }
+
+  static double _parseBalance(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
   }
 }

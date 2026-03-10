@@ -32,6 +32,7 @@ class SendMoneyRepository implements ISendMoneyRepository {
     required String toPhoneNumber,
     required double amount,
     String? remark,
+    String? moneyRequestId,
   }) async {
     if (await _networkInfo.isConnected) {
       try {
@@ -39,6 +40,7 @@ class SendMoneyRepository implements ISendMoneyRepository {
           toPhoneNumber: toPhoneNumber,
           amount: amount,
           remark: remark,
+          moneyRequestId: moneyRequestId,
         );
         return Right(model.toEntity());
       } on DioException catch (e) {
@@ -57,6 +59,7 @@ class SendMoneyRepository implements ISendMoneyRepository {
     required String pin,
     String? remark,
     String? idempotencyKey,
+    String? moneyRequestId,
   }) async {
     if (await _networkInfo.isConnected) {
       try {
@@ -66,6 +69,7 @@ class SendMoneyRepository implements ISendMoneyRepository {
           pin: pin,
           remark: remark,
           idempotencyKey: idempotencyKey,
+          moneyRequestId: moneyRequestId,
         );
         return Right(model.toEntity());
       } on DioException catch (e) {

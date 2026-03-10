@@ -8,7 +8,7 @@ class PrimaryButtonWidget extends StatelessWidget {
     this.isLoading = false,
   });
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String text;
   final bool isLoading;
 

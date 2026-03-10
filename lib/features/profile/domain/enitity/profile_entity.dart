@@ -7,6 +7,7 @@ class ProfileEntity extends Equatable {
   final String email;
   final String? imageUrl;
   final bool hasPin;
+  final double balance;
 
   const ProfileEntity({
     this.id,
@@ -15,8 +16,17 @@ class ProfileEntity extends Equatable {
     required this.email,
     this.imageUrl,
     this.hasPin = false,
+    this.balance = 0,
   });
 
   @override
-  List<Object?> get props => [id, fullName, phoneNumber, imageUrl, hasPin];
+  List<Object?> get props => [
+    id,
+    fullName,
+    phoneNumber,
+    email,
+    imageUrl,
+    hasPin,
+    balance,
+  ];
 }

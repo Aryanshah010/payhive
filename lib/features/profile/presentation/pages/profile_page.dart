@@ -4,16 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:payhive/app/routes/app_routes.dart';
 import 'package:payhive/app/theme/colors.dart';
+import 'package:payhive/app/theme/theme_notifier.dart';
 import 'package:payhive/core/api/api_endpoints.dart';
+import 'package:payhive/core/services/notifications/app_badge_service.dart';
+import 'package:payhive/core/services/notifications/notification_push_service.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/features/auth/presentation/pages/login_page.dart';
+import 'package:payhive/features/auth/presentation/providers/biometric_login_provider.dart';
 import 'package:payhive/features/auth/presentation/view_model/auth_view_model.dart';
 import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/features/dashboard/presentation/widgets/menu_item_widgets.dart';
 import 'package:payhive/features/profile/presentation/pages/fingerprint_setup_sheet.dart';
 import 'package:payhive/features/profile/presentation/state/profile_state.dart';
 import 'package:payhive/features/profile/presentation/pages/pin_management_page.dart';
+import 'package:payhive/features/profile/presentation/pages/update_profile_page.dart';
 import 'package:payhive/features/profile/presentation/view_model/profile_view_model.dart';
+import 'package:payhive/features/devices/presentation/pages/manage_devices_page.dart';
+import 'package:payhive/features/profile/presentation/widgets/pin_verification_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -26,6 +34,28 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfilePage> {
   XFile? _localPreviewImage;
   final ImagePicker _imagePicker = ImagePicker();
+
+  Future<bool> _verifyPinBeforeSensitiveNavigation() async {
+    final hasPin = ref.read(profileViewModelProvider).hasPin;
+    if (!hasPin) {
+      SnackbarUtil.showError(context, 'Please set your PIN first.');
+      AppRoutes.push(context, const PinManagementPage(hasPin: false));
+      return false;
+    }
+
+    final allowed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      constraints: ResponsiveLayout.bottomSheetConstraints(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return const PinVerificationSheet();
+      },
+    );
+    return allowed ?? false;
+  }
 
   Future<bool> _askPermissionFromUser(Permission permission) async {
     final status = await permission.status;
@@ -48,6 +78,8 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        constraints: ResponsiveLayout.dialogConstraints(context),
+        insetPadding: ResponsiveLayout.dialogInsetPadding(context),
         title: const Text("Permission Required"),
         content: const Text(
           "This feature requires permission to access your  gallery. Please enable it in your device settings.",
@@ -117,8 +149,9 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     final phone = profileState.phoneNumber ?? '';
     final email = profileState.email ?? '';
     final backendImage = profileState.imageUrl;
-    final biometricEnabled =
-        ref.watch(biometricStorageServiceProvider).isEnabled();
+    final biometricEnabled = ref
+        .watch(biometricStorageServiceProvider)
+        .isEnabled();
 
     return Scaffold(
       body: SafeArea(
@@ -281,8 +314,13 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                     children: [
                       MenuItem(
                         icon: Icons.person_outline_rounded,
-                        title: 'Update KYC',
-                        onTap: () {},
+                        title: 'Update Profile',
+                        onTap: () async {
+                          final isVerified =
+                              await _verifyPinBeforeSensitiveNavigation();
+                          if (!context.mounted || !isVerified) return;
+                          AppRoutes.push(context, const UpdateProfilePage());
+                        },
                       ),
                       _divider(context),
                       Container(
@@ -323,6 +361,10 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                                 showModalBottomSheet(
                                   context: context,
                                   isScrollControlled: true,
+                                  constraints:
+                                      ResponsiveLayout.bottomSheetConstraints(
+                                        context,
+                                      ),
                                   shape: const RoundedRectangleBorder(
                                     borderRadius: BorderRadius.vertical(
                                       top: Radius.circular(24),
@@ -349,10 +391,43 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
                         ),
                       ),
                       _divider(context),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final mode = ref.watch(themeNotifierProvider);
+                          final isDark = mode == ThemeMode.dark;
+
+                          return MenuItem(
+                            icon: isDark
+                                ? Icons.light_mode_rounded
+                                : Icons.dark_mode_rounded,
+                            title: isDark ? 'Light Mode' : 'Dark Mode',
+                            trailing: Switch.adaptive(
+                              value: isDark,
+                              onChanged: (value) {
+                                ref
+                                    .read(themeNotifierProvider.notifier)
+                                    .setTheme(
+                                      value ? ThemeMode.dark : ThemeMode.light,
+                                    );
+                              },
+                            ),
+                            onTap: () {
+                              ref.read(themeNotifierProvider.notifier).toggle();
+                            },
+                          );
+                        },
+                      ),
+
+                      _divider(context),
                       MenuItem(
                         icon: Icons.devices_rounded,
                         title: 'Manage Devices',
-                        onTap: () {},
+                        onTap: () async {
+                          final isVerified =
+                              await _verifyPinBeforeSensitiveNavigation();
+                          if (!context.mounted || !isVerified) return;
+                          AppRoutes.push(context, const ManageDevicesPage());
+                        },
                       ),
                     ],
                   ),
@@ -406,6 +481,8 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        constraints: ResponsiveLayout.dialogConstraints(dialogContext),
+        insetPadding: ResponsiveLayout.dialogInsetPadding(dialogContext),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Logout',
@@ -427,7 +504,12 @@ class _ProfileScreenState extends ConsumerState<ProfilePage> {
           TextButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
+              await ref
+                  .read(notificationPushServiceProvider)
+                  .clearServerFcmTokenOnLogout();
+              await ref.read(appBadgeServiceProvider).setBadgeCount(0);
               await ref.read(authViewModelProvider.notifier).logout();
+              ref.invalidate(biometricLoginAvailableProvider);
               if (context.mounted) {
                 AppRoutes.pushAndRemoveUntil(context, const LoginPage());
               }

@@ -35,6 +35,8 @@ class SendMoneySuccessPage extends ConsumerWidget {
 
     final state = ref.watch(sendMoneyViewModelProvider);
     final receipt = receiptArg ?? state.receipt;
+    final paymentType = (receipt?.paymentType ?? '').trim().toUpperCase();
+    final isBankTransfer = paymentType == 'BANK_TRANSFER';
 
     final dateText = receipt != null
         ? DateFormat('dd MMMM yyyy hh:mm a').format(receipt.createdAt.toLocal())
@@ -42,6 +44,10 @@ class SendMoneySuccessPage extends ConsumerWidget {
 
     final fromName = receipt?.from.fullName ?? 'Sender';
     final toName = receipt?.to.fullName ?? 'Receiver';
+    final bankName = _resolveBankName(receipt);
+    final accountNumber = _resolveAccountNumber(receipt);
+    final maskedAccountNumber = _maskAccountNumber(accountNumber);
+    final displayToName = isBankTransfer ? (bankName ?? toName) : toName;
     final fromPhone = receipt?.from.phoneNumber ?? '';
     final toPhone = receipt?.to.phoneNumber ?? '';
     final txId = receipt?.txId ?? '--';
@@ -91,7 +97,9 @@ class SendMoneySuccessPage extends ConsumerWidget {
                   SizedBox(height: isTablet ? 18 : 12),
                   Center(
                     child: Text(
-                      "Payment Success!",
+                      isBankTransfer
+                          ? "Bank Transfer Success!"
+                          : "Payment Success!",
                       style: textTheme.titleLarge?.copyWith(
                         fontSize: 20 * scale,
                         fontWeight: FontWeight.w700,
@@ -197,7 +205,19 @@ class SendMoneySuccessPage extends ConsumerWidget {
                     child: Column(
                       children: [
                         InfoRow(label: "From", value: fromName),
-                        InfoRow(label: "To", value: toName),
+                        InfoRow(label: "To", value: displayToName),
+                        if (isBankTransfer)
+                          InfoRow(
+                            label: "Transfer Type",
+                            value: "Bank Transfer",
+                          ),
+                        if (isBankTransfer && bankName != null)
+                          InfoRow(label: "Bank", value: bankName),
+                        if (isBankTransfer && maskedAccountNumber != null)
+                          InfoRow(
+                            label: "Account No.",
+                            value: maskedAccountNumber,
+                          ),
                         InfoRow(label: "Transaction ID", value: txId),
                         InfoRow(label: "Date&Time", value: dateText),
                         InfoRow(label: "Amount(NPR)", value: amountText),
@@ -211,7 +231,9 @@ class SendMoneySuccessPage extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Receiver Payhive Id:",
+                                    isBankTransfer
+                                        ? "Receiver Account:"
+                                        : "Receiver Payhive Id:",
                                     style: TextStyle(
                                       fontSize: 12 * scale,
                                       color: colorScheme.onSurface.withOpacity(
@@ -221,7 +243,12 @@ class SendMoneySuccessPage extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    toPhone.isNotEmpty ? toPhone : "--",
+                                    isBankTransfer
+                                        ? (maskedAccountNumber ??
+                                              (toPhone.isNotEmpty
+                                                  ? toPhone
+                                                  : "--"))
+                                        : (toPhone.isNotEmpty ? toPhone : "--"),
                                     style: TextStyle(
                                       fontSize: 13 * scale,
                                       fontWeight: FontWeight.w600,
@@ -278,4 +305,70 @@ class SendMoneySuccessPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+String? _resolveBankName(ReceiptEntity? receipt) {
+  if (receipt == null) return null;
+  return _readMetaString(receipt.meta, const [
+    'bankName',
+    'bank',
+    'bank_name',
+    'bankTitle',
+  ]);
+}
+
+String? _resolveAccountNumber(ReceiptEntity? receipt) {
+  if (receipt == null) return null;
+  return _readMetaString(receipt.meta, const [
+    'accountNumber',
+    'accountNo',
+    'account',
+    'account_number',
+  ]);
+}
+
+String? _readMetaString(
+  Map<String, dynamic>? meta,
+  List<String> candidateKeys,
+) {
+  if (meta == null || meta.isEmpty) return null;
+
+  for (final key in candidateKeys) {
+    final raw = meta[key];
+    if (raw == null) continue;
+    final value = raw.toString().trim();
+    if (value.isNotEmpty) {
+      return value;
+    }
+  }
+
+  final normalizedCandidates = candidateKeys
+      .map((key) => _normalizeMetaKey(key))
+      .toSet();
+  for (final entry in meta.entries) {
+    if (!normalizedCandidates.contains(_normalizeMetaKey(entry.key))) {
+      continue;
+    }
+    final raw = entry.value;
+    if (raw == null) continue;
+    final value = raw.toString().trim();
+    if (value.isNotEmpty) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+String _normalizeMetaKey(String value) {
+  return value.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+}
+
+String? _maskAccountNumber(String? accountNumber) {
+  if (accountNumber == null || accountNumber.trim().isEmpty) return null;
+  final clean = accountNumber.trim();
+  if (clean.length <= 4) return clean;
+  final hiddenLength = clean.length - 4;
+  final hidden = List.filled(hiddenLength, '*').join();
+  return '$hidden${clean.substring(clean.length - 4)}';
 }

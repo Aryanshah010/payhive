@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const bool isPhysicalDevice = true;
-  static const String _ipAddress = '192.168.1.102';
+  static const bool isPhysicalDevice = false;
+  static const String _ipAddress = '192.168.1.75';
   static const int _port = 5050;
 
   // Base URLs
@@ -26,11 +26,26 @@ class ApiEndpoints {
   static const String authLogin = '/auth/login';
   static const String authRegister = '/auth/register';
   static const String authRequestPasswordReset = '/auth/request-password-reset';
-  static String authResetPassword(String token) => '/auth/reset-password/$token';
+  static String authResetPassword(String token) =>
+      '/auth/reset-password/$token';
   static const String profilePicture = '/auth/profilePicture';
   static const String profile = '/auth/me';
+  static const String profileUpdate = '/profile/updateProfile';
   static const String profilePin = '/profile/pin';
   static const String profileVerifyPin = '/profile/verify-pin';
+
+  // Devices
+  static const String devices = '/devices';
+  static const String devicesPending = '/devices/pending';
+  static String deviceAllow(String deviceId) => '/devices/$deviceId/allow';
+  static String deviceBlock(String deviceId) => '/devices/$deviceId/block';
+  static String deviceFcmToken(String deviceId) =>
+      '/devices/$deviceId/fcm-token';
+
+  // Notifications
+  static const String notifications = '/notifications';
+  static const String notificationsReadAll = '/notifications/read-all';
+  static String notificationRead(String id) => '/notifications/$id/read';
 
   // Transactions
   static const String transactionsPreview = '/transactions/preview';
@@ -38,6 +53,38 @@ class ApiEndpoints {
   static const String transactionsBeneficiary = '/transactions/beneficiary';
   static const String transactionsHistory = '/transactions';
   static String transactionDetail(String txId) => '/transactions/$txId';
+  static const String undoRequests = '/undo-requests';
+  static String undoRequestAccept(String requestId) =>
+      '/undo-requests/$requestId/accept';
+  static String undoRequestReject(String requestId) =>
+      '/undo-requests/$requestId/reject';
+  static const String moneyRequests = '/money-requests';
+  static const String moneyRequestsOutgoing = '/money-requests/outgoing';
+  static String moneyRequestDetail(String requestId) =>
+      '/money-requests/$requestId';
+  static String moneyRequestRespond(String requestId) =>
+      '/money-requests/$requestId/respond';
+  static String moneyRequestCancel(String requestId) =>
+      '/money-requests/$requestId/cancel';
+  static const String banks = '/banks';
+
+  // Flights + Hotels + Bookings + Utility Services
+  static const String flights = '/flights';
+  static String flightDetail(String flightId) => '/flights/$flightId';
+  static const String hotels = '/hotels';
+  static String hotelDetail(String hotelId) => '/hotels/$hotelId';
+  static const String internetServices = '/internet-services';
+  static String internetServiceDetail(String serviceId) =>
+      '/internet-services/$serviceId';
+  static String internetServicePay(String serviceId) =>
+      '/internet-services/$serviceId/pay';
+  static const String topupServices = '/topup-services';
+  static String topupServiceDetail(String serviceId) =>
+      '/topup-services/$serviceId';
+  static String topupServicePay(String serviceId) =>
+      '/topup-services/$serviceId/pay';
+  static const String bookings = '/bookings';
+  static String bookingPay(String bookingId) => '/bookings/$bookingId/pay';
 
   static String profileImage(String filename) =>
       '$mediaServerUrl/profilePicture/$filename';

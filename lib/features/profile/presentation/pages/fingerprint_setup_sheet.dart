@@ -5,6 +5,7 @@ import 'package:payhive/app/theme/colors.dart';
 import 'package:payhive/core/services/biometric/biometric_service.dart';
 import 'package:payhive/core/services/storage/biometric_storage_service.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
+import 'package:payhive/core/utils/responsive_layout.dart';
 import 'package:payhive/core/utils/snackbar_util.dart';
 import 'package:payhive/core/widgets/main_text_form_field.dart';
 import 'package:payhive/core/widgets/primary_button_widget.dart';
@@ -100,7 +101,9 @@ class _FingerprintSetupSheetState extends ConsumerState<FingerprintSetupSheet> {
             'Fingerprint authentication failed or cancelled. '
             'Make sure biometrics are enrolled and try again.';
       });
-      debugPrint('Biometric authenticate returned false. Check simulator/enrollment/Info.plist.');
+      debugPrint(
+        'Biometric authenticate returned false. Check simulator/enrollment/Info.plist.',
+      );
       return;
     }
 
@@ -133,122 +136,128 @@ class _FingerprintSetupSheetState extends ConsumerState<FingerprintSetupSheet> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final width = MediaQuery.of(context).size.width;
-    final isTablet = width >= 600;
+    final isTablet = ResponsiveLayout.isTablet(context);
+    final scale = isTablet ? 1.12 : 1.0;
 
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        ),
+        padding: ResponsiveLayout.bottomSheetPadding(context, bottom: 24),
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(
-                child: Container(
-                  width: 48,
-                  height: 5,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: colorScheme.outline.withOpacity(0.4),
-                    borderRadius: BorderRadius.circular(10),
+          child: ResponsiveLayout.constrainedContent(
+            context,
+            tabletMaxWidth: 560,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 48,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.outline.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-              ),
-              Text(
-                'Enable Fingerprint',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+                Text(
+                  'Enable Fingerprint',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18 * scale,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Enter your 4-digit PIN to continue.',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                const SizedBox(height: 8),
+                Text(
+                  'Enter your 4-digit PIN to continue.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 14 * scale,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    MainTextFormField(
-                      controller: _pinController,
-                      prefixIcon: Icons.lock_outline,
-                      hintText: 'Enter PIN',
-                      label: 'PIN',
-                      keyboardType: TextInputType.number,
-                      obscureText: _obscurePin,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
-                      ],
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter your PIN';
-                        }
-                        if (!RegExp(r'^\d{4}$').hasMatch(value.trim())) {
-                          return 'PIN must be exactly 4 digits.';
-                        }
-                        return null;
-                      },
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePin ? Icons.visibility_off : Icons.visibility,
-                          color: colorScheme.onSurface.withOpacity(0.6),
+                const SizedBox(height: 16),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      MainTextFormField(
+                        controller: _pinController,
+                        prefixIcon: Icons.lock_outline,
+                        hintText: 'Enter PIN',
+                        label: 'PIN',
+                        keyboardType: TextInputType.number,
+                        obscureText: _obscurePin,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(4),
+                        ],
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter your PIN';
+                          }
+                          if (!RegExp(r'^\d{4}$').hasMatch(value.trim())) {
+                            return 'PIN must be exactly 4 digits.';
+                          }
+                          return null;
+                        },
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePin
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          onPressed: () =>
+                              setState(() => _obscurePin = !_obscurePin),
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePin = !_obscurePin),
                       ),
-                    ),
-                    if (_errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: Text(
-                          _errorMessage!,
+                      if (_errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.5 * scale,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      PrimaryButtonWidget(
+                        onPressed: _isLoading
+                            ? () {}
+                            : _handleEnableFingerprint,
+                        isLoading: _isLoading,
+                        text: 'Enable Fingerprint',
+                      ),
+                      const SizedBox(height: 12),
+                      if (!_biometricAvailable)
+                        Text(
+                          'Biometrics not available on this device.',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: colorScheme.error,
+                            fontSize: isTablet ? 16 : 13,
+                            color: AppColors.danger,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 16),
-                    PrimaryButtonWidget(
-                      onPressed: _isLoading ? () {} : _handleEnableFingerprint,
-                      isLoading: _isLoading,
-                      text: 'Enable Fingerprint',
-                    ),
-                    const SizedBox(height: 12),
-                    if (!_biometricAvailable)
-                      Text(
-                        'Biometrics not available on this device.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: isTablet ? 16 : 13,
-                          color: AppColors.danger,
-                          fontWeight: FontWeight.w600,
+                      if (_biometricAvailable && !_biometricEnrolled)
+                        Text(
+                          'No biometrics enrolled on this device.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: isTablet ? 16 : 13,
+                            color: AppColors.danger,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    if (_biometricAvailable && !_biometricEnrolled)
-                      Text(
-                        'No biometrics enrolled on this device.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: isTablet ? 16 : 13,
-                          color: AppColors.danger,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

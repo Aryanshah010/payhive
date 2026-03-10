@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/services/hive/hive_service.dart';
+import 'package:payhive/core/services/storage/biometric_storage_service.dart';
+import 'package:payhive/core/services/storage/token_service.dart';
 import 'package:payhive/core/services/storage/user_session_service.dart';
 import 'package:payhive/features/auth/data/datasources/auth_datasource.dart';
 import 'package:payhive/features/auth/data/models/auth_hive_model.dart';
@@ -10,18 +12,26 @@ final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
   return AuthLocalDatasource(
     hiveService: hiveService,
     userSessionService: userSessionService,
+    tokenService: ref.read(tokenServiceProvider),
+    biometricStorageService: ref.read(biometricStorageServiceProvider),
   );
 });
 
 class AuthLocalDatasource implements IAuthLocalDatasource {
   final HiveService _hiveService;
   final UserSessionService _userSessionService;
+  final TokenService _tokenService;
+  final BiometricStorageService _biometricStorageService;
 
   AuthLocalDatasource({
     required HiveService hiveService,
     required UserSessionService userSessionService,
+    required TokenService tokenService,
+    required BiometricStorageService biometricStorageService,
   }) : _hiveService = hiveService,
-       _userSessionService = userSessionService;
+       _userSessionService = userSessionService,
+       _tokenService = tokenService,
+       _biometricStorageService = biometricStorageService;
 
   @override
   Future<AuthHiveModel?> login(String phoneNumber, String password) async {
@@ -69,6 +79,9 @@ class AuthLocalDatasource implements IAuthLocalDatasource {
   @override
   Future<bool> logout() async {
     try {
+      if (!_biometricStorageService.isEnabled()) {
+        await _tokenService.removeToken();
+      }
       await _userSessionService.clearUserSession();
       return true;
     } catch (e) {

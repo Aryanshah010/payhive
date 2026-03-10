@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/core/services/connectivity/network_info.dart';
+import 'package:payhive/core/services/storage/device_storage_service.dart';
 import 'package:payhive/features/auth/data/datasources/auth_datasource.dart';
 import 'package:payhive/features/auth/data/datasources/local/auth_local_datasource.dart';
 import 'package:payhive/features/auth/data/datasources/remote/auth_remote_datasource.dart';
@@ -16,10 +17,12 @@ final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   final authDatasource = ref.read(authLocalDatasourceProvider);
   final authRemoteDatasource = ref.read(authRemoteDatasourceProvider);
   final networkInfo = ref.read(networkInfoProvider);
+  final deviceStorageService = ref.read(deviceStorageServiceProvider);
   return AuthRepository(
     authDatasource: authDatasource,
     authRemoteDatasource: authRemoteDatasource,
     networkInfo: networkInfo,
+    deviceStorageService: deviceStorageService,
   );
 });
 
@@ -27,14 +30,17 @@ class AuthRepository implements IAuthRepository {
   final IAuthLocalDatasource _authDatasource;
   final IAuthRemoteDatasource _authRemoteDatasource;
   final NetworkInfo _networkInfo;
+  final DeviceStorageService _deviceStorageService;
 
   AuthRepository({
     required IAuthLocalDatasource authDatasource,
     required IAuthRemoteDatasource authRemoteDatasource,
     required NetworkInfo networkInfo,
+    required DeviceStorageService deviceStorageService,
   }) : _authDatasource = authDatasource,
        _authRemoteDatasource = authRemoteDatasource,
-       _networkInfo = networkInfo;
+       _networkInfo = networkInfo,
+       _deviceStorageService = deviceStorageService;
 
   @override
   Future<Either<Failure, AuthEntity>> getUserByPhoneNumber(
@@ -80,6 +86,14 @@ class AuthRepository implements IAuthRepository {
         }
         return const Left(ApiFalilure(message: "Invalid credientials"));
       } on DioException catch (e) {
+        final data = e.response?.data;
+        final deviceId =
+            data is Map && data['deviceId'] is String
+                ? data['deviceId'] as String
+                : null;
+        if (deviceId != null && deviceId.trim().isNotEmpty) {
+          await _deviceStorageService.saveDeviceId(deviceId);
+        }
         return Left(
           ApiFalilure(
             message: e.response?.data['message'] ?? 'Login Failed',

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:payhive/core/error/failures.dart';
 import 'package:payhive/core/usecases/app_usecase.dart';
+import 'package:payhive/core/utils/validator_util.dart';
 import 'package:payhive/features/send_money/data/repositories/send_money_repositories.dart';
 import 'package:payhive/features/send_money/domain/entity/send_money_entity.dart';
 import 'package:payhive/features/send_money/domain/repositories/send_money_repositories.dart';
@@ -12,15 +13,17 @@ class PreviewTransferParams extends Equatable {
   final String toPhoneNumber;
   final double amount;
   final String? remark;
+  final String? moneyRequestId;
 
   const PreviewTransferParams({
     required this.toPhoneNumber,
     required this.amount,
     this.remark,
+    this.moneyRequestId,
   });
 
   @override
-  List<Object?> get props => [toPhoneNumber, amount, remark];
+  List<Object?> get props => [toPhoneNumber, amount, remark, moneyRequestId];
 }
 
 class ConfirmTransferParams extends Equatable {
@@ -29,6 +32,7 @@ class ConfirmTransferParams extends Equatable {
   final String pin;
   final String? remark;
   final String? idempotencyKey;
+  final String? moneyRequestId;
 
   const ConfirmTransferParams({
     required this.toPhoneNumber,
@@ -36,6 +40,7 @@ class ConfirmTransferParams extends Equatable {
     required this.pin,
     this.remark,
     this.idempotencyKey,
+    this.moneyRequestId,
   });
 
   @override
@@ -45,6 +50,7 @@ class ConfirmTransferParams extends Equatable {
     pin,
     remark,
     idempotencyKey,
+    moneyRequestId,
   ];
 }
 
@@ -86,12 +92,12 @@ class PreviewTransferUsecase
 
   @override
   Future<Either<Failure, PreviewEntity>> call(PreviewTransferParams params) {
-    final phoneError = _validatePhone(params.toPhoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.toPhoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
@@ -102,6 +108,7 @@ class PreviewTransferUsecase
       toPhoneNumber: params.toPhoneNumber,
       amount: normalizedAmount,
       remark: params.remark,
+      moneyRequestId: params.moneyRequestId,
     );
   }
 }
@@ -116,17 +123,17 @@ class ConfirmTransferUsecase
 
   @override
   Future<Either<Failure, ReceiptEntity>> call(ConfirmTransferParams params) {
-    final phoneError = _validatePhone(params.toPhoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.toPhoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
-    final pinError = _validatePin(params.pin);
+    final pinError = ValidatorUtil.validatePin(params.pin);
     if (pinError != null) {
       return Future.value(Left(ValidationFailure(message: pinError)));
     }
 
-    final amountError = _validateAmount(params.amount);
+    final amountError = ValidatorUtil.validateAmount(params.amount);
     if (amountError != null) {
       return Future.value(Left(ValidationFailure(message: amountError)));
     }
@@ -143,6 +150,7 @@ class ConfirmTransferUsecase
       pin: params.pin,
       remark: params.remark,
       idempotencyKey: idempotencyKey,
+      moneyRequestId: params.moneyRequestId,
     );
   }
 }
@@ -158,40 +166,13 @@ class LookupBeneficiaryUsecase
   Future<Either<Failure, RecipientEntity>> call(
     LookupBeneficiaryParams params,
   ) {
-    final phoneError = _validatePhone(params.phoneNumber);
+    final phoneError = ValidatorUtil.phoneNumberValidator(params.phoneNumber);
     if (phoneError != null) {
       return Future.value(Left(ValidationFailure(message: phoneError)));
     }
 
     return _repository.lookupBeneficiary(phoneNumber: params.phoneNumber);
   }
-}
-
-String? _validatePhone(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{10}$').hasMatch(cleaned)) {
-    return 'Phone number must be exactly 10 digits.';
-  }
-  return null;
-}
-
-String? _validatePin(String value) {
-  final cleaned = value.trim();
-  if (!RegExp(r'^\d{4}$').hasMatch(cleaned)) {
-    return 'PIN must be exactly 4 digits.';
-  }
-  return null;
-}
-
-String? _validateAmount(double amount) {
-  if (amount <= 0) {
-    return 'Amount must be greater than 0.';
-  }
-  final scaled = amount * 100;
-  if ((scaled - scaled.round()).abs() > 0.000001) {
-    return 'Amount can have at most 2 decimal places.';
-  }
-  return null;
 }
 
 double _normalizeAmount(double amount) {

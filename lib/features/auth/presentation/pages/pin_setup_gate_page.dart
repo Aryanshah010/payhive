@@ -22,7 +22,7 @@ class _PinSetupGatePageState extends ConsumerState<PinSetupGatePage> {
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(profileViewModelProvider.notifier).loadProfile();
+      ref.read(profileViewModelProvider.notifier).ensureLoaded();
     });
   }
 
@@ -64,7 +64,11 @@ class _PinSetupGatePageState extends ConsumerState<PinSetupGatePage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: AppColors.danger,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     profileState.errorMessage ?? 'Failed to load profile.',
@@ -74,7 +78,9 @@ class _PinSetupGatePageState extends ConsumerState<PinSetupGatePage> {
                   const SizedBox(height: 20),
                   PrimaryButtonWidget(
                     onPressed: () {
-                      ref.read(profileViewModelProvider.notifier).loadProfile();
+                      ref
+                          .read(profileViewModelProvider.notifier)
+                          .ensureLoaded();
                     },
                     text: 'Retry',
                   ),
@@ -87,9 +93,7 @@ class _PinSetupGatePageState extends ConsumerState<PinSetupGatePage> {
     }
 
     return const Scaffold(
-      body: SafeArea(
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      body: SafeArea(child: Center(child: CircularProgressIndicator())),
     );
   }
 }
