@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const bool isPhysicalDevice = true;
+  static const bool isPhysicalDevice = false;
   static const String _ipAddress = '192.168.1.75';
   static const int _port = 5050;
 

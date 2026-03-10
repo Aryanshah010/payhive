@@ -19,7 +19,7 @@ class ShakeService {
 
   static const Duration _shakeCooldown = Duration(seconds: 3);
   static const Duration _shakeWindow = Duration(milliseconds: 500);
-  static const double _shakeThresholdG = 2.3;
+  static const double _shakeThresholdG = 2;
   static const double _gravity = 9.80665;
   static const int _requiredShakeCount = 3;
   static const double _alpha = 0.8;
